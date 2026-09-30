@@ -153,27 +153,6 @@ export function PracticePage() {
               endTimeSec={clip.endTimeSec}
             />
 
-            {/* Target Transcript Card */}
-            <div className="rounded-[14px] border border-[#dddddd] bg-[#ffffff] p-6 airbnb-shadow">
-              <div className="flex items-center justify-between mb-3 border-b border-[#ebebeb] pb-3">
-                <div>
-                  <h3 className="text-base font-semibold text-[#222222]">
-                    Target Transcript
-                  </h3>
-                  <p className="text-xs text-[#6a6a6a]">
-                    Match the speaker's vocal stresses, rhythm, and pauses verbatim.
-                  </p>
-                </div>
-                <span className="guest-favorite-badge">
-                  <span>English (US)</span>
-                </span>
-              </div>
-
-              <blockquote className="text-[17px] font-normal text-[#222222] leading-relaxed bg-[#f7f7f7] p-5 rounded-xl border border-[#ebebeb]">
-                "{clip.referenceText}"
-              </blockquote>
-            </div>
-
             {/* Amenity Rows (DESIGN.md amenity-row) */}
             <div className="border-t border-[#ebebeb] pt-6">
               <h3 className="text-[18px] font-semibold text-[#222222] mb-4">
@@ -236,50 +215,27 @@ export function PracticePage() {
           <div className="lg:col-span-5 sticky top-[100px] flex flex-col gap-4">
             {/* The Signature Airbnb Reservation Card (DESIGN.md reservation-card) */}
             <div className="rounded-[14px] border border-[#dddddd] bg-white p-6 airbnb-shadow">
-              {/* Header inside reservation card: Nightly price style */}
-              <div className="flex items-baseline justify-between mb-5 border-b border-[#ebebeb] pb-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[22px] font-bold text-[#222222] font-mono">
-                    {clip.durationSec}s
-                  </span>
-                  <span className="text-sm text-[#6a6a6a]">/ session clip</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs font-semibold text-[#222222]">
-                  <Star className="h-3.5 w-3.5 fill-[#222222] text-[#222222]" />
-                  <span>4.92</span>
-                  <span className="text-[#6a6a6a] font-normal">(128)</span>
-                </div>
-              </div>
-
-              {/* Session Selector Box (Check-in / Check-out style table border) */}
-              <div className="rounded-xl border border-[#dddddd] overflow-hidden mb-5">
-                <div className="grid grid-cols-2 divide-x divide-[#dddddd] border-b border-[#dddddd] p-2.5 bg-[#ffffff]">
-                  <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-[#6a6a6a]">
-                      Difficulty
-                    </span>
-                    <span className="text-xs font-semibold text-[#222222]">
-                      {clip.difficulty}
+              {/* Target Transcript Block (Replaces session details per user feedback) */}
+              <div className="mb-5 pb-5 border-b border-[#ebebeb]">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#222222]">
+                      Target Transcript
                     </span>
                   </div>
-                  <div className="pl-3">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-[#6a6a6a]">
-                      Playback Speed
-                    </span>
-                    <span className="text-xs font-semibold text-[#222222]">
-                      1.0x Native Speed
-                    </span>
-                  </div>
+                  <span className="guest-favorite-badge text-[11px] py-0.5 px-2.5">
+                    {clip.locale || 'English (US)'}
+                  </span>
                 </div>
 
-                <div className="p-2.5 bg-[#ffffff]">
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-[#6a6a6a]">
-                    Assessment Engine
-                  </span>
-                  <span className="text-xs font-semibold text-[#222222] flex items-center gap-1">
-                    <Sparkles className="h-3.5 w-3.5 text-[#ff385c]" />
-                    <span>Sonorauris AI Multi-dimension</span>
-                  </span>
+                <div className="rounded-xl border border-[#dddddd] bg-[#f7f7f7] p-4 text-[#222222]">
+                  <blockquote className="text-[16px] sm:text-[17px] font-normal leading-relaxed text-[#222222]">
+                    "{clip.referenceText}"
+                  </blockquote>
+                  <p className="text-[11px] text-[#6a6a6a] mt-2.5 flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-[#ff385c]" />
+                    <span>Shadow speaker's pause cadence, stresses &amp; rhythm</span>
+                  </p>
                 </div>
               </div>
 
