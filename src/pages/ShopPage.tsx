@@ -230,7 +230,7 @@ export function ShopPage() {
             <div className="rounded-[16px] border border-[#dddddd] bg-[#f7f7f7] p-6 text-center airbnb-shadow">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#6a6a6a]">
-                  Profile Preview
+                  Fitting Room Preview
                 </span>
                 {previewItem && (
                   <button

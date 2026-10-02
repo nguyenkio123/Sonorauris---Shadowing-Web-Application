@@ -18,6 +18,7 @@ import {
   claimDailyQuest,
   equipShopItem,
   getAttemptById,
+  getAttempts,
   getDailyQuestsState,
   getRoomByCode,
   getUserInventory,
@@ -129,6 +130,14 @@ export async function submitAttempt(
 export async function getAttempt(id: string): Promise<Attempt | null> {
   await delay(80)
   return getAttemptById(id)
+}
+
+/**
+ * Retrieves all past attempts for performance stats.
+ */
+export async function getUserAttempts(): Promise<Attempt[]> {
+  await delay(40)
+  return getAttempts()
 }
 
 /**

@@ -5,11 +5,13 @@ import { getDailyQuests, getMe } from '../../api'
 import type { UserProfile } from '../../types/user'
 import type { DailyQuest } from '../../types/quest'
 import { DailyQuestsModal } from './DailyQuestsModal'
+import { ProfileSettingsModal } from './ProfileSettingsModal'
 
 export function Header() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [quests, setQuests] = useState<DailyQuest[]>([])
   const [isQuestsOpen, setIsQuestsOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
@@ -194,11 +196,12 @@ export function Header() {
                 </div>
               </Link>
 
-              {/* User Avatar & Name Pill */}
-              <Link
-                to="/shop"
+              {/* User Profile & Settings Trigger */}
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen(true)}
                 className="flex items-center gap-2 rounded-full border border-[#dddddd] p-1 pr-3 hover:shadow-xs hover:border-[#222222] transition-all cursor-pointer group"
-                title={`Signed in as ${user.displayName} • ${user.equippedTitle || 'Learner'}`}
+                title={`Account & Settings (${user.displayName})`}
               >
                 <img
                   src={user.avatarUrl}
@@ -208,7 +211,7 @@ export function Header() {
                 <span className="hidden sm:inline text-xs font-medium text-[#222222] max-w-[95px] truncate">
                   {user.displayName}
                 </span>
-              </Link>
+              </button>
             </>
           )}
         </div>
@@ -219,6 +222,13 @@ export function Header() {
         isOpen={isQuestsOpen}
         onClose={() => setIsQuestsOpen(false)}
         onRewardClaimed={() => void reloadData()}
+      />
+
+      {/* Profile & Account Settings Modal */}
+      <ProfileSettingsModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        onProfileUpdated={() => void reloadData()}
       />
     </header>
   )
