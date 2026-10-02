@@ -130,8 +130,8 @@ export function HomeCatalogPage() {
       </section>
 
       {/* CATEGORY STRIP — Horizontal Product Tabs with clean Airbnb icons */}
-      <section className="sticky top-[80px] z-30 bg-white border-b border-[#ebebeb] px-4 sm:px-6 lg:px-8 shadow-xs">
-        <div className="mx-auto max-w-7xl flex items-center justify-between gap-4 py-3 overflow-x-auto scrollbar-none">
+      <section className="sticky top-[80px] z-30 bg-white border-b border-[#ebebeb] shadow-xs">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 py-3 overflow-x-auto scrollbar-none">
           <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto py-1">
             {TOPICS.map((t) => {
               const Icon = t.icon
