@@ -36,7 +36,7 @@
 | Mã SRS | Tên tính năng | Ưu tiên | Trạng thái hiện tại | Ghi chú kỹ thuật |
 | :--- | :--- | :---: | :---: | :--- |
 | **FR-AUTH-01** | Đăng ký / Đăng nhập | P0 | 🟡 Mock Local | Đang dùng mock user `Demo Player` trong `localStorage`. Cần form/auth khi nối Supabase Auth. |
-| **FR-AUTH-02** | Hồ sơ cá nhân | P0 | 🟡 Mock Local | Hiển thị avatar, tên, stats trên Header. Chưa có trang/modal chỉnh sửa profile. |
+| **FR-AUTH-02** | Hồ sơ cá nhân | P0 | 🟢 Hoàn thành | Modal Account & Settings: Chỉnh sửa display name, xem chi tiết stats, test micro và reset data. |
 | **FR-CONT-01** | Danh mục clip chọn lọc | P0 | 🟢 Hoàn thành | Đã có 20/20 clip chuẩn tại `src/data/clips.ts` phủ đều 5 chủ đề và 3 cấp độ. |
 | **FR-CONT-02** | Nhúng phát YouTube | P0 | 🟢 Hoàn thành | `YouTubePlayer.tsx` nhúng iframe, tự ngắt chính xác theo `startTimeSec` ➔ `endTimeSec`. |
 | **FR-CONT-03** | Transcript tham chiếu | P0 | 🟢 Hoàn thành | Transcript chuẩn 100% đặt nổi bật tại cột phải `PracticePage.tsx`. |
