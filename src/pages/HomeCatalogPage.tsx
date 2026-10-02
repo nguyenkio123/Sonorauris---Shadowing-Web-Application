@@ -22,7 +22,7 @@ import {
 import { getClips, getMe } from '../api'
 import type { Clip, Difficulty, Topic } from '../types/clip'
 import type { UserProfile } from '../types/user'
-
+1
 const TOPICS: { name: 'All' | Topic; label: string; icon: typeof Compass }[] = [
   { name: 'All', label: 'All Topics', icon: Compass },
   { name: 'Daily Life', label: 'Daily Life', icon: MessageSquare },
@@ -94,7 +94,7 @@ export function HomeCatalogPage() {
               <input
                 id="search-input"
                 type="text"
-                placeholder="Search clips by title, speaker, topic, or transcript..."
+                placeholder="By title, speaker, topic, or transcript..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-transparent text-[14px] text-[#222222] placeholder-[#6a6a6a] outline-none truncate"
