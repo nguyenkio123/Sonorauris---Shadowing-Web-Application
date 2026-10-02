@@ -6,4 +6,9 @@ export interface UserProfile {
   coins: number
   streak: number
   lastPracticeDate: string | null
+  equippedAvatarId?: string
+  equippedFrameId?: string
+  equippedTitleId?: string
+  equippedTitle?: string
+  lastStreakRestoreDate?: string | null
 }

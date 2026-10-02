@@ -1,4 +1,4 @@
-import { Flame, Coins, Zap, Swords, Headphones, BarChart2 } from 'lucide-react'
+import { Flame, Coins, Zap, Swords, Headphones, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { getMe } from '../../api'
@@ -40,6 +40,7 @@ export function Header() {
 
   const isHomeActive = location.pathname === '/' || location.pathname.startsWith('/practice') || location.pathname.startsWith('/result')
   const isBattleActive = location.pathname.startsWith('/battle')
+  const isShopActive = location.pathname.startsWith('/shop')
 
   return (
     <header className="sticky top-0 z-40 w-full h-[80px] bg-white border-b border-[#ebebeb]">
@@ -100,21 +101,27 @@ export function Header() {
           >
             <Swords className="h-4 w-4" />
             <span>1v1 Battle</span>
-            <span className="new-tag">NEW</span>
+            <span className="new-tag">LIVE</span>
             {isBattleActive && (
               <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#222222]" />
             )}
           </Link>
 
-          {/* Product Tab 3: Speech AI Metrics */}
+          {/* Product Tab 3: Cosmetics Shop (FR-SHOP-01) */}
           <Link
-            to="/battle/lobby"
-            className="hidden md:flex relative items-center gap-2 h-full px-3 text-[15px] font-medium text-[#6a6a6a] hover:text-[#222222] transition-colors"
-            title="Real-time Speech Diagnostics"
+            to="/shop"
+            className={`relative flex items-center gap-2 h-full px-3 text-[15px] font-medium transition-colors ${
+              isShopActive
+                ? 'text-[#222222]'
+                : 'text-[#6a6a6a] hover:text-[#222222]'
+            }`}
           >
-            <BarChart2 className="h-4 w-4" />
-            <span>AI Feedback</span>
-            <span className="new-tag">LIVE</span>
+            <Sparkles className="h-4 w-4 text-[#ff385c]" />
+            <span>Cosmetics Shop</span>
+            <span className="new-tag">SHOP</span>
+            {isShopActive && (
+              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#222222]" />
+            )}
           </Link>
         </nav>
 
@@ -122,23 +129,25 @@ export function Header() {
         <div className="flex items-center gap-2 sm:gap-3">
           {user && (
             <>
-              {/* Streak Pill */}
-              <div
-                title={`${user.streak} days active streak`}
-                className="flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222]"
+              {/* Streak Pill -> Link to shop streak restore */}
+              <Link
+                to="/shop"
+                title={`${user.streak} days active streak. Click to manage or restore.`}
+                className="flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222] hover:border-rose-300 transition-colors cursor-pointer group"
               >
-                <Flame className="h-3.5 w-3.5 fill-[#ff385c] text-[#ff385c]" />
+                <Flame className="h-3.5 w-3.5 fill-[#ff385c] text-[#ff385c] group-hover:scale-110 transition-transform" />
                 <span className="font-mono font-bold text-[12px]">{user.streak}d</span>
-              </div>
+              </Link>
 
-              {/* Coins Pill */}
-              <div
-                title={`${user.coins} Coins balance`}
-                className="flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222]"
+              {/* Coins Pill -> Link to shop */}
+              <Link
+                to="/shop"
+                title={`${user.coins} Coins balance. Click to visit Shop.`}
+                className="flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222] hover:border-amber-300 transition-colors cursor-pointer"
               >
                 <Coins className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
                 <span className="font-mono font-bold text-[12px]">{user.coins}</span>
-              </div>
+              </Link>
 
               {/* XP Pill */}
               <div
@@ -149,20 +158,28 @@ export function Header() {
                 <span className="font-mono font-bold text-[12px]">{user.xp} XP</span>
               </div>
 
-              {/* User Avatar Circle */}
-              <div
-                className="flex items-center gap-2 rounded-full border border-[#dddddd] p-1 pr-2 hover:shadow-sm transition-shadow cursor-pointer"
-                title={`Signed in as ${user.displayName}`}
+              {/* User Avatar & Title Pill */}
+              <Link
+                to="/shop"
+                className="flex items-center gap-2 rounded-full border border-[#dddddd] p-1 pr-3 hover:shadow-sm hover:border-[#222222] transition-all cursor-pointer group"
+                title={`Signed in as ${user.displayName} • ${user.equippedTitle || 'Shadowing Learner'}`}
               >
-                <img
-                  src={user.avatarUrl}
-                  alt={user.displayName}
-                  className="h-7 w-7 rounded-full bg-[#f2f2f2] object-cover"
-                />
-                <span className="hidden sm:inline text-xs font-medium text-[#222222] max-w-[85px] truncate">
-                  {user.displayName}
-                </span>
-              </div>
+                <div className="relative">
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.displayName}
+                    className="h-7 w-7 rounded-full bg-[#f2f2f2] object-cover ring-1 ring-[#ebebeb]"
+                  />
+                </div>
+                <div className="hidden sm:flex flex-col text-left leading-none">
+                  <span className="text-xs font-medium text-[#222222] max-w-[85px] truncate">
+                    {user.displayName}
+                  </span>
+                  <span className="text-[10px] text-[#ff385c] font-medium truncate max-w-[85px]">
+                    {user.equippedTitle || 'Learner'}
+                  </span>
+                </div>
+              </Link>
             </>
           )}
         </div>

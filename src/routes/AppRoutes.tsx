@@ -5,11 +5,13 @@ import { BattleRoomPage } from '../pages/BattleRoomPage'
 import { HomeCatalogPage } from '../pages/HomeCatalogPage'
 import { PracticePage } from '../pages/PracticePage'
 import { ResultPage } from '../pages/ResultPage'
+import { ShopPage } from '../pages/ShopPage'
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomeCatalogPage />} />
+      <Route path="/shop" element={<ShopPage />} />
       <Route path="/practice/:clipId" element={<PracticePage />} />
       <Route path="/result/:attemptId" element={<ResultPage />} />
       <Route path="/battle/lobby" element={<BattleLobbyPage />} />

@@ -6,14 +6,22 @@ import type { BattleRoom } from '../types/battle'
 import type { Clip } from '../types/clip'
 import type { UserProfile } from '../types/user'
 import { generateAssessmentResult, syncRoomState } from './mockServer'
+import { SHOP_ITEMS } from '../data/shopItems'
+import type { CosmeticType } from '../types/shop'
 import {
   addRewardTransactions,
+  buyShopItem,
+  canRestoreStreak,
+  equipShopItem,
   getAttemptById,
   getRoomByCode,
+  getUserInventory,
   getUserProfile,
   resetAllStorage,
+  restoreStreak,
   saveAttempt,
   saveRoom,
+  updateDisplayName,
 } from './storage'
 
 function delay(ms: number): Promise<void> {
@@ -229,3 +237,65 @@ export async function resetDemo(): Promise<void> {
   await delay(100)
   resetAllStorage()
 }
+
+/**
+ * SRS Baseline API: GET /api/shop/items (FR-SHOP-01)
+ * Retrieves cosmetic catalog (Avatars, Frames, Titles).
+ */
+export async function getShopCatalog() {
+  await delay(60)
+  return [...SHOP_ITEMS]
+}
+
+/**
+ * SRS Baseline API: GET /api/shop/inventory
+ * Retrieves user's owned and equipped items.
+ */
+export async function getInventory() {
+  await delay(40)
+  return getUserInventory()
+}
+
+/**
+ * SRS Baseline API: POST /api/shop/purchase (FR-SHOP-01)
+ * Purchases cosmetic item using Coins via atomic ledger transaction.
+ */
+export async function purchaseItem(itemId: string) {
+  await delay(120)
+  return buyShopItem(itemId)
+}
+
+/**
+ * SRS Baseline API: POST /api/shop/equip (FR-SHOP-01)
+ * Equips an owned cosmetic item.
+ */
+export async function equipItem(type: CosmeticType, itemId: string) {
+  await delay(60)
+  return equipShopItem(type, itemId)
+}
+
+/**
+ * SRS Baseline API: POST /api/streak/restore (FR-PROG-04)
+ * Restores broken streak by paying 30 coins (max once per 7 days).
+ */
+export async function attemptStreakRestore() {
+  await delay(100)
+  return restoreStreak()
+}
+
+/**
+ * Check if streak restore is available.
+ */
+export async function checkStreakRestoreEligibility() {
+  return canRestoreStreak()
+}
+
+/**
+ * SRS Baseline API: POST /api/me/profile (FR-AUTH-02)
+ * Updates user display name.
+ */
+export async function setDisplayName(name: string) {
+  await delay(60)
+  return updateDisplayName(name)
+}
+

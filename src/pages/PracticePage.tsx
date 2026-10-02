@@ -14,6 +14,7 @@ import {
   Award,
 } from 'lucide-react'
 import { getClip, submitAttempt } from '../api'
+import { REWARDS } from '../config/scoring'
 import { AudioRecorder } from '../components/recorder/AudioRecorder'
 import { YouTubePlayer } from '../components/player/YouTubePlayer'
 import type { Clip } from '../types/clip'
@@ -256,22 +257,22 @@ export function PracticePage() {
               <div className="space-y-2 text-sm text-[#6a6a6a] border-t border-[#ebebeb] pt-4">
                 <div className="flex items-center justify-between text-xs">
                   <span>Base practice attempt</span>
-                  <span className="font-mono text-[#222222] font-medium">+15 XP</span>
+                  <span className="font-mono text-[#222222] font-medium">+{REWARDS.soloPractice.xp} XP</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span>Pronunciation completion</span>
-                  <span className="font-mono text-[#222222] font-medium">+5 Coins</span>
+                  <span className="font-mono text-[#222222] font-medium">+{REWARDS.soloPractice.coins} Coins</span>
                 </div>
                 <div className="border-t border-[#ebebeb] pt-2 flex items-center justify-between font-semibold text-[#222222] text-sm">
                   <span>Session Reward Total</span>
                   <div className="flex items-center gap-2">
                     <span className="flex items-center gap-1 text-[#460479] font-mono text-xs">
                       <Zap className="h-3 w-3 fill-current" />
-                      <span>+15 XP</span>
+                      <span>+{REWARDS.soloPractice.xp} XP</span>
                     </span>
                     <span className="flex items-center gap-1 text-amber-600 font-mono text-xs">
                       <Coins className="h-3 w-3 fill-current" />
-                      <span>+5 Coins</span>
+                      <span>+{REWARDS.soloPractice.coins} Coins</span>
                     </span>
                   </div>
                 </div>

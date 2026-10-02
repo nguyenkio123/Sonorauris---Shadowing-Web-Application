@@ -37,7 +37,7 @@
 | :--- | :--- | :---: | :---: | :--- |
 | **FR-AUTH-01** | Đăng ký / Đăng nhập | P0 | 🟡 Mock Local | Đang dùng mock user `Demo Player` trong `localStorage`. Cần form/auth khi nối Supabase Auth. |
 | **FR-AUTH-02** | Hồ sơ cá nhân | P0 | 🟡 Mock Local | Hiển thị avatar, tên, stats trên Header. Chưa có trang/modal chỉnh sửa profile. |
-| **FR-CONT-01** | Danh mục clip chọn lọc | P0 | 🟡 5 / 20–30 clip | Đã có 5 clip chuẩn tại `src/data/clips.ts`. Cần bổ sung lên 15–25 clip. |
+| **FR-CONT-01** | Danh mục clip chọn lọc | P0 | 🟢 Hoàn thành | Đã có 20/20 clip chuẩn tại `src/data/clips.ts` phủ đều 5 chủ đề và 3 cấp độ. |
 | **FR-CONT-02** | Nhúng phát YouTube | P0 | 🟢 Hoàn thành | `YouTubePlayer.tsx` nhúng iframe, tự ngắt chính xác theo `startTimeSec` ➔ `endTimeSec`. |
 | **FR-CONT-03** | Transcript tham chiếu | P0 | 🟢 Hoàn thành | Transcript chuẩn 100% đặt nổi bật tại cột phải `PracticePage.tsx`. |
 | **FR-REC-01** | Quyền Microphone | P0 | 🟢 Hoàn thành | `AudioRecorder.tsx` xin quyền khi bấm thu âm, có thông báo khi từ chối quyền. |
@@ -49,8 +49,8 @@
 | **FR-PROG-01** | Điểm kinh nghiệm XP | P0 | 🟢 Hoàn thành | Tích lũy qua sổ cái bất biến `RewardTransaction` (idempotent ledger). |
 | **FR-PROG-02** | Tiền thưởng Coins | P0 | 🟢 Hoàn thành | Quản lý qua ledger, chống gian lận F5 / spam request. |
 | **FR-PROG-03** | Chuỗi ngày (Streak) | P0 | 🟢 Hoàn thành | Tăng 1 ngày khi hoàn thành bài tập đầu tiên trong ngày dương lịch. |
-| **FR-PROG-04** | Khôi phục Streak | P0 | 🔴 Chưa có | Cần tính năng trả coins để khôi phục streak (tối đa 1 lần/7 ngày). |
-| **FR-SHOP-01** | Cửa hàng Ngoại trang | P0 | 🔴 Chưa có | Cần trang `/shop` hoặc modal mua Avatar, Khung (frame), Danh hiệu (title). |
+| **FR-PROG-04** | Khôi phục Streak | P0 | 🟢 Hoàn thành | Tiêu tốn 30 Coins để khôi phục streak (tối đa 1 lần/7 ngày) trực tiếp tại `/shop`. |
+| **FR-SHOP-01** | Cửa hàng Ngoại trang | P0 | 🟢 Hoàn thành | Trang `/shop` mua & trang bị Avatar, Khung, Danh hiệu bằng Coins qua Ledger. |
 | **FR-BAT-01** | Tạo phòng 1v1 | P0 | 🟢 Hoàn thành | Tạo phòng sinh mã ngẫu nhiên 5 ký tự (`BattleLobbyPage.tsx`). |
 | **FR-BAT-02** | Vào phòng bằng mã | P0 | 🟢 Hoàn thành | Nhập mã 5 ký tự để vào phòng chờ. |
 | **FR-BAT-03** | Sẵn sàng & Đếm ngược | P0 | 🟢 Hoàn thành | Máy trạng thái đếm ngược đồng bộ 3-2-1 (`BattleRoomPage.tsx`). |
@@ -118,20 +118,20 @@ d:\Shadowing-web-application\
    - `Shift + D`: Bật/tắt thanh công cụ cheat.
    - `Shift + R`: Reset toàn bộ dữ liệu demo về trạng thái ban đầu (120 XP, 45 Coins, Streak 3d).
 
-4. **Lỗi lệch số liệu cần fix ngay**:
-   Trong `PracticePage.tsx`, phần thưởng hiển thị tĩnh `+15 XP / +5 Coins`, cần đổi thành dùng `REWARDS.soloPractice.xp` (+50 XP) và `REWARDS.soloPractice.coins` (+15 Coins) từ `src/config/scoring.ts`.
+4. **Trạng thái phần thưởng**:
+   `PracticePage.tsx` và `scoring.ts` đã đồng bộ hoàn toàn (`+50 XP` / `+15 Coins` cho lượt Luyện tập Solo).
 
 ---
 
 ## 📋 5. Lộ Trình Công Việc Kế Tiếp (Prioritized Roadmap)
 
-### Giai đoạn 1: Hoàn thiện 100% tính năng P0 (Đang tiến hành)
-1. **Fix lỗi lệch phần thưởng** tại `PracticePage.tsx` đồng bộ với `scoring.ts`.
-2. **Cửa hàng Ngoại trang (FR-SHOP-01)**: Tạo trang `/shop` hoặc modal mua Avatar, Khung avatar, Danh hiệu bằng Coins; trang bị trực tiếp vào User Profile.
-3. **Khôi phục Streak (FR-PROG-04)**: Cho phép dùng Coins để khôi phục chuỗi ngày khi nhấn vào biểu tượng Streak trên Header.
-4. **Bổ sung Clip (`src/data/clips.ts`)**: Thêm 10–15 clip tiếng Anh chất lượng cao từ YouTube để đạt 20 clip theo đặc tả SRS.
+### Giai đoạn 1: Hoàn thiện 100% tính năng P0 (✅ HOÀN THÀNH)
+1. ✅ **Fix lỗi lệch phần thưởng** tại `PracticePage.tsx` đồng bộ với `scoring.ts`.
+2. ✅ **Cửa hàng Ngoại trang (FR-SHOP-01)**: Trang `/shop` mua và trang bị Avatar, Khung aura, Danh hiệu bằng Coins qua Ledger.
+3. ✅ **Khôi phục Streak (FR-PROG-04)**: Dùng 30 Coins để khôi phục chuỗi ngày khi nhấn vào Streak / Shop (cooldown 7 ngày).
+4. ✅ **Bổ sung Clip (`src/data/clips.ts`)**: Đã đạt 20 clip tiếng Anh chất lượng cao từ YouTube phủ đều 5 chủ đề và 3 cấp độ.
 
-### Giai đoạn 2: Kết nối Supabase Realtime & Backend API
+### Giai đoạn 2: Kết nối Supabase Realtime & Backend API (Kế hoạch tiếp theo)
 1. Đưa thông tin kết nối Supabase vào `.env`.
 2. Tạo bảng PostgreSQL tương ứng SRS mục 12 và chuyển `useRoom` sang Supabase Realtime Channels (Broadcast) để 2 máy tính thật có thể đấu qua Internet.
 3. Tích hợp Azure Speech Pronunciation Assessment adapter (hoặc proxy API).
