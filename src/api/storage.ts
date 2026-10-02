@@ -312,13 +312,35 @@ export const STREAK_RESTORE_COST = 30
 
 /**
  * Checks if user is eligible to restore a broken streak (once per 7 days).
+ * Prevents spending coins if streak is already active and intact.
  */
 export function canRestoreStreak(): { canRestore: boolean; reason?: string } {
   const profile = getUserProfile()
+  const base = getUserBase()
+
+  // 1. Check if user's streak is already active and intact
+  const today = new Date().toISOString().split('T')[0]
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  const yesterday = d.toISOString().split('T')[0]
+
+  const isStreakIntact =
+    base.streak > 0 &&
+    (base.lastPracticeDate === today || base.lastPracticeDate === yesterday)
+
+  if (isStreakIntact) {
+    return {
+      canRestore: false,
+      reason: 'Streak Active — No restore needed',
+    }
+  }
+
+  // 2. Check if user has sufficient coins
   if (profile.coins < STREAK_RESTORE_COST) {
     return { canRestore: false, reason: `Need ${STREAK_RESTORE_COST} Coins to restore streak.` }
   }
 
+  // 3. Check 7-day cooldown
   if (profile.lastStreakRestoreDate) {
     const lastRestore = new Date(profile.lastStreakRestoreDate).getTime()
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
@@ -342,6 +364,9 @@ export function restoreStreak(): { success: boolean; message: string } {
 
   const profile = getUserProfile()
   const nowStr = new Date().toISOString()
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  const yesterday = d.toISOString().split('T')[0]
 
   // Deduct coins atomically via ledger
   addRewardTransactions([
@@ -354,17 +379,19 @@ export function restoreStreak(): { success: boolean; message: string } {
     },
   ])
 
-  // Increment streak by 1 and record restore date
+  // Recover streak and set lastPracticeDate to yesterday so it can continue today
   const base = getUserBase()
+  const newStreak = Math.max(1, base.streak + 1)
   saveUserBase({
     ...base,
-    streak: base.streak + 1,
+    streak: newStreak,
+    lastPracticeDate: yesterday,
     lastStreakRestoreDate: nowStr,
   })
 
   return {
     success: true,
-    message: `Streak restored to ${base.streak + 1} days! (-${STREAK_RESTORE_COST} Coins)`,
+    message: `Streak recovered to ${newStreak} days! (-${STREAK_RESTORE_COST} Coins)`,
   }
 }
 

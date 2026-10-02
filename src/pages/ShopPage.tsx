@@ -307,10 +307,14 @@ export function ShopPage() {
                 className={`w-full text-xs font-semibold h-[40px] rounded-lg transition-all flex items-center justify-center gap-2 ${
                   streakRestoreInfo.canRestore
                     ? 'btn-primary'
-                    : 'bg-[#f2f2f2] text-[#929292] cursor-not-allowed'
+                    : 'bg-[#f7f7f7] text-[#6a6a6a] border border-[#ebebeb] cursor-not-allowed opacity-90 select-none'
                 }`}
               >
-                <Flame className="h-3.5 w-3.5" />
+                {streakRestoreInfo.canRestore ? (
+                  <Flame className="h-3.5 w-3.5 fill-current" />
+                ) : (
+                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                )}
                 <span>
                   {streakRestoreInfo.canRestore
                     ? 'Restore Streak for 30 🪙'
