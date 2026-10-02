@@ -17,6 +17,7 @@ import {
   Film,
   MessageSquare,
   FlaskConical,
+  X,
 } from 'lucide-react'
 import { getClips, getMe } from '../api'
 import type { Clip, Difficulty, Topic } from '../types/clip'
@@ -83,74 +84,41 @@ export function HomeCatalogPage() {
     <div className="min-h-screen bg-white text-[#222222] font-sans pb-16">
       {/* GLOBAL SEARCH BAR — Signature Airbnb Pill (search-bar-pill & search-orb) */}
       <section className="border-b border-[#ebebeb] py-6 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="mx-auto max-w-4xl">
-          <div className="search-bar-pill flex items-center justify-between p-2 pl-6 gap-2">
-            {/* Segment 1: Where / Keyword search */}
-            <div className="flex-1 min-w-0 pr-4">
+        <div className="mx-auto max-w-2xl">
+          <div className="search-bar-pill flex items-center justify-between p-2 pl-6 gap-3">
+            {/* Search Keyword Input */}
+            <div className="flex-1 min-w-0 pr-2">
               <label htmlFor="search-input" className="block text-[12px] font-semibold text-[#222222] leading-none mb-1">
-                Where &amp; Topic
+                Search Clips
               </label>
               <input
                 id="search-input"
                 type="text"
-                placeholder="Search clips, speeches, podcasts..."
+                placeholder="Search clips by title, speaker, topic, or transcript..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-transparent text-[14px] text-[#222222] placeholder-[#6a6a6a] outline-none truncate"
               />
             </div>
 
-            {/* Hairline Divider */}
-            <div className="hidden sm:block h-8 w-[1px] bg-[#dddddd]" />
-
-            {/* Segment 2: Difficulty Level */}
-            <div className="hidden sm:block flex-1 min-w-0 px-4">
-              <span className="block text-[12px] font-semibold text-[#222222] leading-none mb-1">
-                Proficiency Level
-              </span>
-              <select
-                aria-label="Filter by proficiency level"
-                value={selectedDifficulty}
-                onChange={(e) => setSelectedDifficulty(e.target.value)}
-                className="w-full bg-transparent text-[14px] text-[#6a6a6a] cursor-pointer outline-none"
+            {/* Clear Button */}
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="p-1 text-[#6a6a6a] hover:text-[#222222] hover:bg-[#f7f7f7] rounded-full transition-colors cursor-pointer"
+                title="Clear search"
               >
-                {DIFFICULTIES.map((d) => (
-                  <option key={d} value={d} className="text-[#222222]">
-                    {d === 'All' ? 'All Difficulties' : `${d} Level`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Hairline Divider */}
-            <div className="hidden md:block h-8 w-[1px] bg-[#dddddd]" />
-
-            {/* Segment 3: Topic Segment */}
-            <div className="hidden md:block flex-1 min-w-0 px-4">
-              <span className="block text-[12px] font-semibold text-[#222222] leading-none mb-1">
-                Category
-              </span>
-              <select
-                aria-label="Filter by category"
-                value={selectedTopic}
-                onChange={(e) => setSelectedTopic(e.target.value)}
-                className="w-full bg-transparent text-[14px] text-[#6a6a6a] cursor-pointer outline-none"
-              >
-                {TOPICS.map((t) => (
-                  <option key={t.name} value={t.name} className="text-[#222222]">
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <X className="h-4 w-4" />
+              </button>
+            )}
 
             {/* Search Orb terminating right edge */}
             <button
               type="button"
               className="search-orb"
-              title="Filter and browse clips"
+              title="Search clips"
               onClick={() => {
-                // Focus query if empty
                 const input = document.getElementById('search-input')
                 input?.focus()
               }}
@@ -186,8 +154,8 @@ export function HomeCatalogPage() {
             })}
           </div>
 
-          {/* Quick Filter Pill for Difficulty (Desktop) */}
-          <div className="hidden lg:flex items-center gap-2 pl-4 border-l border-[#ebebeb]">
+          {/* Quick Filter Pill for Difficulty */}
+          <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-[#ebebeb] shrink-0">
             <SlidersHorizontal className="h-4 w-4 text-[#6a6a6a]" />
             <div className="flex items-center gap-1.5">
               {DIFFICULTIES.map((d) => (
