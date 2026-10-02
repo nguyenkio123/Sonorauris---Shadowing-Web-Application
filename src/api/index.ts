@@ -8,6 +8,8 @@ import type { UserProfile } from '../types/user'
 import { generateAssessmentResult, syncRoomState } from './mockServer'
 import { SHOP_ITEMS } from '../data/shopItems'
 import type { CosmeticType } from '../types/shop'
+import { assessPronunciation } from './azureSpeech'
+import { broadcastRoomRealtime } from './realtimeRoom'
 import {
   addRewardTransactions,
   buyShopItem,
@@ -72,17 +74,17 @@ export async function getClip(id: string): Promise<Clip | null> {
  */
 export async function submitAttempt(
   clipId: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _audioBlob?: Blob
+  audioBlob?: Blob
 ): Promise<Attempt> {
-  // Simulate AI assessment latency (~1.5s as specified in SRS / demo requirements)
-  await delay(DEMO_CONFIG.assessmentDelayMs)
-
   const clip = await getClip(clipId)
   const refText = clip ? clip.referenceText : 'English shadowing practice sample text.'
   const user = await getMe()
 
-  const result = generateAssessmentResult(refText)
+  // Assess pronunciation through Azure Speech adapter (or deterministic fallback)
+  const result = audioBlob
+    ? await assessPronunciation(audioBlob, refText)
+    : generateAssessmentResult(refText)
+
   const attemptId = `attempt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
   // Atomically record rewards into ledger with strict idempotency
@@ -156,12 +158,14 @@ export async function createRoom(clipId: string): Promise<BattleRoom> {
   }
 
   saveRoom(room)
+  void broadcastRoomRealtime(room)
   return room
 }
 
 /**
  * SRS Baseline API: POST /api/battles/rooms/:code/join
  * Joins an existing battle room using its 5-character code.
+ * If a real second user joins, replaces the bot with the real opponent.
  */
 export async function joinRoom(code: string): Promise<BattleRoom> {
   await delay(120)
@@ -172,12 +176,29 @@ export async function joinRoom(code: string): Promise<BattleRoom> {
     throw new Error(`Room code "${normalizedCode}" not found.`)
   }
 
+  const user = await getMe()
+  // If guest is joining host's room (not host themselves)
+  if (existing.hostUserId !== user.id && (!existing.opponent || existing.opponent.isBot)) {
+    existing.opponent = {
+      userId: user.id,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      isBot: false,
+      isReady: false,
+      hasSubmitted: false,
+    }
+    existing.botJoinAt = undefined
+    existing.botReadyAt = undefined
+    saveRoom(existing)
+    void broadcastRoomRealtime(existing)
+  }
+
   return syncRoomState(existing)
 }
 
 /**
  * SRS Baseline API: POST /api/battles/rooms/:code/ready
- * Updates the user's ready status.
+ * Updates the user's ready status and broadcasts change.
  */
 export async function setReady(code: string, ready = true): Promise<BattleRoom> {
   await delay(80)
@@ -187,9 +208,18 @@ export async function setReady(code: string, ready = true): Promise<BattleRoom> 
     throw new Error(`Room not found: ${normalizedCode}`)
   }
 
-  room.player.isReady = ready
+  const user = await getMe()
+  if (room.hostUserId === user.id) {
+    room.player.isReady = ready
+  } else if (room.opponent && room.opponent.userId === user.id) {
+    room.opponent.isReady = ready
+  } else {
+    room.player.isReady = ready
+  }
+
   const updated = syncRoomState(room)
   saveRoom(updated)
+  void broadcastRoomRealtime(updated)
   return updated
 }
 
@@ -211,8 +241,7 @@ export async function getRoom(code: string): Promise<BattleRoom | null> {
  */
 export async function submitBattleAttempt(
   code: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _audioBlob?: Blob
+  audioBlob?: Blob
 ): Promise<BattleRoom> {
   await delay(100)
   const normalizedCode = code.trim().toUpperCase()
@@ -221,11 +250,32 @@ export async function submitBattleAttempt(
     throw new Error(`Room not found: ${normalizedCode}`)
   }
 
-  room.player.hasSubmitted = true
-  room.player.submittedAt = Date.now()
+  const clip = await getClip(room.clipId)
+  const refText = clip ? clip.referenceText : 'English shadowing practice sample text.'
+  const user = await getMe()
+
+  // Evaluate via Azure Speech adapter if audioBlob is provided
+  const assessment = audioBlob
+    ? await assessPronunciation(audioBlob, refText)
+    : undefined
+
+  if (room.hostUserId === user.id) {
+    room.player.hasSubmitted = true
+    room.player.submittedAt = Date.now()
+    if (assessment) room.player.assessment = assessment
+  } else if (room.opponent && room.opponent.userId === user.id) {
+    room.opponent.hasSubmitted = true
+    room.opponent.submittedAt = Date.now()
+    if (assessment) room.opponent.assessment = assessment
+  } else {
+    room.player.hasSubmitted = true
+    room.player.submittedAt = Date.now()
+    if (assessment) room.player.assessment = assessment
+  }
 
   const updated = syncRoomState(room)
   saveRoom(updated)
+  void broadcastRoomRealtime(updated)
   return updated
 }
 

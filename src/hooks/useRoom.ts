@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getRoom } from '../api'
+import { subscribeToRoomRealtime } from '../api/realtimeRoom'
+import { saveRoom } from '../api/storage'
 import type { BattleRoom } from '../types/battle'
 
 /**
  * Custom React Hook: useRoom(code)
- * Polls getRoom(code) every ~500ms to simulate real-time WebSocket state synchronization.
- * Room state survives page reloads (F5) because it is computed from persistent timestamps.
+ * Subscribes to Supabase Realtime Broadcast Channel (<50ms sync) with a ~500ms
+ * polling heartbeat fallback. Room state survives page reloads (F5).
  */
 export function useRoom(code: string | undefined): {
   room: BattleRoom | null
@@ -45,6 +47,15 @@ export function useRoom(code: string | undefined): {
 
     let isMounted = true
 
+    // 1. Subscribe to Supabase Realtime Broadcast Channel for instant push updates
+    const unsubscribe = subscribeToRoomRealtime(code, (remoteRoom) => {
+      if (!isMounted) return
+      setRoom(remoteRoom)
+      saveRoom(remoteRoom)
+      setError(null)
+    })
+
+    // 2. Heartbeat polling as reliable fallback & state machine ticker
     const poll = async () => {
       try {
         const data = await getRoom(code)
@@ -71,8 +82,10 @@ export function useRoom(code: string | undefined): {
     return () => {
       isMounted = false
       clearInterval(interval)
+      unsubscribe()
     }
   }, [code])
 
   return { room, loading, error, refetch: fetchRoom }
 }
+

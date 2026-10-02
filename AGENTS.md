@@ -43,7 +43,7 @@
 | **FR-REC-01** | Quyền Microphone | P0 | 🟢 Hoàn thành | `AudioRecorder.tsx` xin quyền khi bấm thu âm, có thông báo khi từ chối quyền. |
 | **FR-REC-02** | Thu âm MediaRecorder | P0 | 🟢 Hoàn thành | Thu âm, đếm giây, sóng âm visualizer, nghe lại playback, thu lại. |
 | **FR-REC-03** | Nộp file âm thanh | P0 | 🟢 Hoàn thành | Nộp Blob âm thanh vào pipeline chấm điểm. |
-| **FR-AI-01** | Đánh giá 4 tiêu chí AI | P0 | 🟢 Mock Engine | 4 chỉ số: Accuracy (35%), Fluency (25%), Completeness (20%), Prosody (20%). Không dùng "Accent". |
+| **FR-AI-01** | Đánh giá 4 tiêu chí AI | P0 | 🟢 Hoàn thành | Adapter Azure Speech (`azureSpeech.ts`) + fallback local engine (NFR-05, NFR-10). |
 | **FR-AI-02** | Trả kết quả chi tiết | P0 | 🟢 Hoàn thành | `ResultPage.tsx` hiển thị Battle Score và 4 chỉ số điểm. |
 | **FR-AI-03** | Lỗi cấp từ (Miscues) | P0 | 🟢 Hoàn thành | Gắn nhãn Mispronounced, Omission, kèm gợi ý IPA chi tiết. |
 | **FR-PROG-01** | Điểm kinh nghiệm XP | P0 | 🟢 Hoàn thành | Tích lũy qua sổ cái bất biến `RewardTransaction` (idempotent ledger). |
@@ -51,8 +51,8 @@
 | **FR-PROG-03** | Chuỗi ngày (Streak) | P0 | 🟢 Hoàn thành | Tăng 1 ngày khi hoàn thành bài tập đầu tiên trong ngày dương lịch. |
 | **FR-PROG-04** | Khôi phục Streak | P0 | 🟢 Hoàn thành | Tiêu tốn 30 Coins để khôi phục streak (tối đa 1 lần/7 ngày) trực tiếp tại `/shop`. |
 | **FR-SHOP-01** | Cửa hàng Ngoại trang | P0 | 🟢 Hoàn thành | Trang `/shop` mua & trang bị Avatar, Khung, Danh hiệu bằng Coins qua Ledger. |
-| **FR-BAT-01** | Tạo phòng 1v1 | P0 | 🟢 Hoàn thành | Tạo phòng sinh mã ngẫu nhiên 5 ký tự (`BattleLobbyPage.tsx`). |
-| **FR-BAT-02** | Vào phòng bằng mã | P0 | 🟢 Hoàn thành | Nhập mã 5 ký tự để vào phòng chờ. |
+| **FR-BAT-01** | Tạo phòng 1v1 | P0 | 🟢 Hoàn thành | Tạo phòng sinh mã 5 ký tự (`BattleLobbyPage.tsx`); phát Supabase Realtime broadcast. |
+| **FR-BAT-02** | Vào phòng bằng mã | P0 | 🟢 Hoàn thành | Nhập mã 5 ký tự; hỗ trợ 2 người chơi thật qua mạng Internet và bot offline. |
 | **FR-BAT-03** | Sẵn sàng & Đếm ngược | P0 | 🟢 Hoàn thành | Máy trạng thái đếm ngược đồng bộ 3-2-1 (`BattleRoomPage.tsx`). |
 | **FR-BAT-04** | Đánh giá trận đấu | P0 | 🟢 Hoàn thành | Cả 2 nộp bài độc lập, server chấm dựa trên cùng 1 transcript. |
 | **FR-BAT-05** | Xác định kết quả đấu | P0 | 🟢 Hoàn thành | So sánh Battle Score -> VICTORY / DEFEAT / DRAW (`BattleResultPage.tsx`). |
@@ -131,14 +131,15 @@ d:\Shadowing-web-application\
 3. ✅ **Khôi phục Streak (FR-PROG-04)**: Dùng 30 Coins để khôi phục chuỗi ngày khi nhấn vào Streak / Shop (cooldown 7 ngày).
 4. ✅ **Bổ sung Clip (`src/data/clips.ts`)**: Đã đạt 20 clip tiếng Anh chất lượng cao từ YouTube phủ đều 5 chủ đề và 3 cấp độ.
 
-### Giai đoạn 2: Kết nối Supabase Realtime & Backend API (Kế hoạch tiếp theo)
-1. Đưa thông tin kết nối Supabase vào `.env`.
-2. Tạo bảng PostgreSQL tương ứng SRS mục 12 và chuyển `useRoom` sang Supabase Realtime Channels (Broadcast) để 2 máy tính thật có thể đấu qua Internet.
-3. Tích hợp Azure Speech Pronunciation Assessment adapter (hoặc proxy API).
+### Giai đoạn 2: Kết nối Supabase Realtime & Backend API (✅ HOÀN THÀNH)
+1. ✅ **Cấu hình & Schema PostgreSQL/Supabase**: Đã tạo file `supabase/schema.sql` đầy đủ theo SRS mục 12 và cập nhật `.env.example`.
+2. ✅ **Multiplayer 1v1 qua Supabase Realtime**: `realtimeRoom.ts` và `useRoom.ts` hỗ trợ Broadcast Channel (<50ms) để 2 máy tính thật tham gia và thi đấu trực tiếp qua Internet.
+3. ✅ **Adapter Azure Speech Pronunciation Assessment**: Module `azureSpeech.ts` chuẩn hóa 4 chỉ số (Accuracy, Fluency, Completeness, Prosody) và lỗi cấp từ với cơ chế fallback local engine an toàn.
 
-### Giai đoạn 3: Tính năng P1
+### Giai đoạn 3: Tính năng P1 (Kế hoạch tiếp theo)
 1. Tra từ điển trên Transcript khi click (`FR-DICT-01`).
 2. Danh sách 3 nhiệm vụ ngày (`FR-QUEST-01`).
+3. Phòng đấu 3–5 người (`FR-BAT-07`).
 
 ---
 *File này được tạo tự động và cập nhật liên tục để đảm bảo hiệu suất tốt nhất cho các phiên làm việc của Agent.*
