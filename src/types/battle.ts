@@ -22,6 +22,7 @@ export interface BattleParticipant {
   submittedAt?: number
   assessment?: AssessmentResult
   outcome?: BattleOutcome
+  rank?: number // 1, 2, 3, etc. for multiplayer arena (FR-BAT-07)
   earnedXp?: number
   earnedCoins?: number
 }
@@ -34,6 +35,8 @@ export interface BattleRoom {
   status: RoomStatus
   player: BattleParticipant
   opponent: BattleParticipant | null
+  maxPlayers?: number // 2, 3, 4, 5 (FR-BAT-07)
+  participants?: BattleParticipant[] // Full list of 2 to 5 participants
   createdAt: number
   botJoinAt?: number
   botReadyAt?: number

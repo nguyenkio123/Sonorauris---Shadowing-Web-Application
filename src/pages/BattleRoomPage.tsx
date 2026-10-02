@@ -185,68 +185,71 @@ export function BattleRoomPage() {
         {/* 2. RECORDING STATE */}
         {room.status === 'RECORDING' && (
           <div className="flex flex-col gap-6">
-            {/* Contenders Status Banner: 2 Equal-Sized Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-              {/* Card 1: You */}
-              <div className="rounded-[14px] bg-white border border-[#dddddd] p-4 airbnb-shadow flex items-center justify-between h-full min-h-[72px]">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={room.player.avatarUrl}
-                    alt={room.player.displayName}
-                    className="h-11 w-11 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
-                  />
-                  <div>
-                    <div className="text-xs font-bold text-[#222222] flex items-center gap-1.5">
-                      <span>{room.player.displayName}</span>
-                      <span className="text-[10px] bg-[#ff385c]/10 text-[#ff385c] px-1.5 py-0.5 rounded-full font-mono font-bold">YOU</span>
-                    </div>
-                    <span className="text-[11px] text-[#6a6a6a]">Host Contender</span>
-                  </div>
-                </div>
+            {/* Contenders Status Banner: Dynamic cards for 2 to 5 participants (FR-BAT-07) */}
+            {(() => {
+              const maxPlayers = room.maxPlayers || 2
+              const participants = room.participants && room.participants.length > 0
+                ? room.participants
+                : [room.player, ...(room.opponent ? [room.opponent] : [])]
+              const gridCols =
+                maxPlayers === 2
+                  ? 'grid-cols-1 sm:grid-cols-2'
+                  : maxPlayers === 3
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
 
-                <div className="text-[11px] font-medium">
-                  {room.player.hasSubmitted ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1 font-bold">
-                      <CheckCircle2 className="h-3 w-3" /> Submitted
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 text-[#c13515] border border-rose-200 px-2.5 py-1 font-bold animate-pulse">
-                      <Mic className="h-3 w-3" /> Recording...
-                    </span>
-                  )}
-                </div>
-              </div>
+              return (
+                <div className={`grid ${gridCols} gap-4 items-stretch`}>
+                  {participants.map((p, idx) => {
+                    const isMe = p.userId === room.player.userId
+                    return (
+                      <div
+                        key={p.userId || idx}
+                        className="rounded-[14px] bg-white border border-[#dddddd] p-4 airbnb-shadow flex items-center justify-between h-full min-h-[72px]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={p.avatarUrl}
+                            alt={p.displayName}
+                            className="h-10 w-10 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-[#222222] flex items-center gap-1.5 flex-wrap">
+                              <span className="truncate">{p.displayName}</span>
+                              {isMe && (
+                                <span className="text-[10px] bg-[#ff385c]/10 text-[#ff385c] px-1.5 py-0.5 rounded-full font-mono font-bold">
+                                  YOU
+                                </span>
+                              )}
+                              {p.isBot && <Bot className="h-3 w-3 text-amber-500" />}
+                            </div>
+                            <span className="text-[11px] text-[#6a6a6a]">
+                              {idx === 0 ? 'Host' : `Contender #${idx}`}
+                            </span>
+                          </div>
+                        </div>
 
-              {/* Card 2: Opponent */}
-              <div className="rounded-[14px] bg-white border border-[#dddddd] p-4 airbnb-shadow flex items-center justify-between h-full min-h-[72px]">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={room.opponent?.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot'}
-                    alt="Opponent"
-                    className="h-11 w-11 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
-                  />
-                  <div>
-                    <div className="text-xs font-bold text-[#222222] flex items-center gap-1.5">
-                      <span>{room.opponent?.displayName || 'Opponent'}</span>
-                      <Bot className="h-3.5 w-3.5 text-amber-500" />
-                    </div>
-                    <span className="text-[11px] text-[#6a6a6a]">Challenger</span>
-                  </div>
+                        <div className="text-[11px] font-medium shrink-0">
+                          {p.hasSubmitted ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1 font-bold">
+                              <CheckCircle2 className="h-3 w-3" /> Submitted
+                            </span>
+                          ) : isMe ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 text-[#c13515] border border-rose-200 px-2.5 py-1 font-bold animate-pulse">
+                              <Mic className="h-3 w-3" /> Recording...
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 px-2.5 py-1 font-bold">
+                              <Volume2 className="h-3 w-3 animate-bounce" /> Speaking...
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-
-                <div className="text-[11px] font-medium">
-                  {room.opponent?.hasSubmitted ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1 font-bold">
-                      <CheckCircle2 className="h-3 w-3" /> Submitted
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 px-2.5 py-1 font-bold">
-                      <Volume2 className="h-3 w-3 animate-bounce" /> Speaking...
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
+              )
+            })()}
 
             {/* Video Player + Transcript + Audio Recorder */}
             {clip && (

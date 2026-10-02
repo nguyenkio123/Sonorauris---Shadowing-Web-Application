@@ -1,5 +1,5 @@
 export type RewardType = 'XP' | 'COINS'
-export type ReferenceType = 'SEED' | 'ATTEMPT' | 'BATTLE' | 'SHOP' | 'STREAK_RESTORE'
+export type ReferenceType = 'SEED' | 'ATTEMPT' | 'BATTLE' | 'SHOP' | 'STREAK_RESTORE' | 'QUEST'
 
 export interface RewardTransaction {
   id: string

@@ -10,12 +10,15 @@ import { SHOP_ITEMS } from '../data/shopItems'
 import type { CosmeticType } from '../types/shop'
 import { assessPronunciation } from './azureSpeech'
 import { broadcastRoomRealtime } from './realtimeRoom'
+import type { DailyQuest } from '../types/quest'
 import {
   addRewardTransactions,
   buyShopItem,
   canRestoreStreak,
+  claimDailyQuest,
   equipShopItem,
   getAttemptById,
+  getDailyQuestsState,
   getRoomByCode,
   getUserInventory,
   getUserProfile,
@@ -129,14 +132,23 @@ export async function getAttempt(id: string): Promise<Attempt | null> {
 }
 
 /**
- * SRS Baseline API: POST /api/battles/rooms
- * Creates a new private 1v1 battle room with a 5-character room code.
+ * SRS Baseline API: POST /api/battles/rooms (FR-BAT-01, FR-BAT-07)
+ * Creates a new battle room (2 to 5 players) with a 5-character room code.
  */
-export async function createRoom(clipId: string): Promise<BattleRoom> {
+export async function createRoom(clipId: string, maxPlayers: number = 2): Promise<BattleRoom> {
   await delay(150)
   const user = await getMe()
   const code = generateRoomCode()
   const now = Date.now()
+
+  const hostParticipant = {
+    userId: user.id,
+    displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
+    isBot: false,
+    isReady: false,
+    hasSubmitted: false,
+  }
 
   const room: BattleRoom = {
     id: `room-${now}-${code}`,
@@ -144,15 +156,10 @@ export async function createRoom(clipId: string): Promise<BattleRoom> {
     clipId,
     hostUserId: user.id,
     status: 'WAITING',
-    player: {
-      userId: user.id,
-      displayName: user.displayName,
-      avatarUrl: user.avatarUrl,
-      isBot: false,
-      isReady: false,
-      hasSubmitted: false,
-    },
+    maxPlayers,
+    player: hostParticipant,
     opponent: null,
+    participants: [hostParticipant],
     createdAt: now,
     botJoinAt: now + DEMO_CONFIG.botJoinDelayMs,
   }
@@ -163,9 +170,9 @@ export async function createRoom(clipId: string): Promise<BattleRoom> {
 }
 
 /**
- * SRS Baseline API: POST /api/battles/rooms/:code/join
+ * SRS Baseline API: POST /api/battles/rooms/:code/join (FR-BAT-02, FR-BAT-07)
  * Joins an existing battle room using its 5-character code.
- * If a real second user joins, replaces the bot with the real opponent.
+ * Supports up to maxPlayers (2 to 5).
  */
 export async function joinRoom(code: string): Promise<BattleRoom> {
   await delay(120)
@@ -177,9 +184,16 @@ export async function joinRoom(code: string): Promise<BattleRoom> {
   }
 
   const user = await getMe()
-  // If guest is joining host's room (not host themselves)
-  if (existing.hostUserId !== user.id && (!existing.opponent || existing.opponent.isBot)) {
-    existing.opponent = {
+  const maxPlayers = existing.maxPlayers || 2
+
+  if (!existing.participants) {
+    existing.participants = [existing.player]
+    if (existing.opponent) existing.participants.push(existing.opponent)
+  }
+
+  const alreadyIn = existing.participants.some((p) => p.userId === user.id)
+  if (!alreadyIn && existing.participants.length < maxPlayers) {
+    const newParticipant = {
       userId: user.id,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
@@ -187,8 +201,17 @@ export async function joinRoom(code: string): Promise<BattleRoom> {
       isReady: false,
       hasSubmitted: false,
     }
-    existing.botJoinAt = undefined
-    existing.botReadyAt = undefined
+    const firstBotIdx = existing.participants.findIndex((p) => p.isBot)
+    if (firstBotIdx !== -1) {
+      existing.participants[firstBotIdx] = newParticipant
+    } else {
+      existing.participants.push(newParticipant)
+    }
+
+    if (existing.hostUserId !== user.id && (!existing.opponent || existing.opponent.isBot)) {
+      existing.opponent = newParticipant
+    }
+
     saveRoom(existing)
     void broadcastRoomRealtime(existing)
   }
@@ -215,6 +238,11 @@ export async function setReady(code: string, ready = true): Promise<BattleRoom> 
     room.opponent.isReady = ready
   } else {
     room.player.isReady = ready
+  }
+
+  if (room.participants) {
+    const p = room.participants.find((item) => item.userId === user.id)
+    if (p) p.isReady = ready
   }
 
   const updated = syncRoomState(room)
@@ -271,6 +299,15 @@ export async function submitBattleAttempt(
     room.player.hasSubmitted = true
     room.player.submittedAt = Date.now()
     if (assessment) room.player.assessment = assessment
+  }
+
+  if (room.participants) {
+    const p = room.participants.find((item) => item.userId === user.id)
+    if (p) {
+      p.hasSubmitted = true
+      p.submittedAt = Date.now()
+      if (assessment) p.assessment = assessment
+    }
   }
 
   const updated = syncRoomState(room)
@@ -348,4 +385,23 @@ export async function setDisplayName(name: string) {
   await delay(60)
   return updateDisplayName(name)
 }
+
+/**
+ * SRS Baseline API: GET /api/quests (FR-QUEST-01)
+ * Retrieves today's 3 daily quests and their real-time progress.
+ */
+export async function getDailyQuests(): Promise<DailyQuest[]> {
+  await delay(60)
+  return getDailyQuestsState()
+}
+
+/**
+ * SRS Baseline API: POST /api/quests/:id/claim (FR-QUEST-01)
+ * Claims rewards for a completed daily quest via atomic ledger transaction.
+ */
+export async function claimQuest(questId: string): Promise<{ success: boolean; message: string }> {
+  await delay(80)
+  return claimDailyQuest(questId)
+}
+
 

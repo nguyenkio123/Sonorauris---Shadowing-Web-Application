@@ -6,7 +6,7 @@ import {
 } from '../config/scoring'
 import { SAMPLE_CLIPS } from '../data/clips'
 import type { AssessmentResult, MiscueWord } from '../types/attempt'
-import type { BattleOutcome, BattleRoom } from '../types/battle'
+import type { BattleParticipant, BattleRoom } from '../types/battle'
 import { addRewardTransactions, saveRoom } from './storage'
 
 function randomBetween(min: number, max: number): number {
@@ -81,49 +81,105 @@ export function generateAssessmentResult(
   }
 }
 
+const BOT_ROSTER = [
+  {
+    userId: 'bot-shadow-ai',
+    displayName: 'ShadowBot AI',
+    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot',
+  },
+  {
+    userId: 'bot-echo-ai',
+    displayName: 'EchoBot Neo',
+    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=EchoBot',
+  },
+  {
+    userId: 'bot-cadence-ai',
+    displayName: 'CadenceBot Max',
+    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=CadenceBot',
+  },
+  {
+    userId: 'bot-prosody-ai',
+    displayName: 'ProsodyBot Iris',
+    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=ProsodyBot',
+  },
+]
+
 /**
  * Calculates current room status purely from Date.now() and stored timestamps.
  * Guarantees that room state survives page refresh (F5).
+ * Supports 2–5 players arena multiplayer (FR-BAT-07).
  */
 export function syncRoomState(room: BattleRoom): BattleRoom {
   const now = Date.now()
   let modified = false
+  const maxPlayers = room.maxPlayers || 2
+
+  // Ensure participants array is initialized
+  let currentParticipants: BattleParticipant[] = room.participants
+    ? room.participants.map((p) => ({ ...p }))
+    : [{ ...room.player }]
+
+  if (room.opponent && !currentParticipants.some((p) => p.userId === room.opponent?.userId)) {
+    currentParticipants.push({ ...room.opponent })
+  }
+
   const updated: BattleRoom = {
     ...room,
     player: { ...room.player },
     opponent: room.opponent ? { ...room.opponent } : null,
+    maxPlayers,
+    participants: currentParticipants,
   }
 
   const clip = SAMPLE_CLIPS.find((c) => c.id === updated.clipId)
   const refText = clip ? clip.referenceText : 'English shadowing practice sample text.'
 
-  // 1. WAITING state: check bot join and bot ready
+  // 1. WAITING state: populate bot opponents up to maxPlayers
   if (updated.status === 'WAITING') {
-    if (updated.botJoinAt && now >= updated.botJoinAt && !updated.opponent) {
-      updated.opponent = {
-        userId: 'bot-shadow-ai',
-        displayName: 'ShadowBot AI',
-        avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot',
-        isBot: true,
-        isReady: false,
-        hasSubmitted: false,
+    if (updated.botJoinAt && now >= updated.botJoinAt) {
+      let botIdx = 0
+      while (updated.participants!.length < maxPlayers && botIdx < BOT_ROSTER.length) {
+        const botData = BOT_ROSTER[botIdx]
+        if (!updated.participants!.some((p) => p.userId === botData.userId)) {
+          updated.participants!.push({
+            userId: botData.userId,
+            displayName: botData.displayName,
+            avatarUrl: botData.avatarUrl,
+            isBot: true,
+            isReady: false,
+            hasSubmitted: false,
+          })
+          modified = true
+        }
+        botIdx++
       }
-      updated.botReadyAt = now + DEMO_CONFIG.botReadyDelayMs
-      modified = true
+
+      if (!updated.opponent && updated.participants!.length > 1) {
+        updated.opponent = updated.participants![1]
+      }
+      if (!updated.botReadyAt) {
+        updated.botReadyAt = now + DEMO_CONFIG.botReadyDelayMs
+      }
     }
 
-    if (
-      updated.opponent &&
-      !updated.opponent.isReady &&
-      updated.botReadyAt &&
-      now >= updated.botReadyAt
-    ) {
-      updated.opponent.isReady = true
-      modified = true
+    if (updated.botReadyAt && now >= updated.botReadyAt) {
+      for (const p of updated.participants!) {
+        if (p.isBot && !p.isReady) {
+          p.isReady = true
+          modified = true
+        }
+      }
+      if (updated.opponent && !updated.opponent.isReady) {
+        updated.opponent.isReady = true
+      }
     }
 
-    // Both ready? Transition to READY
-    if (updated.player.isReady && updated.opponent?.isReady) {
+    // All participants ready and room full? Transition to READY
+    const allReady =
+      updated.participants!.length >= maxPlayers &&
+      updated.participants!.every((p) => p.isReady)
+
+    if (allReady) {
       updated.status = 'READY'
       updated.countdownEndsAt = now + DEMO_CONFIG.countdownSeconds * 1000
       modified = true
@@ -151,33 +207,26 @@ export function syncRoomState(room: BattleRoom): BattleRoom {
 
   // 4. RECORDING state:
   if (updated.status === 'RECORDING') {
-    // Bot automatically submits ~4s into recording
-    if (updated.opponent && !updated.opponent.hasSubmitted) {
-      const botSubmitThreshold = (updated.countdownEndsAt || now) + 4000
-      if (now >= botSubmitThreshold) {
-        updated.opponent.hasSubmitted = true
-        updated.opponent.submittedAt = now
-        modified = true
-      }
-    }
-
-    // Check if timeout reached (60s submit deadline)
     const isTimedOut = updated.submitDeadlineAt ? now >= updated.submitDeadlineAt : false
 
-    if (isTimedOut) {
-      // If player did not submit in time, mark as unsubmitted
-      if (!updated.player.hasSubmitted) {
-        updated.player.hasSubmitted = false
+    // Stagger bot submissions for lifelike arena dynamics
+    updated.participants!.forEach((p, idx) => {
+      if (p.isBot && !p.hasSubmitted) {
+        const botThreshold = (updated.countdownEndsAt || now) + 3200 + idx * 800
+        if (now >= botThreshold || isTimedOut) {
+          p.hasSubmitted = true
+          p.submittedAt = now
+          modified = true
+        }
       }
-      if (updated.opponent && !updated.opponent.hasSubmitted) {
-        updated.opponent.hasSubmitted = true
-        updated.opponent.submittedAt = now
-      }
-      updated.status = 'ASSESSING'
-      updated.assessReadyAt = now + DEMO_CONFIG.assessmentDelayMs
-      modified = true
-    } else if (updated.player.hasSubmitted && updated.opponent?.hasSubmitted) {
-      // Both submitted normally
+    })
+
+    if (updated.opponent && updated.participants!.length > 1) {
+      updated.opponent = updated.participants![1]
+    }
+
+    const allSubmitted = updated.participants!.every((p) => p.hasSubmitted)
+    if (allSubmitted || isTimedOut) {
       updated.status = 'ASSESSING'
       updated.assessReadyAt = now + DEMO_CONFIG.assessmentDelayMs
       modified = true
@@ -187,133 +236,96 @@ export function syncRoomState(room: BattleRoom): BattleRoom {
   // 5. ASSESSING state: calculate results when assessReadyAt is reached
   if (updated.status === 'ASSESSING') {
     if (updated.assessReadyAt && now >= updated.assessReadyAt) {
-      // Check if player timed out without submitting
-      const playerDidNotSubmit = !updated.player.hasSubmitted
+      const forcedOutcome = getForcedOutcome()
 
-      if (playerDidNotSubmit) {
-        // Player forfeited / timed out
-        const botAssessment = generateAssessmentResult(refText, 85)
-        updated.player.assessment = undefined
-        updated.player.outcome = 'LOSE'
-        updated.player.earnedXp = 0
-        updated.player.earnedCoins = 0
+      // Assess human player
+      let playerAssessment = updated.player.assessment
+      if (!playerAssessment) {
+        playerAssessment = updated.player.hasSubmitted
+          ? generateAssessmentResult(refText)
+          : generateAssessmentResult(refText, 45) // forfeited penalty
+      }
+      updated.player.assessment = playerAssessment
 
-        if (updated.opponent) {
-          updated.opponent.assessment = botAssessment
-          updated.opponent.outcome = 'WIN'
-          updated.opponent.earnedXp = REWARDS.battleWin.xp
-          updated.opponent.earnedCoins = REWARDS.battleWin.coins
+      // Assess all participants
+      updated.participants!.forEach((p) => {
+        if (p.userId === updated.player.userId) {
+          p.assessment = playerAssessment
+        } else if (!p.assessment) {
+          if (p.isBot) {
+            let targetBotScore: number
+            if (forcedOutcome === 'WIN') {
+              targetBotScore = Math.max(50, playerAssessment!.battleScore - randomBetween(6, 14))
+            } else if (forcedOutcome === 'LOSE') {
+              targetBotScore = Math.min(98, playerAssessment!.battleScore + randomBetween(6, 14))
+            } else if (forcedOutcome === 'DRAW') {
+              targetBotScore = playerAssessment!.battleScore
+            } else {
+              targetBotScore = randomBetween(72, 92)
+            }
+            p.assessment = generateAssessmentResult(refText, targetBotScore)
+          } else {
+            p.assessment = generateAssessmentResult(refText)
+          }
         }
-      } else {
-        // 1. Generate player's organic score first
-        const playerAssessment = generateAssessmentResult(refText)
-        const forcedOutcome = getForcedOutcome()
+      })
 
-        let botAssessment: AssessmentResult
+      // Sort participants by battleScore descending for Leaderboard ranking
+      const sorted = [...updated.participants!].sort((a, b) => {
+        const scoreA = a.assessment?.battleScore || 0
+        const scoreB = b.assessment?.battleScore || 0
+        return scoreB - scoreA
+      })
 
-        // 2. Generate bot's score relative to player's score to guarantee matching labels
-        if (forcedOutcome === 'WIN') {
-          // Bot is 5-15 points lower than player
-          const diff = randomBetween(5, 15)
-          const botTarget = Math.max(50, playerAssessment.battleScore - diff)
-          botAssessment = generateAssessmentResult(refText, botTarget)
-          // Ensure strictly lower
-          while (botAssessment.battleScore >= playerAssessment.battleScore) {
-            botAssessment.accuracy = Math.max(50, botAssessment.accuracy - 2)
-            botAssessment.battleScore = calculateBattleScore(
-              botAssessment.accuracy,
-              botAssessment.fluency,
-              botAssessment.completeness,
-              botAssessment.prosody
-            )
-          }
-        } else if (forcedOutcome === 'LOSE') {
-          // Bot is 5-15 points higher than player
-          const diff = randomBetween(5, 15)
-          const botTarget = Math.min(98, playerAssessment.battleScore + diff)
-          botAssessment = generateAssessmentResult(refText, botTarget)
-          // Ensure strictly higher
-          while (botAssessment.battleScore <= playerAssessment.battleScore) {
-            botAssessment.accuracy = Math.min(99, botAssessment.accuracy + 2)
-            botAssessment.battleScore = calculateBattleScore(
-              botAssessment.accuracy,
-              botAssessment.fluency,
-              botAssessment.completeness,
-              botAssessment.prosody
-            )
-          }
-        } else if (forcedOutcome === 'DRAW') {
-          // Both have strictly identical battleScore integers
-          botAssessment = {
-            ...playerAssessment,
-            accuracy: playerAssessment.accuracy,
-            fluency: playerAssessment.fluency,
-            completeness: playerAssessment.completeness,
-            prosody: playerAssessment.prosody,
-            battleScore: playerAssessment.battleScore,
-            words: generateMockMiscues(refText),
-          }
+      const topScore = sorted[0]?.assessment?.battleScore || 0
+
+      // Assign ranks & outcomes
+      sorted.forEach((p, idx) => {
+        const pScore = p.assessment?.battleScore || 0
+        p.rank = idx + 1
+        if (pScore === topScore) {
+          p.outcome = 'WIN'
+          p.earnedXp = REWARDS.battleWin.xp
+          p.earnedCoins = REWARDS.battleWin.coins
+        } else if (idx === 1 && maxPlayers > 2) {
+          p.outcome = 'DRAW'
+          p.earnedXp = REWARDS.battleDraw.xp
+          p.earnedCoins = REWARDS.battleDraw.coins
         } else {
-          // Natural random matchup
-          botAssessment = generateAssessmentResult(refText)
+          p.outcome = 'LOSE'
+          p.earnedXp = REWARDS.battleLose.xp
+          p.earnedCoins = REWARDS.battleLose.coins
         }
+      })
 
-        // 3. Determine outcome strictly from the comparison of battleScore numbers
-        let playerOutcome: BattleOutcome
-        let opponentOutcome: BattleOutcome
+      updated.participants = sorted
 
-        if (playerAssessment.battleScore > botAssessment.battleScore) {
-          playerOutcome = 'WIN'
-          opponentOutcome = 'LOSE'
-        } else if (playerAssessment.battleScore < botAssessment.battleScore) {
-          playerOutcome = 'LOSE'
-          opponentOutcome = 'WIN'
-        } else {
-          playerOutcome = 'DRAW'
-          opponentOutcome = 'DRAW'
-        }
+      // Sync player & opponent references
+      const myParticipant = sorted.find((p) => p.userId === updated.player.userId) || sorted[0]
+      updated.player = { ...myParticipant }
 
-        const rewardMap = {
-          WIN: REWARDS.battleWin,
-          DRAW: REWARDS.battleDraw,
-          LOSE: REWARDS.battleLose,
-        }
+      const otherParticipant = sorted.find((p) => p.userId !== updated.player.userId) || sorted[1]
+      updated.opponent = otherParticipant ? { ...otherParticipant } : null
 
-        const playerReward = rewardMap[playerOutcome]
-        const botReward = rewardMap[opponentOutcome]
-
-        updated.player.assessment = playerAssessment
-        updated.player.outcome = playerOutcome
-        updated.player.earnedXp = playerReward.xp
-        updated.player.earnedCoins = playerReward.coins
-
-        if (updated.opponent) {
-          updated.opponent.assessment = botAssessment
-          updated.opponent.outcome = opponentOutcome
-          updated.opponent.earnedXp = botReward.xp
-          updated.opponent.earnedCoins = botReward.coins
-        }
-
-        // 4. Atomically record rewards into ledger (Double protection: rewardsClaimed flag + ledger idempotency)
-        if (!updated.rewardsClaimed) {
-          addRewardTransactions([
-            {
-              userId: updated.player.userId,
-              type: 'XP',
-              amount: playerReward.xp,
-              referenceType: 'BATTLE',
-              referenceId: updated.id,
-            },
-            {
-              userId: updated.player.userId,
-              type: 'COINS',
-              amount: playerReward.coins,
-              referenceType: 'BATTLE',
-              referenceId: updated.id,
-            },
-          ])
-          updated.rewardsClaimed = true
-        }
+      // Atomically record rewards into ledger for human player
+      if (!updated.rewardsClaimed) {
+        addRewardTransactions([
+          {
+            userId: updated.player.userId,
+            type: 'XP',
+            amount: updated.player.earnedXp || REWARDS.battleLose.xp,
+            referenceType: 'BATTLE',
+            referenceId: updated.id,
+          },
+          {
+            userId: updated.player.userId,
+            type: 'COINS',
+            amount: updated.player.earnedCoins || REWARDS.battleLose.coins,
+            referenceType: 'BATTLE',
+            referenceId: updated.id,
+          },
+        ])
+        updated.rewardsClaimed = true
       }
 
       updated.status = 'RESULT'

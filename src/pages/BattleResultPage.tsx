@@ -5,6 +5,7 @@ import {
   Bot,
   Coins,
   Flame,
+  Medal,
   RotateCcw,
   Sparkles,
   Swords,
@@ -61,12 +62,52 @@ export function BattleResultPage() {
   }
 
   const { player, opponent } = room
+  const participants =
+    room.participants && room.participants.length > 0
+      ? room.participants
+      : [player, ...(opponent ? [opponent] : [])]
+  const isMultiplayer = participants.length > 2
+
+  const myRank = player.rank || (player.outcome === 'WIN' ? 1 : 2)
   const outcome = player.outcome || 'DRAW'
   const playerScore = player.assessment?.battleScore || 0
   const opponentScore = opponent?.assessment?.battleScore || 0
   const scoreDiff = playerScore - opponentScore
 
   const getOutcomeStyle = () => {
+    if (isMultiplayer) {
+      if (myRank === 1) {
+        return {
+          title: 'CHAMPION • 1ST PLACE!',
+          subtitle: `You conquered the ${participants.length}-player arena with a stunning Battle Score of ${playerScore}!`,
+          badgeClass: 'bg-amber-50 border-amber-300 text-amber-800',
+          icon: <Trophy className="h-10 w-10 text-amber-500 animate-bounce" />,
+        }
+      }
+      if (myRank === 2) {
+        return {
+          title: 'RUNNER-UP • 2ND PLACE!',
+          subtitle: `Silver finish! You outperformed ${participants.length - 2} other contender${participants.length - 2 > 1 ? 's' : ''} in the arena.`,
+          badgeClass: 'bg-slate-100 border-slate-300 text-slate-800',
+          icon: <Medal className="h-10 w-10 text-slate-500" />,
+        }
+      }
+      if (myRank === 3) {
+        return {
+          title: 'PODIUM • 3RD PLACE!',
+          subtitle: 'Bronze podium finish! Great shadowing cadence against tough sparring contenders.',
+          badgeClass: 'bg-amber-50/60 border-amber-300 text-amber-900',
+          icon: <Medal className="h-10 w-10 text-amber-700" />,
+        }
+      }
+      return {
+        title: `ARENA FINISH #${myRank}`,
+        subtitle: `You finished #${myRank} out of ${participants.length} contenders. Review your errors and rematch!`,
+        badgeClass: 'bg-rose-50 border-rose-300 text-rose-800',
+        icon: <Swords className="h-10 w-10 text-[#c13515]" />,
+      }
+    }
+
     switch (outcome) {
       case 'WIN':
         return {
@@ -146,200 +187,370 @@ export function BattleResultPage() {
           </div>
         </section>
 
-        {/* CONTENDER COMPARISON SCOREBOARD */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base sm:text-lg font-bold text-[#222222] flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#ff385c]" />
-              <span>Contender Head-to-Head Comparison</span>
-            </h2>
-            <span className="text-xs text-[#6a6a6a]">
-              Evaluated by Sonorauris Speech AI
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-11 gap-4 items-stretch">
-            {/* Player Card (5 Cols) */}
-            <div
-              className={`md:col-span-5 rounded-[14px] border p-6 flex flex-col justify-between h-full airbnb-shadow ${
-                outcome === 'WIN'
-                  ? 'border-emerald-300 bg-emerald-50/20'
-                  : 'border-[#dddddd] bg-white'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={player.avatarUrl}
-                    alt={player.displayName}
-                    className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
-                  />
-                  <div>
-                    <div className="text-sm font-bold text-[#222222] flex items-center gap-1.5">
-                      <span>{player.displayName}</span>
-                      <span className="text-[10px] bg-[#ff385c]/10 text-[#ff385c] px-2 py-0.5 rounded-full font-bold font-mono">
-                        YOU
-                      </span>
-                    </div>
-                    <span className="text-xs text-[#6a6a6a]">Host Contender</span>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-3xl sm:text-4xl font-bold text-[#222222] font-mono">
-                    {playerScore}
-                  </span>
-                  <div className="text-[10px] uppercase font-bold text-[#6a6a6a] tracking-wider">
-                    Battle Score
-                  </div>
-                </div>
-              </div>
-
-              {/* 4 Metrics Bars */}
-              {player.assessment && (
-                <div className="space-y-2.5 pt-3 border-t border-[#ebebeb]">
-                  <div>
-                    <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
-                      <span>Accuracy</span>
-                      <span className="text-[#ff385c] font-bold font-mono">{player.assessment.accuracy}%</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                      <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${player.assessment.accuracy}%` }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
-                      <span>Fluency</span>
-                      <span className="text-[#460479] font-bold font-mono">{player.assessment.fluency}%</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                      <div className="h-full bg-[#460479] rounded-full" style={{ width: `${player.assessment.fluency}%` }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
-                      <span>Completeness</span>
-                      <span className="text-amber-600 font-bold font-mono">{player.assessment.completeness}%</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                      <div className="h-full bg-amber-500 rounded-full" style={{ width: `${player.assessment.completeness}%` }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
-                      <span>Prosody</span>
-                      <span className="text-[#ff385c] font-bold font-mono">{player.assessment.prosody}%</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                      <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${player.assessment.prosody}%` }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Center VS Badge (1 Col) */}
-            <div className="md:col-span-1 flex flex-col items-center justify-center py-2 my-auto">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f7f7f7] border border-[#dddddd] font-bold text-xs text-[#222222]">
-                VS
-              </div>
-              <span
-                className={`text-[11px] font-mono font-bold mt-1 px-2 py-0.5 rounded-full ${
-                  scoreDiff > 0
-                    ? 'text-emerald-700 bg-emerald-50 border border-emerald-300'
-                    : scoreDiff < 0
-                    ? 'text-rose-700 bg-rose-50 border border-rose-300'
-                    : 'text-amber-700 bg-amber-50 border border-amber-300'
-                }`}
-              >
-                {scoreDiff > 0 ? `+${scoreDiff}` : scoreDiff}
+        {/* SCOREBOARD SECTION: MULTIPLAYER LEADERBOARD OR 1V1 DUEL */}
+        {isMultiplayer ? (
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base sm:text-lg font-bold text-[#222222] flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-amber-500" />
+                <span>Bảng Xếp Hạng Đấu Trường ({participants.length} Người Chơi)</span>
+              </h2>
+              <span className="text-xs text-[#6a6a6a]">
+                Xếp hạng theo Battle Score (AI Speech Assessment)
               </span>
             </div>
 
-            {/* Opponent Card (5 Cols) */}
-            <div
-              className={`md:col-span-5 rounded-[14px] border p-6 flex flex-col justify-between h-full airbnb-shadow ${
-                outcome === 'LOSE'
-                  ? 'border-emerald-300 bg-emerald-50/20'
-                  : 'border-[#dddddd] bg-white'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={opponent?.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot'}
-                    alt={opponent?.displayName || 'Opponent'}
-                    className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
-                  />
-                  <div>
-                    <div className="text-sm font-bold text-[#222222] flex items-center gap-1.5">
-                      <span>{opponent?.displayName || 'ShadowBot AI'}</span>
-                      <Bot className="h-3.5 w-3.5 text-amber-500" />
+            <div className="flex flex-col gap-4">
+              {participants.map((p, idx) => {
+                const isMe = p.userId === player.userId
+                const rank = p.rank || idx + 1
+                const score = p.assessment?.battleScore || 0
+
+                const rankBadge =
+                  rank === 1 ? (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold font-mono">
+                      <Trophy className="h-3.5 w-3.5 text-amber-600 fill-amber-500" />
+                      #1 QUÁN QUÂN
+                    </span>
+                  ) : rank === 2 ? (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold font-mono">
+                      <Medal className="h-3.5 w-3.5 text-slate-500" />
+                      #2 Á QUÂN
+                    </span>
+                  ) : rank === 3 ? (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-300 text-xs font-bold font-mono">
+                      <Medal className="h-3.5 w-3.5 text-amber-700" />
+                      #3 HẠNG BA
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-300 text-xs font-bold font-mono">
+                      #{rank}
+                    </span>
+                  )
+
+                return (
+                  <div
+                    key={p.userId || idx}
+                    className={`rounded-[16px] border p-5 sm:p-6 transition-all duration-200 airbnb-shadow ${
+                      isMe
+                        ? 'border-rausch/40 bg-rose-50/20 ring-1 ring-rausch/30'
+                        : rank === 1
+                        ? 'border-amber-300 bg-amber-50/20'
+                        : 'border-[#dddddd] bg-white'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                      <div className="flex items-center gap-3.5">
+                        <div className="relative shrink-0">
+                          <img
+                            src={p.avatarUrl}
+                            alt={p.displayName}
+                            className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
+                          />
+                          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#222222] text-white text-[11px] font-bold flex items-center justify-center font-mono">
+                            {rank}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-base font-bold text-[#222222]">
+                              {p.displayName}
+                            </span>
+                            {isMe && (
+                              <span className="rounded-full bg-[#ff385c]/10 text-[#ff385c] px-2 py-0.5 text-[10px] font-bold font-mono">
+                                BẠN
+                              </span>
+                            )}
+                            {p.isBot && (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-[#460479]/10 text-[#460479] px-2 py-0.5 text-[10px] font-bold font-mono">
+                                <Bot className="h-3 w-3" />
+                                <span>BOT</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1">{rankBadge}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-baseline gap-2 sm:text-right">
+                        <div>
+                          <span className="text-3xl sm:text-4xl font-bold text-[#222222] font-mono">
+                            {score}
+                          </span>
+                          <span className="text-xs text-[#6a6a6a] ml-1 uppercase font-bold">
+                            / 100
+                          </span>
+                          <div className="text-[10px] uppercase font-bold text-[#6a6a6a] tracking-wider">
+                            Battle Score
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-xs text-[#6a6a6a]">Challenger</span>
+
+                    {/* 4 Metrics Bars */}
+                    {p.assessment && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#ebebeb]">
+                        <div>
+                          <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                            <span>Accuracy</span>
+                            <span className="text-[#ff385c] font-bold font-mono">
+                              {p.assessment.accuracy}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                            <div
+                              className="h-full bg-[#ff385c] rounded-full"
+                              style={{ width: `${p.assessment.accuracy}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                            <span>Fluency</span>
+                            <span className="text-[#460479] font-bold font-mono">
+                              {p.assessment.fluency}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                            <div
+                              className="h-full bg-[#460479] rounded-full"
+                              style={{ width: `${p.assessment.fluency}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                            <span>Completeness</span>
+                            <span className="text-amber-600 font-bold font-mono">
+                              {p.assessment.completeness}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                            <div
+                              className="h-full bg-amber-500 rounded-full"
+                              style={{ width: `${p.assessment.completeness}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                            <span>Prosody</span>
+                            <span className="text-[#ff385c] font-bold font-mono">
+                              {p.assessment.prosody}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                            <div
+                              className="h-full bg-[#ff385c] rounded-full"
+                              style={{ width: `${p.assessment.prosody}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        ) : (
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base sm:text-lg font-bold text-[#222222] flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[#ff385c]" />
+                <span>Contender Head-to-Head Comparison</span>
+              </h2>
+              <span className="text-xs text-[#6a6a6a]">
+                Evaluated by Sonorauris Speech AI
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-11 gap-4 items-stretch">
+              {/* Player Card (5 Cols) */}
+              <div
+                className={`md:col-span-5 rounded-[14px] border p-6 flex flex-col justify-between h-full airbnb-shadow ${
+                  outcome === 'WIN'
+                    ? 'border-emerald-300 bg-emerald-50/20'
+                    : 'border-[#dddddd] bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={player.avatarUrl}
+                      alt={player.displayName}
+                      className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
+                    />
+                    <div>
+                      <div className="text-sm font-bold text-[#222222] flex items-center gap-1.5">
+                        <span>{player.displayName}</span>
+                        <span className="text-[10px] bg-[#ff385c]/10 text-[#ff385c] px-2 py-0.5 rounded-full font-bold font-mono">
+                          YOU
+                        </span>
+                      </div>
+                      <span className="text-xs text-[#6a6a6a]">Host Contender</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-3xl sm:text-4xl font-bold text-[#222222] font-mono">
+                      {playerScore}
+                    </span>
+                    <div className="text-[10px] uppercase font-bold text-[#6a6a6a] tracking-wider">
+                      Battle Score
+                    </div>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <span className="text-3xl sm:text-4xl font-bold text-[#222222] font-mono">
-                    {opponentScore}
-                  </span>
-                  <div className="text-[10px] uppercase font-bold text-[#6a6a6a] tracking-wider">
-                    Battle Score
+                {/* 4 Metrics Bars */}
+                {player.assessment && (
+                  <div className="space-y-2.5 pt-3 border-t border-[#ebebeb]">
+                    <div>
+                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                        <span>Accuracy</span>
+                        <span className="text-[#ff385c] font-bold font-mono">{player.assessment.accuracy}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                        <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${player.assessment.accuracy}%` }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                        <span>Fluency</span>
+                        <span className="text-[#460479] font-bold font-mono">{player.assessment.fluency}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                        <div className="h-full bg-[#460479] rounded-full" style={{ width: `${player.assessment.fluency}%` }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                        <span>Completeness</span>
+                        <span className="text-amber-600 font-bold font-mono">{player.assessment.completeness}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${player.assessment.completeness}%` }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                        <span>Prosody</span>
+                        <span className="text-[#ff385c] font-bold font-mono">{player.assessment.prosody}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                        <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${player.assessment.prosody}%` }} />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* 4 Metrics Bars for Opponent */}
-              {opponent?.assessment && (
-                <div className="space-y-2.5 pt-3 border-t border-[#ebebeb]">
-                  <div>
-                    <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
-                      <span>Accuracy</span>
-                      <span className="text-[#ff385c] font-bold font-mono">{opponent.assessment.accuracy}%</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                      <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${opponent.assessment.accuracy}%` }} />
+              {/* Center VS Badge (1 Col) */}
+              <div className="md:col-span-1 flex flex-col items-center justify-center py-2 my-auto">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f7f7f7] border border-[#dddddd] font-bold text-xs text-[#222222]">
+                  VS
+                </div>
+                <span
+                  className={`text-[11px] font-mono font-bold mt-1 px-2 py-0.5 rounded-full ${
+                    scoreDiff > 0
+                      ? 'text-emerald-700 bg-emerald-50 border border-emerald-300'
+                      : scoreDiff < 0
+                      ? 'text-rose-700 bg-rose-50 border border-rose-300'
+                      : 'text-amber-700 bg-amber-50 border border-amber-300'
+                  }`}
+                >
+                  {scoreDiff > 0 ? `+${scoreDiff}` : scoreDiff}
+                </span>
+              </div>
+
+              {/* Opponent Card (5 Cols) */}
+              <div
+                className={`md:col-span-5 rounded-[14px] border p-6 flex flex-col justify-between h-full airbnb-shadow ${
+                  outcome === 'LOSE'
+                    ? 'border-emerald-300 bg-emerald-50/20'
+                    : 'border-[#dddddd] bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={opponent?.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot'}
+                      alt={opponent?.displayName || 'Opponent'}
+                      className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
+                    />
+                    <div>
+                      <div className="text-sm font-bold text-[#222222] flex items-center gap-1.5">
+                        <span>{opponent?.displayName || 'ShadowBot AI'}</span>
+                        <Bot className="h-3.5 w-3.5 text-amber-500" />
+                      </div>
+                      <span className="text-xs text-[#6a6a6a]">Challenger</span>
                     </div>
                   </div>
 
-                  <div>
-                    <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
-                      <span>Fluency</span>
-                      <span className="text-[#460479] font-bold font-mono">{opponent.assessment.fluency}%</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                      <div className="h-full bg-[#460479] rounded-full" style={{ width: `${opponent.assessment.fluency}%` }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
-                      <span>Completeness</span>
-                      <span className="text-amber-600 font-bold font-mono">{opponent.assessment.completeness}%</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                      <div className="h-full bg-amber-500 rounded-full" style={{ width: `${opponent.assessment.completeness}%` }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
-                      <span>Prosody</span>
-                      <span className="text-[#ff385c] font-bold font-mono">{opponent.assessment.prosody}%</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                      <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${opponent.assessment.prosody}%` }} />
+                  <div className="text-right">
+                    <span className="text-3xl sm:text-4xl font-bold text-[#222222] font-mono">
+                      {opponentScore}
+                    </span>
+                    <div className="text-[10px] uppercase font-bold text-[#6a6a6a] tracking-wider">
+                      Battle Score
                     </div>
                   </div>
                 </div>
-              )}
+
+                {/* 4 Metrics Bars for Opponent */}
+                {opponent?.assessment && (
+                  <div className="space-y-2.5 pt-3 border-t border-[#ebebeb]">
+                    <div>
+                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                        <span>Accuracy</span>
+                        <span className="text-[#ff385c] font-bold font-mono">{opponent.assessment.accuracy}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                        <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${opponent.assessment.accuracy}%` }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                        <span>Fluency</span>
+                        <span className="text-[#460479] font-bold font-mono">{opponent.assessment.fluency}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                        <div className="h-full bg-[#460479] rounded-full" style={{ width: `${opponent.assessment.fluency}%` }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                        <span>Completeness</span>
+                        <span className="text-amber-600 font-bold font-mono">{opponent.assessment.completeness}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${opponent.assessment.completeness}%` }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                        <span>Prosody</span>
+                        <span className="text-[#ff385c] font-bold font-mono">{opponent.assessment.prosody}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                        <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${opponent.assessment.prosody}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* ACTION BUTTONS (REMATCH / CATALOG) */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#ebebeb] pt-6">

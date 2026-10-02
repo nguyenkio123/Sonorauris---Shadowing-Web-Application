@@ -12,11 +12,13 @@ import {
   Volume2,
   Mic,
   Award,
+  BookOpen,
 } from 'lucide-react'
 import { getClip, submitAttempt } from '../api'
 import { REWARDS } from '../config/scoring'
 import { AudioRecorder } from '../components/recorder/AudioRecorder'
 import { YouTubePlayer } from '../components/player/YouTubePlayer'
+import { DictionaryModal } from '../components/common/DictionaryModal'
 import type { Clip } from '../types/clip'
 
 export function PracticePage() {
@@ -27,6 +29,7 @@ export function PracticePage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedDictWord, setSelectedDictWord] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadClip() {
@@ -230,13 +233,30 @@ export function PracticePage() {
                 </div>
 
                 <div className="rounded-xl border border-[#dddddd] bg-[#f7f7f7] p-4 text-[#222222]">
-                  <blockquote className="text-[16px] sm:text-[17px] font-normal leading-relaxed text-[#222222]">
-                    "{clip.referenceText}"
+                  <blockquote className="text-[16px] sm:text-[17px] font-normal leading-relaxed text-[#222222] select-text">
+                    "
+                    {clip.referenceText.split(/\s+/).map((rawWord, idx) => {
+                      const cleanWord = rawWord.replace(/^[.,/#!$%^&*;:{}=\-_`~()?"]+|[.,/#!$%^&*;:{}=\-_`~()?"]+$/g, '')
+                      return (
+                        <span
+                          key={idx}
+                          onClick={() => setSelectedDictWord(cleanWord)}
+                          className="hover:text-[#ff385c] hover:bg-rose-50 hover:underline underline-offset-4 rounded px-0.5 cursor-pointer transition-colors"
+                          title={`Click to lookup definition for "${cleanWord}"`}
+                        >
+                          {rawWord}{' '}
+                        </span>
+                      )
+                    })}
+                    "
                   </blockquote>
-                  <p className="text-[11px] text-[#6a6a6a] mt-2.5 flex items-center gap-1">
-                    <Sparkles className="h-3 w-3 text-[#ff385c]" />
-                    <span>Shadow speaker's pause cadence, stresses &amp; rhythm</span>
-                  </p>
+                  <div className="mt-3 pt-2.5 border-t border-[#ebebeb] flex items-center justify-between text-[11px] text-[#6a6a6a]">
+                    <span className="flex items-center gap-1 text-[#ff385c] font-medium">
+                      <BookOpen className="h-3 w-3" />
+                      <span>Click any word to look up definition &amp; IPA</span>
+                    </span>
+                    <span className="text-[10px] text-[#929292]">FR-DICT-01</span>
+                  </div>
                 </div>
               </div>
 
@@ -292,6 +312,12 @@ export function PracticePage() {
           </div>
         </div>
       </div>
+
+      {/* Dictionary Modal (FR-DICT-01) */}
+      <DictionaryModal
+        word={selectedDictWord}
+        onClose={() => setSelectedDictWord(null)}
+      />
     </div>
   )
 }

@@ -57,9 +57,9 @@
 | **FR-BAT-04** | Đánh giá trận đấu | P0 | 🟢 Hoàn thành | Cả 2 nộp bài độc lập, server chấm dựa trên cùng 1 transcript. |
 | **FR-BAT-05** | Xác định kết quả đấu | P0 | 🟢 Hoàn thành | So sánh Battle Score -> VICTORY / DEFEAT / DRAW (`BattleResultPage.tsx`). |
 | **FR-BAT-06** | Trả thưởng trận đấu | P0 | 🟢 Hoàn thành | Thắng (+100 XP, +30 Coins), Hòa (+50 XP, +15 Coins), Thua (+25 XP, +5 Coins). |
-| **FR-QUEST-01**| 3 Nhiệm vụ hằng ngày | P1 | ⚪ Chưa làm | Dự kiến sau khi xong P0. |
-| **FR-DICT-01** | Tra từ điển transcript | P1 | ⚪ Chưa làm | Click vào từ trên transcript để xem nghĩa/IPA. |
-| **FR-BAT-07** | Phòng đấu 3–5 người | P1 | ⚪ Chưa làm | Mở rộng phòng thi đấu cho nhóm bạn. |
+| **FR-QUEST-01**| 3 Nhiệm vụ hằng ngày | P1 | 🟢 Hoàn thành | 3 nhiệm vụ ngày (Solo, Điểm cao ≥80, Đấu 1v1), theo dõi thời gian thực, modal nhận thưởng XP/Coins qua Ledger. |
+| **FR-DICT-01** | Tra từ điển transcript | P1 | 🟢 Hoàn thành | Click vào từ trong transcript hiển thị nghĩa, phiên âm IPA, câu ví dụ và phát âm audio qua Free Dictionary API + Web Speech. |
+| **FR-BAT-07** | Phòng đấu 3–5 người | P1 | 🟢 Hoàn thành | Sức chứa 2–5 người (1v1, Trio, Squad, Royale), bot sparring tự lấp đầy, bảng xếp hạng Podium và huy chương tại kết quả. |
 
 ---
 
@@ -69,30 +69,35 @@
 d:\Shadowing-web-application\
 ├── src/
 │   ├── api/
-│   │   ├── index.ts          # Public API facade (getMe, getClips, submitAttempt, createRoom, etc.)
-│   │   ├── mockServer.ts     # Mô phỏng AI assessment & State machine phòng đấu (F5-resilient)
-│   │   └── storage.ts        # Immutable Ledger, LocalStorage cache, Seed data
+│   │   ├── index.ts          # Public API facade (getMe, getClips, submitAttempt, createRoom, quests, etc.)
+│   │   ├── dictionary.ts     # Free Dictionary API adapter + Web Speech fallback
+│   │   ├── mockServer.ts     # Mô phỏng AI assessment & State machine phòng đấu 2-5 người (F5-resilient)
+│   │   └── storage.ts        # Immutable Ledger, LocalStorage cache, Daily quests state
 │   ├── components/
-│   │   ├── layout/           # Header.tsx, Footer.tsx, DemoCheatBar.tsx
+│   │   ├── common/           # DictionaryModal.tsx (Tra từ điển transcript)
+│   │   ├── layout/           # Header.tsx, DailyQuestsModal.tsx, Footer.tsx, DemoCheatBar.tsx
 │   │   ├── player/           # YouTubePlayer.tsx (IFrame API controller, boundary guard)
 │   │   └── recorder/         # AudioRecorder.tsx (MediaRecorder, Visualizer, Playback)
 │   ├── config/
 │   │   ├── demo.ts           # Cấu hình Demo, forced outcomes, bot delay
 │   │   └── scoring.ts        # Trọng số Battle Score (SRS 8.2) & Định mức phần thưởng
 │   ├── data/
-│   │   └── clips.ts          # Danh mục clips mẫu (YouTube ID, start/end sec, transcript)
+│   │   ├── clips.ts          # Danh mục 20 clips mẫu chuẩn YouTube
+│   │   ├── quests.ts         # 3 Nhiệm vụ hằng ngày mẫu
+│   │   └── shopItems.ts      # Danh mục ngoại trang (Avatars, Frames, Titles)
 │   ├── hooks/
 │   │   └── useRoom.ts        # Polling/sync trạng thái phòng đấu theo thời gian thực
 │   ├── pages/
 │   │   ├── HomeCatalogPage.tsx   # Trang chủ: duyệt danh mục clip, lọc topic/level, search
-│   │   ├── PracticePage.tsx      # Luyện tập Solo: Video + Transcript + Audio Recorder
+│   │   ├── PracticePage.tsx      # Luyện tập Solo: Video + Clickable Transcript Dictionary + Audio Recorder
 │   │   ├── ResultPage.tsx        # Kết quả chấm điểm 4 tiêu chí + Từ lỗi + Thưởng
-│   │   ├── BattleLobbyPage.tsx   # Sảnh đấu trường 1v1: Tạo/vào phòng, Bot tham gia
+│   │   ├── ShopPage.tsx          # Cửa hàng ngoại trang & Khôi phục Streak
+│   │   ├── BattleLobbyPage.tsx   # Sảnh đấu trường 2-5 người: Tạo phòng, Chọn mode, Vào phòng
 │   │   ├── BattleRoomPage.tsx    # Phòng thi đấu: Đếm ngược 3-2-1, cùng làm bài
-│   │   └── BattleResultPage.tsx  # Bảng kết quả so tài 1v1, tỷ số, cộng thưởng
+│   │   └── BattleResultPage.tsx  # Bảng kết quả so tài 1v1 hoặc Bảng xếp hạng Podium 3-5 người
 │   ├── routes/
 │   │   └── AppRoutes.tsx     # Bộ định tuyến React Router v7
-│   └── types/                # Types: clip.ts, attempt.ts, battle.ts, transaction.ts, user.ts
+│   └── types/                # Types: clip.ts, attempt.ts, battle.ts, transaction.ts, user.ts, quest.ts, shop.ts
 ├── DEMO_SCRIPT.md            # Kịch bản quay video demo 120 giây chi tiết
 ├── DESIGN.md                 # Toàn bộ design token, typography, spacing chuẩn Airbnb
 └── Đặc tả Yêu cầu Phần mềm (SRS) - English Shadowing MVP v1.0.md # Tài liệu đặc tả gốc
@@ -136,10 +141,11 @@ d:\Shadowing-web-application\
 2. ✅ **Multiplayer 1v1 qua Supabase Realtime**: `realtimeRoom.ts` và `useRoom.ts` hỗ trợ Broadcast Channel (<50ms) để 2 máy tính thật tham gia và thi đấu trực tiếp qua Internet.
 3. ✅ **Adapter Azure Speech Pronunciation Assessment**: Module `azureSpeech.ts` chuẩn hóa 4 chỉ số (Accuracy, Fluency, Completeness, Prosody) và lỗi cấp từ với cơ chế fallback local engine an toàn.
 
-### Giai đoạn 3: Tính năng P1 (Kế hoạch tiếp theo)
-1. Tra từ điển trên Transcript khi click (`FR-DICT-01`).
-2. Danh sách 3 nhiệm vụ ngày (`FR-QUEST-01`).
-3. Phòng đấu 3–5 người (`FR-BAT-07`).
+### Giai đoạn 3: Hoàn thiện toàn bộ tính năng P1 (✅ HOÀN THÀNH)
+1. ✅ **Tra từ điển trên Transcript khi click (`FR-DICT-01`)**: Tích hợp Free Dictionary API, phát âm âm thanh bản xứ + Web Speech synthesis fallback, modal popover chuẩn Airbnb.
+2. ✅ **3 Nhiệm vụ hằng ngày (`FR-QUEST-01`)**: Tự động tính toán tiến độ hằng ngày (Luyện tập solo, Đạt điểm cao ≥80, Tham gia đấu trường 1v1) và nhận thưởng XP/Coins qua Ledger.
+3. ✅ **Phòng đấu 3–5 người (`FR-BAT-07`)**: Tùy chọn sức chứa phòng (2P, 3P, 4P, 5P), bot sparring đa dạng (Alpha, Neo, Max, Iris), và bảng xếp hạng Podium trao huy chương vàng/bạc/đồng tại trang kết quả.
+
 
 ---
 *File này được tạo tự động và cập nhật liên tục để đảm bảo hiệu suất tốt nhất cho các phiên làm việc của Agent.*

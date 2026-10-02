@@ -1,3 +1,4 @@
+import { DEFAULT_DAILY_QUESTS } from '../data/quests'
 import {
   DEFAULT_AVATAR_ID,
   DEFAULT_FRAME_ID,
@@ -6,6 +7,7 @@ import {
 } from '../data/shopItems'
 import type { Attempt } from '../types/attempt'
 import type { BattleRoom } from '../types/battle'
+import type { DailyQuest } from '../types/quest'
 import type { CosmeticType, UserInventory } from '../types/shop'
 import type { ReferenceType, RewardTransaction, RewardType } from '../types/transaction'
 import type { UserProfile } from '../types/user'
@@ -395,4 +397,82 @@ export function resetAllStorage(): void {
   writeJson(STORAGE_KEYS.ATTEMPTS, [])
   writeJson(STORAGE_KEYS.ROOMS, {})
   localStorage.removeItem('shadowing_forced_outcome')
+}
+
+/**
+ * SRS FR-QUEST-01: Derives today's 3 daily quests and their real-time progress.
+ */
+export function getDailyQuestsState(): DailyQuest[] {
+  const today = new Date().toISOString().split('T')[0]
+  const attempts = getAttempts()
+  const rooms = Object.values(getRooms())
+
+  // Activity performed today
+  const todayAttempts = attempts.filter((a) => a.createdAt.startsWith(today))
+  const soloCount = todayAttempts.length
+  const highScoreCount = todayAttempts.filter((a) => a.result.battleScore >= 80).length
+  const battleCount = rooms.filter((r) => r.player.hasSubmitted && r.status === 'RESULT').length
+
+  const claimedKey = `shadowing_claimed_quests_${today}`
+  const claimedIds = readJson<string[]>(claimedKey, [])
+
+  return DEFAULT_DAILY_QUESTS.map((q) => {
+    let currentValue = 0
+    if (q.type === 'SOLO_PRACTICE') currentValue = soloCount
+    else if (q.type === 'HIGH_SCORE') currentValue = highScoreCount
+    else if (q.type === 'BATTLE_MATCH') currentValue = battleCount
+
+    const completed = currentValue >= q.targetValue
+    const claimed = claimedIds.includes(q.id)
+
+    return {
+      ...q,
+      currentValue: Math.min(q.targetValue, currentValue),
+      completed,
+      claimed,
+    }
+  })
+}
+
+/**
+ * Claims rewards for a completed daily quest via atomic ledger transaction.
+ */
+export function claimDailyQuest(questId: string): { success: boolean; message: string } {
+  const today = new Date().toISOString().split('T')[0]
+  const quests = getDailyQuestsState()
+  const quest = quests.find((q) => q.id === questId)
+
+  if (!quest) return { success: false, message: 'Quest not found.' }
+  if (!quest.completed) return { success: false, message: 'Quest objectives not yet completed.' }
+  if (quest.claimed) return { success: false, message: 'Quest rewards already claimed today.' }
+
+  const profile = getUserProfile()
+
+  // Idempotently add reward to immutable ledger
+  addRewardTransactions([
+    {
+      userId: profile.id,
+      type: 'XP',
+      amount: quest.rewardXp,
+      referenceType: 'QUEST',
+      referenceId: `${questId}-${today}`,
+    },
+    {
+      userId: profile.id,
+      type: 'COINS',
+      amount: quest.rewardCoins,
+      referenceType: 'QUEST',
+      referenceId: `${questId}-${today}`,
+    },
+  ])
+
+  // Mark as claimed for today
+  const claimedKey = `shadowing_claimed_quests_${today}`
+  const claimedIds = readJson<string[]>(claimedKey, [])
+  writeJson(claimedKey, [...claimedIds, questId])
+
+  return {
+    success: true,
+    message: `Claimed +${quest.rewardXp} XP and +${quest.rewardCoins} Coins!`,
+  }
 }

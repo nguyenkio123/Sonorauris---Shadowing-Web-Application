@@ -1,11 +1,15 @@
-import { Flame, Coins, Zap, Swords, Headphones, Sparkles } from 'lucide-react'
+import { Flame, Coins, Zap, Swords, Headphones, Sparkles, Trophy } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { getMe } from '../../api'
+import { getDailyQuests, getMe } from '../../api'
 import type { UserProfile } from '../../types/user'
+import type { DailyQuest } from '../../types/quest'
+import { DailyQuestsModal } from './DailyQuestsModal'
 
 export function Header() {
   const [user, setUser] = useState<UserProfile | null>(null)
+  const [quests, setQuests] = useState<DailyQuest[]>([])
+  const [isQuestsOpen, setIsQuestsOpen] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
@@ -22,10 +26,23 @@ export function Header() {
       }
     }
 
+    const fetchQuests = async () => {
+      try {
+        const qData = await getDailyQuests()
+        if (isMounted) {
+          setQuests(qData)
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     void fetchUser()
+    void fetchQuests()
 
     const handleStorageChange = () => {
       void fetchUser()
+      void fetchQuests()
     }
 
     window.addEventListener('storage', handleStorageChange)
@@ -38,9 +55,21 @@ export function Header() {
     }
   }, [location.pathname])
 
+  const reloadData = async () => {
+    try {
+      const [uData, qData] = await Promise.all([getMe(), getDailyQuests()])
+      setUser(uData)
+      setQuests(qData)
+    } catch {
+      // ignore
+    }
+  }
+
   const isHomeActive = location.pathname === '/' || location.pathname.startsWith('/practice') || location.pathname.startsWith('/result')
   const isBattleActive = location.pathname.startsWith('/battle')
   const isShopActive = location.pathname.startsWith('/shop')
+  const completedCount = quests.filter((q) => q.completed).length
+  const hasClaimable = quests.some((q) => q.completed && !q.claimed)
 
   return (
     <header className="sticky top-0 z-40 w-full h-[80px] bg-white border-b border-[#ebebeb]">
@@ -129,6 +158,26 @@ export function Header() {
         <div className="flex items-center gap-2 sm:gap-3">
           {user && (
             <>
+              {/* Daily Quests Trigger Button (FR-QUEST-01) */}
+              <button
+                type="button"
+                onClick={() => setIsQuestsOpen(true)}
+                title={`Nhiệm vụ hằng ngày (${completedCount}/${quests.length || 3})`}
+                className="relative flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222] hover:border-amber-300 hover:bg-amber-50/50 transition-all cursor-pointer group"
+              >
+                <Trophy className="h-3.5 w-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold text-[12px] hidden md:inline">Nhiệm vụ</span>
+                <span className="font-mono text-[11px] text-gray-500">
+                  {completedCount}/{quests.length || 3}
+                </span>
+                {hasClaimable && (
+                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rausch opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rausch"></span>
+                  </span>
+                )}
+              </button>
+
               {/* Streak Pill -> Link to shop streak restore */}
               <Link
                 to="/shop"
@@ -184,6 +233,13 @@ export function Header() {
           )}
         </div>
       </div>
+
+      {/* Daily Quests Modal */}
+      <DailyQuestsModal
+        isOpen={isQuestsOpen}
+        onClose={() => setIsQuestsOpen(false)}
+        onRewardClaimed={() => void reloadData()}
+      />
     </header>
   )
 }

@@ -24,6 +24,7 @@ export function BattleLobbyPage() {
   const [activeCode, setActiveCode] = useState<string | null>(queryRoom)
   const [clips, setClips] = useState<Clip[]>([])
   const [selectedClipId, setSelectedClipId] = useState<string>(queryClipId || 'clip-1')
+  const [selectedMaxPlayers, setSelectedMaxPlayers] = useState<number>(2)
   const [joinCodeInput, setJoinCodeInput] = useState('')
   const [creating, setCreating] = useState(false)
   const [joining, setJoining] = useState(false)
@@ -67,7 +68,7 @@ export function BattleLobbyPage() {
     setCreating(true)
     setJoinError(null)
     try {
-      const newRoom = await createRoom(selectedClipId)
+      const newRoom = await createRoom(selectedClipId, selectedMaxPlayers)
       setActiveCode(newRoom.code)
     } catch (err) {
       setJoinError(err instanceof Error ? err.message : 'Failed to create room')
@@ -169,6 +170,38 @@ export function BattleLobbyPage() {
                     ))}
                   </select>
                 </div>
+
+                {/* Arena Capacity Selector (FR-BAT-07) */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-semibold text-[#222222] uppercase tracking-wider">
+                      Arena Mode (Sức chứa)
+                    </label>
+                    <span className="new-tag">FR-BAT-07</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { count: 2, label: '2P', sub: '1v1 Duel' },
+                      { count: 3, label: '3P', sub: 'Trio' },
+                      { count: 4, label: '4P', sub: 'Squad' },
+                      { count: 5, label: '5P', sub: 'Royale' },
+                    ].map((mode) => (
+                      <button
+                        key={mode.count}
+                        type="button"
+                        onClick={() => setSelectedMaxPlayers(mode.count)}
+                        className={`py-2 px-1 rounded-xl border text-center transition-all cursor-pointer ${
+                          selectedMaxPlayers === mode.count
+                            ? 'border-[#ff385c] bg-rose-50/70 text-[#ff385c] ring-1 ring-[#ff385c]'
+                            : 'border-[#dddddd] bg-[#f7f7f7] text-[#222222] hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="font-bold text-sm font-mono">{mode.label}</div>
+                        <div className="text-[10px] text-gray-500 font-medium truncate">{mode.sub}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -263,7 +296,7 @@ export function BattleLobbyPage() {
             <div className="rounded-[14px] border border-[#dddddd] bg-white p-6 sm:p-8 airbnb-shadow flex flex-col sm:flex-row items-center justify-between gap-6">
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-widest text-[#ff385c] mb-1 block">
-                  Private 1v1 Room
+                  Private Arena • {room?.maxPlayers || 2} Contenders
                 </span>
                 <div className="flex items-center gap-3">
                   <span className="text-3xl sm:text-4xl font-mono font-bold text-[#222222] tracking-widest bg-[#f7f7f7] px-4 py-1.5 rounded-xl border border-[#dddddd]">
@@ -319,159 +352,150 @@ export function BattleLobbyPage() {
               </div>
             )}
 
-            {/* 2 CONTENDER PODS (PLAYER VS OPPONENT) */}
-            {room && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                {/* Pod 1: Host / Player */}
-                <div
-                  className={`rounded-[14px] border p-6 flex flex-col justify-between h-full min-h-[220px] transition-all duration-200 ${
-                    room.player.isReady
-                      ? 'border-[#10b981]/50 bg-emerald-50/30 airbnb-shadow'
-                      : 'border-[#dddddd] bg-white airbnb-shadow'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={room.player.avatarUrl}
-                      alt={room.player.displayName}
-                      className="h-14 w-14 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
-                    />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-base font-bold text-[#222222]">
-                          {room.player.displayName}
-                        </span>
-                        <span className="rounded-full bg-[#ff385c]/10 text-[#ff385c] px-2 py-0.5 text-[10px] font-bold font-mono">
-                          YOU
-                        </span>
-                      </div>
-                      <span className="text-xs text-[#6a6a6a]">Host Contender</span>
-                    </div>
-                  </div>
+            {/* CONTENDER PODS (2 to 5 PLAYERS - FR-BAT-07) */}
+            {room && (() => {
+              const maxPlayers = room.maxPlayers || 2
+              const participants = room.participants && room.participants.length > 0
+                ? room.participants
+                : [room.player, ...(room.opponent ? [room.opponent] : [])]
+              const readyCount = participants.filter((p) => p.isReady).length
+              const allReady = participants.length >= maxPlayers && participants.every((p) => p.isReady)
 
-                  <div className="flex items-center justify-between border-t border-[#ebebeb] pt-4 mt-6">
-                    <span className="text-xs font-semibold text-[#6a6a6a]">Status</span>
-                    {room.player.isReady ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 px-3 py-1 text-xs font-bold">
-                        <Check className="h-3.5 w-3.5" />
-                        <span>READY</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#dddddd] px-3 py-1 text-xs font-medium text-[#6a6a6a]">
-                        <span>NOT READY</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
+              const gridCols =
+                maxPlayers === 2
+                  ? 'grid-cols-1 md:grid-cols-2'
+                  : maxPlayers === 3
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
 
-                {/* Pod 2: Opponent / Bot */}
-                <div
-                  className={`rounded-[14px] border p-6 flex flex-col justify-between h-full min-h-[220px] transition-all duration-200 ${
-                    room.opponent?.isReady
-                      ? 'border-[#10b981]/50 bg-emerald-50/30 airbnb-shadow'
-                      : 'border-[#dddddd] bg-white airbnb-shadow'
-                  }`}
-                >
-                  {room.opponent ? (
-                    <>
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={room.opponent.avatarUrl}
-                          alt={room.opponent.displayName}
-                          className="h-14 w-14 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
-                        />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-base font-bold text-[#222222]">
-                              {room.opponent.displayName}
-                            </span>
-                            {room.opponent.isBot && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[#460479]/10 text-[#460479] px-2 py-0.5 text-[10px] font-bold font-mono">
-                                <Bot className="h-3 w-3" />
-                                <span>BOT</span>
-                              </span>
-                            )}
+              return (
+                <>
+                  <div className={`grid ${gridCols} gap-4 sm:gap-6 items-stretch`}>
+                    {Array.from({ length: maxPlayers }).map((_, idx) => {
+                      const participant = participants[idx]
+
+                      if (participant) {
+                        const isMe = participant.userId === room.player.userId
+                        return (
+                          <div
+                            key={participant.userId || idx}
+                            className={`rounded-[14px] border p-5 sm:p-6 flex flex-col justify-between min-h-[200px] transition-all duration-200 ${
+                              participant.isReady
+                                ? 'border-[#10b981]/50 bg-emerald-50/30 airbnb-shadow'
+                                : 'border-[#dddddd] bg-white airbnb-shadow'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3.5">
+                              <img
+                                src={participant.avatarUrl}
+                                alt={participant.displayName}
+                                className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-sm font-bold text-[#222222] truncate">
+                                    {participant.displayName}
+                                  </span>
+                                  {isMe && (
+                                    <span className="rounded-full bg-[#ff385c]/10 text-[#ff385c] px-2 py-0.5 text-[9px] font-bold font-mono">
+                                      YOU
+                                    </span>
+                                  )}
+                                  {participant.isBot && (
+                                    <span className="inline-flex items-center gap-0.5 rounded-full bg-[#460479]/10 text-[#460479] px-2 py-0.5 text-[9px] font-bold font-mono">
+                                      <Bot className="h-2.5 w-2.5" />
+                                      <span>BOT</span>
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-xs text-[#6a6a6a]">
+                                  {idx === 0 ? 'Host' : `Challenger #${idx}`}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between border-t border-[#ebebeb] pt-3.5 mt-4">
+                              <span className="text-xs font-semibold text-[#6a6a6a]">Status</span>
+                              {participant.isReady ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 text-xs font-bold">
+                                  <Check className="h-3 w-3" />
+                                  <span>READY</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-[#f7f7f7] border border-[#dddddd] px-2.5 py-0.5 text-xs font-medium text-[#6a6a6a]">
+                                  <span>PREPARING...</span>
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <span className="text-xs text-[#6a6a6a]">Challenger</span>
+                        )
+                      }
+
+                      return (
+                        <div
+                          key={`slot-empty-${idx}`}
+                          className="rounded-[14px] border border-dashed border-gray-300 bg-gray-50/50 p-6 flex flex-col items-center justify-center text-center min-h-[200px]"
+                        >
+                          <div className="relative mb-2.5 flex items-center justify-center">
+                            <span className="h-8 w-8 rounded-full border-2 border-[#ff385c]/20 border-t-[#ff385c] animate-spin" />
+                            <Users className="absolute h-3.5 w-3.5 text-[#ff385c]" />
+                          </div>
+                          <h4 className="text-xs font-semibold text-gray-800">
+                            Chờ đấu thủ #{idx + 1}...
+                          </h4>
+                          <p className="text-[11px] text-gray-500 max-w-[160px] mt-0.5 leading-tight">
+                            Chia sẻ mã phòng hoặc Bot sẽ tham gia tự động.
+                          </p>
                         </div>
-                      </div>
+                      )
+                    })}
+                  </div>
 
-                      <div className="flex items-center justify-between border-t border-[#ebebeb] pt-4 mt-6">
-                        <span className="text-xs font-semibold text-[#6a6a6a]">Status</span>
-                        {room.opponent.isReady ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 px-3 py-1 text-xs font-bold">
-                            <Check className="h-3.5 w-3.5" />
-                            <span>READY</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#dddddd] px-3 py-1 text-xs font-medium text-[#6a6a6a]">
-                            <span>PREPARING...</span>
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-center h-full my-auto py-2">
-                      <div className="relative mb-3 flex items-center justify-center">
-                        <span className="h-10 w-10 rounded-full border-2 border-[#ff385c]/20 border-t-[#ff385c] animate-spin" />
-                        <Users className="absolute h-4 w-4 text-[#ff385c]" />
-                      </div>
-                      <h4 className="text-sm font-semibold text-[#222222] mb-1">
-                        Waiting for Opponent...
-                      </h4>
-                      <p className="text-xs text-[#6a6a6a] max-w-xs">
-                        Share the 5-character code with a friend, or ShadowBot will step in after ~3s.
-                      </p>
+                  {/* READY TOGGLE BUTTON */}
+                  <div className="rounded-[14px] border border-[#dddddd] bg-white p-6 airbnb-shadow flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-xs text-[#6a6a6a] text-center sm:text-left">
+                      {allReady ? (
+                        <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
+                          <Zap className="h-4 w-4 text-emerald-600" />
+                          <span>Tất cả {maxPlayers} đấu thủ đã sẵn sàng! Bắt đầu đếm ngược...</span>
+                        </span>
+                      ) : room.player.isReady ? (
+                        <span className="text-amber-600 font-semibold">
+                          Bạn đã sẵn sàng! Chờ đấu thủ khác ({readyCount}/{maxPlayers})...
+                        </span>
+                      ) : (
+                        <span>
+                          Nhấn "Tôi đã sẵn sàng" khi bạn đã chuẩn bị thu âm shadowing.
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            )}
 
-            {/* READY TOGGLE BUTTON */}
-            {room && (
-              <div className="rounded-[14px] border border-[#dddddd] bg-white p-6 airbnb-shadow flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-xs text-[#6a6a6a] text-center sm:text-left">
-                  {room.player.isReady && !room.opponent?.isReady ? (
-                    <span className="text-amber-600 font-semibold">
-                      You are Ready! Waiting for opponent to confirm readiness...
-                    </span>
-                  ) : room.player.isReady && room.opponent?.isReady ? (
-                    <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
-                      <Zap className="h-4 w-4 text-emerald-600" />
-                      <span>Both contenders ready! Starting countdown...</span>
-                    </span>
-                  ) : (
-                    <span>
-                      Press Ready when you are prepared to shadow the clip.
-                    </span>
-                  )}
-                </div>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => setActiveCode(null)}
+                        className="btn-secondary text-xs font-medium h-[44px] px-5 rounded-lg"
+                      >
+                        Leave Lobby
+                      </button>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <button
-                    type="button"
-                    onClick={() => setActiveCode(null)}
-                    className="btn-secondary text-xs font-medium h-[44px] px-5 rounded-lg"
-                  >
-                    Leave Lobby
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleToggleReady}
-                    className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-lg px-8 h-[44px] text-sm font-semibold text-white transition-all active:scale-95 ${
-                      room.player.isReady
-                        ? 'bg-[#c13515] hover:bg-[#b32505]'
-                        : 'btn-primary'
-                    }`}
-                  >
-                    <Check className="h-4 w-4" />
-                    <span>{room.player.isReady ? 'Cancel Ready' : 'I AM READY!'}</span>
-                  </button>
-                </div>
-              </div>
-            )}
+                      <button
+                        type="button"
+                        onClick={handleToggleReady}
+                        className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-lg px-8 h-[44px] text-sm font-semibold text-white transition-all active:scale-95 ${
+                          room.player.isReady
+                            ? 'bg-[#c13515] hover:bg-[#b32505]'
+                            : 'btn-primary'
+                        }`}
+                      >
+                        <Check className="h-4 w-4" />
+                        <span>{room.player.isReady ? 'Cancel Ready' : 'I AM READY!'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )
+            })()}
           </div>
         )}
       </div>
