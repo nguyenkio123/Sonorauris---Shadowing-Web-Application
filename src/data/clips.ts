@@ -6,15 +6,19 @@ import type { Clip } from '../types/clip'
  *
  * Each clip has:
  * - 100% authentic English audio
- * - Fully embeddable YouTube video without restriction (no Error 150)
- * - Exact 1-to-1 matching referenceText transcript (sourced from TED.com JSON-LD)
- * - Second-precise startTimeSec and endTimeSec within 8–20 seconds duration
+ * - Correct YouTube video ID verified via youtube-transcript.ai
+ * - Exact transcript sourced from YouTube's own captions (auto/manual)
+ * - Second-precise startTimeSec and endTimeSec matching actual spoken content
  * - Balanced distribution across Topics and Difficulties
  *
- * VERIFICATION METHOD: All YouTube IDs confirmed via youtube.com/oembed API (200 OK).
- * All transcripts verified against TED.com official structured data.
+ * VERIFICATION METHOD (2-step):
+ *   1. YouTube ID verified by fetching full transcript from youtube-transcript.ai
+ *   2. Transcript text extracted directly from the YouTube caption timestamps
  */
 export const SAMPLE_CLIPS: Clip[] = [
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIPS 1–5: Original clips, previously verified working
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-1',
     youtubeVideoId: 'UF8uR6Z6KLc',
@@ -100,8 +104,11 @@ export const SAMPLE_CLIPS: Clip[] = [
     difficulty: 'Advanced',
     locale: 'en-US',
   },
-  // ── Clip 6: Brené Brown — The Power of Vulnerability ──
-  // YT ID verified via oEmbed ✅ | Transcript from TED.com JSON-LD ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 6: Brené Brown — The Power of Vulnerability
+  // YT ID: iCvmsMzlF7o ✅ | Captions verified at [1:16]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-6',
     youtubeVideoId: 'iCvmsMzlF7o',
@@ -110,34 +117,41 @@ export const SAMPLE_CLIPS: Clip[] = [
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1519791883288-dc8bd696e667?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 50,
-    endTimeSec: 64,
-    durationSec: 14,
+    startTimeSec: 76,
+    endTimeSec: 92,
+    durationSec: 16,
     referenceText:
       "And maybe stories are just data with a soul. And maybe I'm just a storyteller. And so I said, you know what, why don't you just say I'm a researcher-storyteller.",
     topic: 'Debate & Opinion',
     difficulty: 'Beginner',
     locale: 'en-US',
   },
-  // ── Clip 7: Carol Dweck — The Power of Believing That You Can Improve ──
-  // YT ID verified via oEmbed ✅ | Transcript from TED.com JSON-LD ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 7: Carol Dweck — The Power of Believing You Can Improve
+  // YT ID: _X0mgOOSpLU ✅ | Captions verified at [0:13]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-7',
-    youtubeVideoId: 'PHe0bXAIuk0',
+    youtubeVideoId: '_X0mgOOSpLU',
     title: 'The Power of Believing You Can Improve',
-    sourceUrl: 'https://www.youtube.com/watch?v=PHe0bXAIuk0',
+    sourceUrl: 'https://www.youtube.com/watch?v=_X0mgOOSpLU',
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 14,
-    endTimeSec: 28,
+    startTimeSec: 13,
+    endTimeSec: 27,
     durationSec: 14,
     referenceText:
-      "And I thought that was fantastic, because if you get a failing grade, you think, I'm nothing, I'm nowhere. But if you get the grade Not Yet, you understand that you're on a learning curve. It gives you a path into the future.",
+      "I heard about a high school in Chicago where students had to pass a certain number of courses to graduate, and if they didn't pass a course, they got the grade \"Not Yet.\" And I thought that was fantastic.",
     topic: 'Daily Life',
     difficulty: 'Beginner',
     locale: 'en-US',
   },
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIPS 8–10: Original clips, previously verified working
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-8',
     youtubeVideoId: 'g-jwWYX7Jlo',
@@ -189,63 +203,76 @@ export const SAMPLE_CLIPS: Clip[] = [
     difficulty: 'Beginner',
     locale: 'en-US',
   },
-  // ── Clip 11: Dan Pink — The Puzzle of Motivation ──
-  // YT ID verified via oEmbed ✅ | Transcript from TED.com JSON-LD ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 11: Dan Pink — The Puzzle of Motivation
+  // YT ID: rrkrvAUbU9Y ✅ | Captions verified at [1:16]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-11',
-    youtubeVideoId: '5MgBikgcWnY',
+    youtubeVideoId: 'rrkrvAUbU9Y',
     title: 'The Puzzle of Motivation',
-    sourceUrl: 'https://www.youtube.com/watch?v=5MgBikgcWnY',
+    sourceUrl: 'https://www.youtube.com/watch?v=rrkrvAUbU9Y',
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 45,
-    endTimeSec: 58,
-    durationSec: 13,
+    startTimeSec: 76,
+    endTimeSec: 90,
+    durationSec: 14,
     referenceText:
       "I want to make a hard-headed, evidence-based, dare I say lawyerly case, for rethinking how we run our businesses.",
     topic: 'Work & Tech',
     difficulty: 'Intermediate',
     locale: 'en-US',
   },
-  // ── Clip 12: Chimamanda Ngozi Adichie — The Danger of a Single Story ──
-  // YT ID verified via oEmbed ✅ | Transcript from TED.com JSON-LD ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 12: Chimamanda Ngozi Adichie — The Danger of a Single Story
+  // YT ID: D9Ihs241zeg ✅ | Captions verified at [0:12]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-12',
-    youtubeVideoId: 'd0NHOpeczUU',
+    youtubeVideoId: 'D9Ihs241zeg',
     title: 'The Danger of a Single Story',
-    sourceUrl: 'https://www.youtube.com/watch?v=d0NHOpeczUU',
+    sourceUrl: 'https://www.youtube.com/watch?v=D9Ihs241zeg',
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80',
     startTimeSec: 12,
-    endTimeSec: 28,
-    durationSec: 16,
+    endTimeSec: 27,
+    durationSec: 15,
     referenceText:
-      "I grew up on a university campus in eastern Nigeria. My mother says that I started reading at the age of two, although I think four is probably close to the truth.",
+      "I'm a storyteller. And I would like to tell you a few personal stories about what I like to call the danger of the single story. I grew up on a university campus in eastern Nigeria.",
     topic: 'Movies & Culture',
     difficulty: 'Intermediate',
     locale: 'en-US',
   },
-  // ── Clip 13: Shawn Achor — The Happy Secret to Better Work ──
-  // YT ID verified via oEmbed ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 13: Shawn Achor — The Happy Secret to Better Work
+  // YT ID: fLJsdqxnZb0 ✅ | Captions verified at [0:15]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-13',
-    youtubeVideoId: 'rPh3c8Sa37M',
+    youtubeVideoId: 'fLJsdqxnZb0',
     title: 'The Happy Secret to Better Work',
-    sourceUrl: 'https://www.youtube.com/watch?v=rPh3c8Sa37M',
+    sourceUrl: 'https://www.youtube.com/watch?v=fLJsdqxnZb0',
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 30,
-    endTimeSec: 45,
+    startTimeSec: 15,
+    endTimeSec: 30,
     durationSec: 15,
     referenceText:
-      "When I was seven years old and my sister was just five years old, we were playing on top of a bunk bed. I was two years older than my sister at the time. I mean, I'm two years older than her now.",
+      "When I was seven years old and my sister was just five years old, we were playing on top of a bunk bed. I was two years older than my sister at the time -- I mean, I'm two years older than her now.",
     topic: 'Daily Life',
     difficulty: 'Beginner',
     locale: 'en-US',
   },
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 14: Original clip, previously verified working
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-14',
     youtubeVideoId: 'ZXsQAXx_ao0',
@@ -263,18 +290,21 @@ export const SAMPLE_CLIPS: Clip[] = [
     difficulty: 'Beginner',
     locale: 'en-US',
   },
-  // ── Clip 15: Elizabeth Gilbert — Your Elusive Creative Genius ──
-  // YT ID verified via oEmbed ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 15: Elizabeth Gilbert — Your Elusive Creative Genius
+  // YT ID: 86x-u-tz0MA ✅ | Captions verified at [0:13]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-15',
-    youtubeVideoId: 'Lp7E973zozc',
+    youtubeVideoId: '86x-u-tz0MA',
     title: 'Your Elusive Creative Genius',
-    sourceUrl: 'https://www.youtube.com/watch?v=Lp7E973zozc',
+    sourceUrl: 'https://www.youtube.com/watch?v=86x-u-tz0MA',
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 12,
-    endTimeSec: 27,
+    startTimeSec: 13,
+    endTimeSec: 28,
     durationSec: 15,
     referenceText:
       "I am a writer. Writing books is my profession but it's more than that, of course. It is also my great lifelong love and fascination.",
@@ -282,8 +312,11 @@ export const SAMPLE_CLIPS: Clip[] = [
     difficulty: 'Intermediate',
     locale: 'en-US',
   },
-  // ── Clip 16: Brené Brown — Vulnerability ──
-  // YT ID verified via oEmbed ✅ | Transcript from TED.com JSON-LD ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 16: Brené Brown — Connection and Worthiness
+  // YT ID: iCvmsMzlF7o ✅ | Captions verified at [3:19]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-16',
     youtubeVideoId: 'iCvmsMzlF7o',
@@ -292,27 +325,30 @@ export const SAMPLE_CLIPS: Clip[] = [
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 240,
-    endTimeSec: 258,
-    durationSec: 18,
+    startTimeSec: 199,
+    endTimeSec: 215,
+    durationSec: 16,
     referenceText:
       "Connection is why we're here. It's what gives purpose and meaning to our lives. This is what it's all about.",
     topic: 'Debate & Opinion',
     difficulty: 'Beginner',
     locale: 'en-US',
   },
-  // ── Clip 17: Dan Pink — The Puzzle of Motivation (Advanced Segment) ──
-  // YT ID verified via oEmbed ✅ | Transcript from TED.com JSON-LD ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 17: Dan Pink — Autonomy, Mastery and Purpose
+  // YT ID: rrkrvAUbU9Y ✅ | Captions verified at [12:11]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-17',
-    youtubeVideoId: '5MgBikgcWnY',
+    youtubeVideoId: 'rrkrvAUbU9Y',
     title: 'Autonomy, Mastery and Purpose',
-    sourceUrl: 'https://www.youtube.com/watch?v=5MgBikgcWnY',
+    sourceUrl: 'https://www.youtube.com/watch?v=rrkrvAUbU9Y',
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 670,
-    endTimeSec: 688,
+    startTimeSec: 731,
+    endTimeSec: 749,
     durationSec: 18,
     referenceText:
       "And to my mind, that new operating system for our businesses revolves around three elements: autonomy, mastery and purpose. Autonomy: the urge to direct our own lives.",
@@ -320,18 +356,21 @@ export const SAMPLE_CLIPS: Clip[] = [
     difficulty: 'Advanced',
     locale: 'en-US',
   },
-  // ── Clip 18: Carol Dweck — Growth Mindset (Advanced Segment) ──
-  // YT ID verified via oEmbed ✅ | Transcript from TED.com JSON-LD ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 18: Carol Dweck — Growth Mindset vs Fixed Mindset
+  // YT ID: _X0mgOOSpLU ✅ | Captions verified at [1:14]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-18',
-    youtubeVideoId: 'PHe0bXAIuk0',
+    youtubeVideoId: '_X0mgOOSpLU',
     title: 'The Tyranny of Now vs The Power of Yet',
-    sourceUrl: 'https://www.youtube.com/watch?v=PHe0bXAIuk0',
+    sourceUrl: 'https://www.youtube.com/watch?v=_X0mgOOSpLU',
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 48,
-    endTimeSec: 66,
+    startTimeSec: 74,
+    endTimeSec: 92,
     durationSec: 18,
     referenceText:
       'They understood that their abilities could be developed. They had what I call a growth mindset. But other students felt it was tragic, catastrophic. From their more fixed mindset perspective, their intelligence had been up for judgment, and they failed.',
@@ -339,18 +378,21 @@ export const SAMPLE_CLIPS: Clip[] = [
     difficulty: 'Advanced',
     locale: 'en-US',
   },
-  // ── Clip 19: Chimamanda — The Danger of a Single Story (Advanced Segment) ──
-  // YT ID verified via oEmbed ✅ | Transcript from TED.com JSON-LD ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 19: Chimamanda — The Single Story Creates Stereotypes
+  // YT ID: D9Ihs241zeg ✅ | Captions verified at [12:48]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-19',
-    youtubeVideoId: 'd0NHOpeczUU',
+    youtubeVideoId: 'D9Ihs241zeg',
     title: 'The Single Story Creates Stereotypes',
-    sourceUrl: 'https://www.youtube.com/watch?v=d0NHOpeczUU',
+    sourceUrl: 'https://www.youtube.com/watch?v=D9Ihs241zeg',
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 830,
-    endTimeSec: 848,
+    startTimeSec: 768,
+    endTimeSec: 786,
     durationSec: 18,
     referenceText:
       'The single story creates stereotypes, and the problem with stereotypes is not that they are untrue, but that they are incomplete. They make one story become the only story.',
@@ -358,19 +400,22 @@ export const SAMPLE_CLIPS: Clip[] = [
     difficulty: 'Advanced',
     locale: 'en-US',
   },
-  // ── Clip 20: Dan Pink — Motivation (Science Summary) ──
-  // YT ID verified via oEmbed ✅ | Transcript from TED.com JSON-LD ✅
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CLIP 20: Dan Pink — What Science Knows vs What Business Does
+  // YT ID: rrkrvAUbU9Y ✅ | Captions verified at [4:53]
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 'clip-20',
-    youtubeVideoId: '5MgBikgcWnY',
+    youtubeVideoId: 'rrkrvAUbU9Y',
     title: 'What Science Knows About Motivation',
-    sourceUrl: 'https://www.youtube.com/watch?v=5MgBikgcWnY',
+    sourceUrl: 'https://www.youtube.com/watch?v=rrkrvAUbU9Y',
     channelName: 'TED',
     thumbnailUrl:
       'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=800&q=80',
-    startTimeSec: 262,
-    endTimeSec: 280,
-    durationSec: 18,
+    startTimeSec: 293,
+    endTimeSec: 310,
+    durationSec: 17,
     referenceText:
       "If you look at the science, there is a mismatch between what science knows and what business does.",
     topic: 'Work & Tech',
