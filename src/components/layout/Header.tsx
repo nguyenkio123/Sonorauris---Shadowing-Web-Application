@@ -1,4 +1,4 @@
-import { Flame, Coins, Zap, Swords, Headphones, Sparkles, Trophy } from 'lucide-react'
+import { Flame, Coins, Swords, Headphones, Sparkles, Trophy } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { getDailyQuests, getMe } from '../../api'
@@ -101,9 +101,9 @@ export function Header() {
           </div>
         </Link>
 
-        {/* Center Product Navigation Tabs — Airbnb 3-Product Pattern with NEW tags */}
+        {/* Center Product Navigation Tabs — Clean Minimalist Airbnb Pattern */}
         <nav className="flex items-center h-full gap-2 sm:gap-6">
-          {/* Product Tab 1: Practice Clips */}
+          {/* Product Tab 1: Practice */}
           <Link
             to="/"
             className={`relative flex items-center gap-2 h-full px-3 text-[15px] font-medium transition-colors ${
@@ -113,13 +113,13 @@ export function Header() {
             }`}
           >
             <Headphones className="h-4 w-4" />
-            <span>Practice Clips</span>
+            <span>Practice</span>
             {isHomeActive && (
               <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#222222]" />
             )}
           </Link>
 
-          {/* Product Tab 2: 1v1 Battle Arena (with NEW Tag) */}
+          {/* Product Tab 2: 1v1 Battle Arena */}
           <Link
             to="/battle/lobby"
             className={`relative flex items-center gap-2 h-full px-3 text-[15px] font-medium transition-colors ${
@@ -136,7 +136,7 @@ export function Header() {
             )}
           </Link>
 
-          {/* Product Tab 3: Cosmetics Shop (FR-SHOP-01) */}
+          {/* Product Tab 3: Shop */}
           <Link
             to="/shop"
             className={`relative flex items-center gap-2 h-full px-3 text-[15px] font-medium transition-colors ${
@@ -146,27 +146,26 @@ export function Header() {
             }`}
           >
             <Sparkles className="h-4 w-4 text-[#ff385c]" />
-            <span>Cosmetics Shop</span>
-            <span className="new-tag">SHOP</span>
+            <span>Shop</span>
             {isShopActive && (
               <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#222222]" />
             )}
           </Link>
         </nav>
 
-        {/* Right Utilities: User Stats and Profile */}
+        {/* Right Utilities: Quests, Quick Stats, and Profile */}
         <div className="flex items-center gap-2 sm:gap-3">
           {user && (
             <>
-              {/* Daily Quests Trigger Button (FR-QUEST-01) */}
+              {/* Daily Quests Trigger Button (English, FR-QUEST-01) */}
               <button
                 type="button"
                 onClick={() => setIsQuestsOpen(true)}
-                title={`Nhiệm vụ hằng ngày (${completedCount}/${quests.length || 3})`}
+                title={`Daily Quests (${completedCount}/${quests.length || 3})`}
                 className="relative flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222] hover:border-amber-300 hover:bg-amber-50/50 transition-all cursor-pointer group"
               >
                 <Trophy className="h-3.5 w-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
-                <span className="font-semibold text-[12px] hidden md:inline">Nhiệm vụ</span>
+                <span className="font-semibold text-[12px] hidden md:inline">Quests</span>
                 <span className="font-mono text-[11px] text-gray-500">
                   {completedCount}/{quests.length || 3}
                 </span>
@@ -178,56 +177,37 @@ export function Header() {
                 )}
               </button>
 
-              {/* Streak Pill -> Link to shop streak restore */}
+              {/* Unified Quick Currency Pill: Streak & Coins */}
               <Link
                 to="/shop"
-                title={`${user.streak} days active streak. Click to manage or restore.`}
-                className="flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222] hover:border-rose-300 transition-colors cursor-pointer group"
+                title={`${user.streak} days active streak • ${user.coins} Coins (Click to visit Shop)`}
+                className="flex items-center gap-2.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-semibold text-[#222222] hover:border-[#dddddd] transition-all cursor-pointer group"
               >
-                <Flame className="h-3.5 w-3.5 fill-[#ff385c] text-[#ff385c] group-hover:scale-110 transition-transform" />
-                <span className="font-mono font-bold text-[12px]">{user.streak}d</span>
+                <div className="flex items-center gap-1 text-[#ff385c]">
+                  <Flame className="h-3.5 w-3.5 fill-[#ff385c] group-hover:scale-110 transition-transform" />
+                  <span className="font-mono text-[12px]">{user.streak}d</span>
+                </div>
+                <div className="h-3 w-px bg-[#dddddd]" />
+                <div className="flex items-center gap-1 text-amber-600">
+                  <Coins className="h-3.5 w-3.5 fill-amber-500 text-amber-500 group-hover:scale-110 transition-transform" />
+                  <span className="font-mono text-[12px]">{user.coins}</span>
+                </div>
               </Link>
 
-              {/* Coins Pill -> Link to shop */}
+              {/* User Avatar & Name Pill */}
               <Link
                 to="/shop"
-                title={`${user.coins} Coins balance. Click to visit Shop.`}
-                className="flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222] hover:border-amber-300 transition-colors cursor-pointer"
+                className="flex items-center gap-2 rounded-full border border-[#dddddd] p-1 pr-3 hover:shadow-xs hover:border-[#222222] transition-all cursor-pointer group"
+                title={`Signed in as ${user.displayName} • ${user.equippedTitle || 'Learner'}`}
               >
-                <Coins className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                <span className="font-mono font-bold text-[12px]">{user.coins}</span>
-              </Link>
-
-              {/* XP Pill */}
-              <div
-                title={`${user.xp} Total XP earned`}
-                className="hidden lg:flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222]"
-              >
-                <Zap className="h-3.5 w-3.5 fill-[#460479] text-[#460479]" />
-                <span className="font-mono font-bold text-[12px]">{user.xp} XP</span>
-              </div>
-
-              {/* User Avatar & Title Pill */}
-              <Link
-                to="/shop"
-                className="flex items-center gap-2 rounded-full border border-[#dddddd] p-1 pr-3 hover:shadow-sm hover:border-[#222222] transition-all cursor-pointer group"
-                title={`Signed in as ${user.displayName} • ${user.equippedTitle || 'Shadowing Learner'}`}
-              >
-                <div className="relative">
-                  <img
-                    src={user.avatarUrl}
-                    alt={user.displayName}
-                    className="h-7 w-7 rounded-full bg-[#f2f2f2] object-cover ring-1 ring-[#ebebeb]"
-                  />
-                </div>
-                <div className="hidden sm:flex flex-col text-left leading-none">
-                  <span className="text-xs font-medium text-[#222222] max-w-[85px] truncate">
-                    {user.displayName}
-                  </span>
-                  <span className="text-[10px] text-[#ff385c] font-medium truncate max-w-[85px]">
-                    {user.equippedTitle || 'Learner'}
-                  </span>
-                </div>
+                <img
+                  src={user.avatarUrl}
+                  alt={user.displayName}
+                  className="h-7 w-7 rounded-full bg-[#f2f2f2] object-cover ring-1 ring-[#ebebeb]"
+                />
+                <span className="hidden sm:inline text-xs font-medium text-[#222222] max-w-[95px] truncate">
+                  {user.displayName}
+                </span>
               </Link>
             </>
           )}

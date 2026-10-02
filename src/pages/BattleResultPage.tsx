@@ -193,10 +193,10 @@ export function BattleResultPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base sm:text-lg font-bold text-[#222222] flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-amber-500" />
-                <span>Bảng Xếp Hạng Đấu Trường ({participants.length} Người Chơi)</span>
+                <span>Arena Leaderboard ({participants.length} Players)</span>
               </h2>
               <span className="text-xs text-[#6a6a6a]">
-                Xếp hạng theo Battle Score (AI Speech Assessment)
+                Ranked by Battle Score (AI Speech Assessment)
               </span>
             </div>
 
@@ -210,17 +210,17 @@ export function BattleResultPage() {
                   rank === 1 ? (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold font-mono">
                       <Trophy className="h-3.5 w-3.5 text-amber-600 fill-amber-500" />
-                      #1 QUÁN QUÂN
+                      #1 CHAMPION
                     </span>
                   ) : rank === 2 ? (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold font-mono">
                       <Medal className="h-3.5 w-3.5 text-slate-500" />
-                      #2 Á QUÂN
+                      #2 RUNNER-UP
                     </span>
                   ) : rank === 3 ? (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-300 text-xs font-bold font-mono">
                       <Medal className="h-3.5 w-3.5 text-amber-700" />
-                      #3 HẠNG BA
+                      #3 3RD PLACE
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-300 text-xs font-bold font-mono">
@@ -258,7 +258,7 @@ export function BattleResultPage() {
                             </span>
                             {isMe && (
                               <span className="rounded-full bg-[#ff385c]/10 text-[#ff385c] px-2 py-0.5 text-[10px] font-bold font-mono">
-                                BẠN
+                                YOU
                               </span>
                             )}
                             {p.isBot && (

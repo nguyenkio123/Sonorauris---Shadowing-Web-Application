@@ -74,19 +74,19 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-bold text-gray-900">Nhiệm vụ Hằng ngày</h3>
+                <h3 className="text-xl font-bold text-gray-900">Daily Quests</h3>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-rausch/10 text-rausch font-semibold">
-                  {completedCount}/{quests.length} Đạt
+                  {completedCount}/{quests.length} Completed
                 </span>
               </div>
               <p className="text-xs text-gray-500 mt-0.5">
-                Hoàn thành mục tiêu mỗi ngày để nhận thêm XP và Coins (Làm mới lúc 00:00).
+                Complete daily goals to earn bonus XP and Coins (resets at 00:00 UTC).
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            aria-label="Đóng bảng nhiệm vụ"
+            aria-label="Close daily quests"
             className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -123,7 +123,7 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
                       <h4 className="text-sm font-bold text-gray-900">{quest.title}</h4>
                       {quest.completed && !quest.claimed && (
                         <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500 text-white font-bold animate-pulse">
-                          Sẵn sàng nhận
+                          Ready to claim
                         </span>
                       )}
                     </div>
@@ -146,7 +146,7 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
                 <div className="flex items-center gap-3 mt-3">
                   <div className="flex-1">
                     <div className="flex justify-between text-[11px] font-semibold text-gray-500 mb-1">
-                      <span>Tiến độ</span>
+                      <span>Progress</span>
                       <span>
                         {quest.currentValue} / {quest.targetValue}
                       </span>
@@ -164,7 +164,7 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
                   <div className="shrink-0">
                     {quest.claimed ? (
                       <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 px-3 py-1.5 rounded-xl bg-gray-100">
-                        <Check className="w-3.5 h-3.5 text-gray-400" /> Đã nhận
+                        <Check className="w-3.5 h-3.5 text-gray-400" /> Claimed
                       </span>
                     ) : quest.completed ? (
                       <button
@@ -173,11 +173,11 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
                         className="px-4 py-1.5 rounded-xl bg-rausch hover:bg-[#e0314f] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
-                        {claimingId === quest.id ? 'Đang nhận...' : 'Nhận thưởng'}
+                        {claimingId === quest.id ? 'Claiming...' : 'Claim Reward'}
                       </button>
                     ) : (
                       <span className="inline-flex items-center text-xs font-medium text-gray-400 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-100">
-                        Chưa đạt
+                        In Progress
                       </span>
                     )}
                   </div>
@@ -189,7 +189,7 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
 
         {/* Footer tip */}
         <div className="pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
-          Mỗi ngày hoàn thành 3 nhiệm vụ để tích lũy thêm tối đa <strong className="text-gray-700">75 XP</strong> và <strong className="text-gray-700">25 Coins</strong>!
+          Complete all 3 quests daily to earn up to <strong className="text-gray-700">75 XP</strong> and <strong className="text-gray-700">25 Coins</strong>!
         </div>
       </div>
     </div>

@@ -175,7 +175,7 @@ export function BattleLobbyPage() {
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <label className="block text-xs font-semibold text-[#222222] uppercase tracking-wider">
-                      Arena Mode (Sức chứa)
+                      Arena Mode (Capacity)
                     </label>
                     <span className="new-tag">FR-BAT-07</span>
                   </div>
@@ -441,10 +441,10 @@ export function BattleLobbyPage() {
                             <Users className="absolute h-3.5 w-3.5 text-[#ff385c]" />
                           </div>
                           <h4 className="text-xs font-semibold text-gray-800">
-                            Chờ đấu thủ #{idx + 1}...
+                            Waiting for gladiator #{idx + 1}...
                           </h4>
                           <p className="text-[11px] text-gray-500 max-w-[160px] mt-0.5 leading-tight">
-                            Chia sẻ mã phòng hoặc Bot sẽ tham gia tự động.
+                            Share room code or sparring bot will join automatically.
                           </p>
                         </div>
                       )
@@ -457,15 +457,15 @@ export function BattleLobbyPage() {
                       {allReady ? (
                         <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
                           <Zap className="h-4 w-4 text-emerald-600" />
-                          <span>Tất cả {maxPlayers} đấu thủ đã sẵn sàng! Bắt đầu đếm ngược...</span>
+                          <span>All {maxPlayers} gladiators ready! Starting countdown...</span>
                         </span>
                       ) : room.player.isReady ? (
                         <span className="text-amber-600 font-semibold">
-                          Bạn đã sẵn sàng! Chờ đấu thủ khác ({readyCount}/{maxPlayers})...
+                          You are ready! Waiting for others ({readyCount}/{maxPlayers})...
                         </span>
                       ) : (
                         <span>
-                          Nhấn "Tôi đã sẵn sàng" khi bạn đã chuẩn bị thu âm shadowing.
+                          Click "I'm Ready" when you are prepared to shadow record.
                         </span>
                       )}
                     </div>
