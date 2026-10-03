@@ -5,6 +5,9 @@ import {
   Crown,
   Edit2,
   Flame,
+  LogIn,
+  LogOut,
+  Mail,
   Mic,
   RotateCcw,
   Sparkles,
@@ -18,11 +21,13 @@ import { Link } from 'react-router-dom'
 import { getMe, getUserAttempts, resetDemo, setDisplayName } from '../../api'
 import type { UserProfile } from '../../types/user'
 import type { Attempt } from '../../types/attempt'
+import { useAuth } from '../../context/AuthContext'
 
 interface ProfileSettingsModalProps {
   isOpen: boolean
   onClose: () => void
   onProfileUpdated?: () => void
+  onOpenAuth?: () => void
 }
 
 type TabType = 'ACCOUNT' | 'STATS' | 'AUDIO'
@@ -31,7 +36,9 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   isOpen,
   onClose,
   onProfileUpdated,
+  onOpenAuth,
 }) => {
+  const { user: authUser, signOut, isConfigured } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('ACCOUNT')
   const [user, setUser] = useState<UserProfile | null>(null)
   const [attempts, setAttempts] = useState<Attempt[]>([])
@@ -358,9 +365,67 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               )}
             </div>
 
-            {/* Account Storage Architecture notice */}
-            <div className="text-[11px] text-[#6a6a6a] bg-gray-50 border border-gray-200/80 rounded-xl p-3 leading-relaxed">
-              <span className="font-semibold text-gray-800">Storage Mode:</span> Browser Local Storage (Sandbox Profile). When connected to Supabase Auth, this profile automatically synchronizes across all your devices.
+            {/* Account Credentials & Sync Status */}
+            <div className="rounded-xl border border-[#ebebeb] bg-[#f7f9fa] p-4 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#5B6780] font-medium flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5 text-[#171B2A]" />
+                  <span>Email Account</span>
+                </span>
+                <span className="font-mono text-[#171B2A] font-semibold">
+                  {authUser?.email || 'guest@sonorauris.com'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-[#ebebeb]">
+                <span className="text-[#5B6780] font-medium">Account Status</span>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    authUser?.isGuest
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-emerald-100 text-emerald-800'
+                  }`}
+                >
+                  {authUser?.isGuest ? 'Guest (Local Sandbox)' : 'Verified Member'}
+                </span>
+              </div>
+
+              <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between gap-3">
+                {authUser?.isGuest ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose()
+                      onOpenAuth?.()
+                    }}
+                    className="w-full py-2 px-3 rounded-xl btn-primary text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <LogIn className="h-3.5 w-3.5" />
+                    <span>Sign In or Create Account</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await signOut()
+                      void loadProfile()
+                      onProfileUpdated?.()
+                    }}
+                    className="w-full py-2 px-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-600 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Architecture Notice */}
+            <div className="text-[11px] text-[#5B6780] bg-white border border-[#dddddd] rounded-xl p-3 leading-relaxed">
+              <span className="font-semibold text-[#171B2A]">Sync Architecture:</span>{' '}
+              {isConfigured
+                ? 'Connected to Supabase Cloud Auth. Your progress and rewards are automatically synchronized across all devices.'
+                : 'Running in Local Sandbox Mode. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env to enable multi-device Cloud Sync.'}
             </div>
           </div>
         )}

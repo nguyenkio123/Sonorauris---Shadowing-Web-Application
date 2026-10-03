@@ -1,4 +1,4 @@
-import { Flame, Coins, Swords, Headphones, Sparkles, Trophy } from 'lucide-react'
+import { Flame, Coins, Swords, Headphones, Sparkles, Trophy, LogIn } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { getDailyQuests, getMe } from '../../api'
@@ -6,12 +6,16 @@ import type { UserProfile } from '../../types/user'
 import type { DailyQuest } from '../../types/quest'
 import { DailyQuestsModal } from './DailyQuestsModal'
 import { ProfileSettingsModal } from './ProfileSettingsModal'
+import { useAuth } from '../../context/AuthContext'
+import { AuthModal } from '../auth/AuthModal'
 
 export function Header() {
+  const { user: authUser } = useAuth()
   const [user, setUser] = useState<UserProfile | null>(null)
   const [quests, setQuests] = useState<DailyQuest[]>([])
   const [isQuestsOpen, setIsQuestsOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isAuthOpen, setIsAuthOpen] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
@@ -191,6 +195,19 @@ export function Header() {
                 </div>
               </Link>
 
+              {/* Sign In Button for Guest / Anonymous Users */}
+              {authUser?.isGuest && (
+                <button
+                  type="button"
+                  onClick={() => setIsAuthOpen(true)}
+                  className="hidden sm:flex items-center gap-1.5 rounded-full bg-[#171B2A] hover:bg-[#2b3445] text-white text-xs font-semibold px-3 py-1.5 transition-all shadow-xs cursor-pointer"
+                  title="Sign In or Register"
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  <span>Sign In</span>
+                </button>
+              )}
+
               {/* User Profile & Settings Trigger */}
               <button
                 type="button"
@@ -224,6 +241,16 @@ export function Header() {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         onProfileUpdated={() => void reloadData()}
+        onOpenAuth={() => setIsAuthOpen(true)}
+      />
+
+      {/* Authentication Modal (Sign In / Register) */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => {
+          setIsAuthOpen(false)
+          void reloadData()
+        }}
       />
     </header>
   )
