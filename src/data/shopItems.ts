@@ -71,11 +71,11 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'frame-rausch',
     type: 'FRAME',
-    name: 'Rausch Voltage',
-    description: 'Vibrant Airbnb Rausch neon pulse border radiating competitive passion.',
+    name: 'Turquoise Voltage',
+    description: 'Vibrant Sonorauris turquoise pulse border radiating competitive passion.',
     price: 30,
-    assetValue: 'ring-2 ring-[#ff385c] shadow-[0_0_12px_rgba(255,56,92,0.45)]',
-    previewColor: '#ff385c',
+    assetValue: 'ring-2 ring-[#4E9488] shadow-[0_0_12px_rgba(78,148,136,0.45)]',
+    previewColor: '#4E9488',
     rarity: 'Rare',
   },
   {
@@ -157,7 +157,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     description: 'The supreme badge of pronunciation precision and 1v1 dominance.',
     price: 75,
     assetValue: 'Phonetic Grandmaster',
-    previewColor: '#ff385c',
+    previewColor: '#4E9488',
     rarity: 'Legendary',
   },
 ]

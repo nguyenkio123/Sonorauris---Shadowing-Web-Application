@@ -71,8 +71,8 @@ export function DemoCheatBar() {
           'rgba(0, 0, 0, 0.04) 0 0 0 1px, rgba(0, 0, 0, 0.08) 0 4px 14px 0, rgba(0, 0, 0, 0.12) 0 8px 24px 0',
       }}
     >
-      <div className="flex items-center gap-1.5 font-bold text-[#ff385c] text-[11px] uppercase tracking-wider">
-        <span className="flex h-2 w-2 rounded-full bg-[#ff385c] animate-pulse" />
+      <div className="flex items-center gap-1.5 font-bold text-[#4E9488] text-[11px] uppercase tracking-wider">
+        <span className="flex h-2 w-2 rounded-full bg-[#4E9488] animate-pulse" />
         <span>DEMO:</span>
       </div>
 
@@ -130,7 +130,7 @@ export function DemoCheatBar() {
           }}
           className={`px-2.5 py-1 rounded-full font-bold font-mono text-[11px] transition-all ${
             forced === null
-              ? 'bg-[#ff385c] text-white shadow-sm'
+              ? 'bg-[#4E9488] text-white shadow-sm'
               : 'text-[#6a6a6a] hover:text-[#222222]'
           }`}
           title="Shortcut: Shift + 0 (Natural)"

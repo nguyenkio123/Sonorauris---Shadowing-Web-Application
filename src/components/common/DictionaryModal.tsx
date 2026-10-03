@@ -67,15 +67,15 @@ export function DictionaryModal({ word, onClose }: DictionaryModalProps) {
         </button>
 
         {/* Header Badge */}
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#ff385c] mb-2">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#4E9488] mb-2">
           <BookOpen className="h-4 w-4" />
           <span>TRANSCRIPT DICTIONARY</span>
           <span className="new-tag">FR-DICT-01</span>
         </div>
 
         {loading ? (
-          <div className="py-8 flex flex-col items-center justify-center text-xs text-[#6a6a6a]">
-            <span className="h-6 w-6 rounded-full border-2 border-[#ff385c]/30 border-t-[#ff385c] animate-spin mb-2" />
+          <div className="py-8 flex flex-col items-center justify-center text-xs text-[#5B6780]">
+            <span className="h-6 w-6 rounded-full border-2 border-[#4E9488]/30 border-t-[#4E9488] animate-spin mb-2" />
             Looking up definition for "{word}"...
           </div>
         ) : entry ? (
@@ -84,17 +84,17 @@ export function DictionaryModal({ word, onClose }: DictionaryModalProps) {
             <div className="flex items-center justify-between gap-3 mt-1 pb-3 border-b border-[#ebebeb]">
               <div>
                 <div className="flex items-baseline gap-2">
-                  <h3 className="text-2xl font-bold text-[#222222] capitalize">
+                  <h3 className="text-2xl font-bold text-[#171B2A] capitalize">
                     {entry.word}
                   </h3>
                   {entry.partOfSpeech && (
-                    <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded-full bg-[#f7f7f7] text-[#6a6a6a] border border-[#ebebeb]">
+                    <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded-full bg-[#f7f9fa] text-[#5B6780] border border-[#ebebeb]">
                       {entry.partOfSpeech}
                     </span>
                   )}
                 </div>
                 {entry.phonetic && (
-                  <span className="text-sm font-mono text-[#6a6a6a] mt-0.5 block">
+                  <span className="text-sm font-mono text-[#5B6780] mt-0.5 block">
                     {entry.phonetic}
                   </span>
                 )}
@@ -105,8 +105,8 @@ export function DictionaryModal({ word, onClose }: DictionaryModalProps) {
                 onClick={handlePlayAudio}
                 className={`flex items-center gap-1.5 h-9 px-3 rounded-full border transition-all ${
                   playing
-                    ? 'bg-[#ff385c] text-white border-[#ff385c] scale-105'
-                    : 'bg-[#f7f7f7] text-[#222222] border-[#ebebeb] hover:border-[#c1c1c1]'
+                    ? 'bg-[#4E9488] text-white border-[#4E9488] scale-105'
+                    : 'bg-[#f7f9fa] text-[#171B2A] border-[#ebebeb] hover:border-[#c1c1c1]'
                 }`}
                 title="Listen to pronunciation"
               >
@@ -117,17 +117,17 @@ export function DictionaryModal({ word, onClose }: DictionaryModalProps) {
 
             {/* Definition */}
             <div className="mt-4">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6a6a6a] block mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5B6780] block mb-1">
                 Definition
               </span>
-              <p className="text-sm text-[#222222] leading-relaxed">
+              <p className="text-sm text-[#171B2A] leading-relaxed">
                 {entry.definition}
               </p>
             </div>
 
             {/* Example sentence if available */}
             {entry.example && (
-              <div className="mt-4 p-3 rounded-xl bg-[#f7f7f7] border-l-3 border-[#ff385c] text-xs text-[#3f3f3f] italic leading-relaxed">
+              <div className="mt-4 p-3 rounded-xl bg-[#f7f9fa] border-l-3 border-[#4E9488] text-xs text-[#283044] italic leading-relaxed">
                 "{entry.example}"
               </div>
             )}

@@ -91,7 +91,7 @@ export function Footer({ onDataReset }: FooterProps) {
             <ul className="space-y-2.5 text-sm text-[#6a6a6a]">
               <li>
                 <span className="flex items-center gap-1.5 text-[#222222] font-medium">
-                  <Sparkles className="h-3.5 w-3.5 text-[#ff385c]" />
+                  <Sparkles className="h-3.5 w-3.5 text-[#4E9488]" />
                   <span>AI Pronunciation Engine</span>
                 </span>
               </li>
@@ -139,7 +139,7 @@ export function Footer({ onDataReset }: FooterProps) {
               <button
                 onClick={handleReset}
                 type="button"
-                className="flex items-center gap-1 rounded-full bg-[#f7f7f7] hover:bg-[#ebebeb] border border-[#dddddd] px-3 py-1 text-[#ff385c] text-xs font-medium transition-all"
+                className="flex items-center gap-1 rounded-full bg-[#f7f7f7] hover:bg-[#ebebeb] border border-[#dddddd] px-3 py-1 text-[#4E9488] text-xs font-medium transition-all"
                 title="Reset demo state (Shift + R)"
               >
                 <RotateCcw className="h-3 w-3" />
@@ -154,7 +154,7 @@ export function Footer({ onDataReset }: FooterProps) {
                 setDemoMode(!demoActive)
                 window.location.reload()
               }}
-              className="text-[#929292] hover:text-[#ff385c] transition-colors select-none font-mono text-xs"
+              className="text-[#929292] hover:text-[#4E9488] transition-colors select-none font-mono text-xs"
               title="Toggle Demo Bar (Shift + D)"
             >
               {demoActive ? '[Demo Mode Active]' : '•'}

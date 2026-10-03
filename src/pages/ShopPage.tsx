@@ -153,15 +153,15 @@ export function ShopPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#6a6a6a] text-sm">
-        <span className="h-8 w-8 rounded-full border-2 border-[#ff385c]/20 border-t-[#ff385c] animate-spin mb-3" />
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#5B6780] text-sm">
+        <span className="h-8 w-8 rounded-full border-2 border-[#4E9488]/20 border-t-[#4E9488] animate-spin mb-3" />
         Opening Cosmetics Shop...
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#222222] font-sans pb-16">
+    <div className="min-h-screen bg-white text-[#171B2A] font-sans pb-16">
       {/* Top Breadcrumb & Status Header */}
       <section className="border-b border-[#ebebeb] py-6 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -235,7 +235,7 @@ export function ShopPage() {
                 {previewItem && (
                   <button
                     onClick={() => setPreviewItem(null)}
-                    className="flex items-center gap-1 text-[11px] text-[#ff385c] hover:underline"
+                    className="flex items-center gap-1 text-[11px] text-[#4E9488] hover:underline"
                   >
                     <RotateCcw className="h-3 w-3" />
                     <span>Reset preview</span>
@@ -257,30 +257,30 @@ export function ShopPage() {
               </div>
 
               {/* Display Name & Title */}
-              <h3 className="text-lg font-semibold text-[#222222]">
+              <h3 className="text-lg font-semibold text-[#171B2A]">
                 {user?.displayName || 'Demo Player'}
               </h3>
-              <div className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-full bg-white border border-[#ebebeb] text-xs font-semibold text-[#ff385c] shadow-xs">
+              <div className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-full bg-white border border-[#ebebeb] text-xs font-semibold text-[#4E9488] shadow-xs">
                 <Crown className="h-3 w-3" />
                 <span>{previewTitleText}</span>
               </div>
 
               <div className="mt-6 pt-5 border-t border-[#ebebeb] grid grid-cols-3 gap-2 text-center text-xs">
                 <div>
-                  <div className="text-[11px] text-[#6a6a6a]">Streak</div>
-                  <div className="font-mono font-bold text-sm text-[#222222] mt-0.5">
+                  <div className="text-[11px] text-[#5B6780]">Streak</div>
+                  <div className="font-mono font-bold text-sm text-[#171B2A] mt-0.5">
                     {user?.streak || 0}d
                   </div>
                 </div>
                 <div>
-                  <div className="text-[11px] text-[#6a6a6a]">Coins</div>
+                  <div className="text-[11px] text-[#5B6780]">Coins</div>
                   <div className="font-mono font-bold text-sm text-amber-600 mt-0.5">
                     {user?.coins || 0}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[11px] text-[#6a6a6a]">Rank</div>
-                  <div className="font-mono font-bold text-sm text-[#460479] mt-0.5">
+                  <div className="text-[11px] text-[#5B6780]">Rank</div>
+                  <div className="font-mono font-bold text-sm text-[#171B2A] mt-0.5">
                     Tier 1
                   </div>
                 </div>
@@ -289,10 +289,10 @@ export function ShopPage() {
 
             {/* Streak Restore Section (FR-PROG-04) */}
             <div className="rounded-[16px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
-              <div className="flex items-center gap-2 mb-2 text-[#222222] font-semibold text-sm">
-                <Flame className="h-4 w-4 fill-[#ff385c] text-[#ff385c]" />
+              <div className="flex items-center gap-2 mb-2 text-[#171B2A] font-semibold text-sm">
+                <Flame className="h-4 w-4 fill-[#4E9488] text-[#4E9488]" />
                 <span>Streak Insurance</span>
-                <span className="text-[10px] uppercase font-bold text-[#ff385c] bg-rose-50 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] uppercase font-bold text-[#4E9488] bg-emerald-50 px-2 py-0.5 rounded-full">
                   P0 RULE
                 </span>
               </div>
@@ -373,7 +373,7 @@ export function ShopPage() {
                     onClick={() => setPreviewItem(item)}
                     className={`group relative rounded-[14px] border p-4 bg-white transition-all cursor-pointer ${
                       previewItem?.id === item.id
-                        ? 'border-[#ff385c] shadow-md'
+                        ? 'border-[#4E9488] ring-1 ring-[#4E9488] shadow-md'
                         : 'border-[#ebebeb] hover:border-[#c1c1c1] hover:shadow-xs'
                     }`}
                   >

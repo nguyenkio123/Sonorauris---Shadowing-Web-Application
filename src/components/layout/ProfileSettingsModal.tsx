@@ -197,12 +197,12 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
         {/* Header */}
         <div className="flex items-start justify-between border-b border-[#ebebeb] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-[#ff385c] shadow-xs">
+            <div className="w-12 h-12 rounded-2xl bg-[#4E9488]/10 border border-[#4E9488]/20 flex items-center justify-center text-[#4E9488] shadow-xs">
               <User className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-[#222222]">Account & Settings</h3>
-              <p className="text-xs text-[#6a6a6a] mt-0.5">
+              <h3 className="text-xl font-bold text-[#171B2A]">Account & Settings</h3>
+              <p className="text-xs text-[#5B6780] mt-0.5">
                 Manage your profile identity, learning stats, and device preferences.
               </p>
             </div>
@@ -223,8 +223,8 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             onClick={() => setActiveTab('ACCOUNT')}
             className={`pb-2 text-xs font-semibold px-3 transition-colors border-b-2 cursor-pointer ${
               activeTab === 'ACCOUNT'
-                ? 'border-[#222222] text-[#222222]'
-                : 'border-transparent text-[#6a6a6a] hover:text-[#222222]'
+                ? 'border-[#4E9488] text-[#171B2A]'
+                : 'border-transparent text-[#5B6780] hover:text-[#171B2A]'
             }`}
           >
             Account Identity
@@ -234,8 +234,8 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             onClick={() => setActiveTab('STATS')}
             className={`pb-2 text-xs font-semibold px-3 transition-colors border-b-2 cursor-pointer ${
               activeTab === 'STATS'
-                ? 'border-[#222222] text-[#222222]'
-                : 'border-transparent text-[#6a6a6a] hover:text-[#222222]'
+                ? 'border-[#4E9488] text-[#171B2A]'
+                : 'border-transparent text-[#5B6780] hover:text-[#171B2A]'
             }`}
           >
             Stats & Records
@@ -245,8 +245,8 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             onClick={() => setActiveTab('AUDIO')}
             className={`pb-2 text-xs font-semibold px-3 transition-colors border-b-2 cursor-pointer ${
               activeTab === 'AUDIO'
-                ? 'border-[#222222] text-[#222222]'
-                : 'border-transparent text-[#6a6a6a] hover:text-[#222222]'
+                ? 'border-[#4E9488] text-[#171B2A]'
+                : 'border-transparent text-[#5B6780] hover:text-[#171B2A]'
             }`}
           >
             Audio & Device
@@ -271,7 +271,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   <img
                     src={user.avatarUrl}
                     alt={user.displayName}
-                    className="h-14 w-14 rounded-full bg-white object-cover ring-2 ring-[#ff385c]/30 shadow-xs"
+                    className="h-14 w-14 rounded-full bg-white object-cover ring-2 ring-[#4E9488]/30 shadow-xs"
                   />
                   <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
                     <span className="h-1.5 w-1.5 rounded-full bg-white" />
@@ -279,13 +279,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="text-base font-bold text-[#222222]">{user.displayName}</h4>
-                    <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold text-[#ff385c] bg-[#ff385c]/10 px-2 py-0.5 rounded-full">
+                    <h4 className="text-base font-bold text-[#171B2A]">{user.displayName}</h4>
+                    <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold text-[#4E9488] bg-[#4E9488]/10 px-2 py-0.5 rounded-full">
                       <Crown className="w-3 h-3 fill-current" />
                       {user.equippedTitle || 'Shadowing Learner'}
                     </span>
                   </div>
-                  <p className="text-xs text-[#6a6a6a] mt-0.5">
+                  <p className="text-xs text-[#5B6780] mt-0.5">
                     Account ID: <span className="font-mono text-gray-500">{user.id}</span>
                   </p>
                 </div>
@@ -295,10 +295,10 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               <Link
                 to="/shop"
                 onClick={onClose}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#dddddd] bg-white text-xs font-semibold text-[#222222] hover:border-[#222222] hover:shadow-xs transition-all"
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#dddddd] bg-white text-xs font-semibold text-[#171B2A] hover:border-[#171B2A] hover:shadow-xs transition-all"
                 title="Change Avatar, Frame, or Title"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#ff385c]" />
+                <Sparkles className="w-3.5 h-3.5 text-[#4E9488]" />
                 <span className="hidden sm:inline">Shop Wardrobe</span>
               </Link>
             </div>
@@ -306,14 +306,14 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             {/* Edit Display Name Form */}
             <div className="p-4 rounded-2xl border border-[#ebebeb] bg-white">
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="display-name-input" className="text-xs font-bold text-[#222222] uppercase tracking-wider">
+                <label htmlFor="display-name-input" className="text-xs font-bold text-[#171B2A] uppercase tracking-wider">
                   Display Name
                 </label>
                 {!isEditingName && (
                   <button
                     type="button"
                     onClick={() => setIsEditingName(true)}
-                    className="text-xs font-semibold text-[#ff385c] hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-semibold text-[#4E9488] hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Edit2 className="w-3 h-3" />
                     <span>Change Name</span>
@@ -330,13 +330,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
                     placeholder="Enter your nickname..."
-                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-[#222222] focus:outline-none focus:ring-2 focus:ring-[#ff385c]/30 font-medium"
+                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-[#171B2A] focus:outline-none focus:ring-2 focus:ring-[#4E9488]/30 font-medium"
                     autoFocus
                   />
                   <button
                     type="submit"
                     disabled={savingName || !nameInput.trim()}
-                    className="px-3 py-2 rounded-xl bg-[#222222] text-white text-xs font-semibold hover:bg-black transition-colors disabled:opacity-50 cursor-pointer"
+                    className="px-3 py-2 rounded-xl bg-[#171B2A] text-white text-xs font-semibold hover:bg-black transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     {savingName ? 'Saving...' : 'Save'}
                   </button>
@@ -393,44 +393,44 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
               {/* Streak */}
               <div className="p-3.5 rounded-2xl border border-[#ebebeb] bg-white flex flex-col justify-between">
-                <div className="flex items-center justify-between text-xs text-[#6a6a6a]">
+                <div className="flex items-center justify-between text-xs text-[#5B6780]">
                   <span>Active Streak</span>
-                  <Flame className="w-4 h-4 text-[#ff385c] fill-[#ff385c]" />
+                  <Flame className="w-4 h-4 text-[#4E9488] fill-[#4E9488]" />
                 </div>
-                <div className="text-lg font-bold font-mono text-[#222222] mt-2">
+                <div className="text-lg font-bold font-mono text-[#171B2A] mt-2">
                   {user.streak} Days
                 </div>
               </div>
 
               {/* Total Practices */}
               <div className="p-3.5 rounded-2xl border border-[#ebebeb] bg-white flex flex-col justify-between">
-                <div className="flex items-center justify-between text-xs text-[#6a6a6a]">
+                <div className="flex items-center justify-between text-xs text-[#5B6780]">
                   <span>Solo Sessions</span>
                   <Volume2 className="w-4 h-4 text-sky-500" />
                 </div>
-                <div className="text-lg font-bold font-mono text-[#222222] mt-2">
+                <div className="text-lg font-bold font-mono text-[#171B2A] mt-2">
                   {totalAttempts}
                 </div>
               </div>
 
               {/* Best Score */}
               <div className="p-3.5 rounded-2xl border border-[#ebebeb] bg-white flex flex-col justify-between">
-                <div className="flex items-center justify-between text-xs text-[#6a6a6a]">
+                <div className="flex items-center justify-between text-xs text-[#5B6780]">
                   <span>Best Score</span>
                   <Trophy className="w-4 h-4 text-amber-500" />
                 </div>
-                <div className="text-lg font-bold font-mono text-[#222222] mt-2">
+                <div className="text-lg font-bold font-mono text-[#171B2A] mt-2">
                   {bestScore > 0 ? `${bestScore}/100` : '—'}
                 </div>
               </div>
 
               {/* Average Score */}
               <div className="p-3.5 rounded-2xl border border-[#ebebeb] bg-white flex flex-col justify-between">
-                <div className="flex items-center justify-between text-xs text-[#6a6a6a]">
+                <div className="flex items-center justify-between text-xs text-[#5B6780]">
                   <span>Avg Accuracy</span>
                   <Sparkles className="w-4 h-4 text-emerald-500" />
                 </div>
-                <div className="text-lg font-bold font-mono text-[#222222] mt-2">
+                <div className="text-lg font-bold font-mono text-[#171B2A] mt-2">
                   {avgScore > 0 ? `${avgScore}%` : '—'}
                 </div>
               </div>
@@ -449,8 +449,8 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             <div className="p-4 rounded-2xl border border-[#ebebeb] bg-[#fcfcfc]">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Mic className="w-4 h-4 text-[#ff385c]" />
-                  <h4 className="text-xs font-bold text-[#222222] uppercase tracking-wider">
+                  <Mic className="w-4 h-4 text-[#4E9488]" />
+                  <h4 className="text-xs font-bold text-[#171B2A] uppercase tracking-wider">
                     Microphone Input Test
                   </h4>
                 </div>
@@ -475,7 +475,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 </span>
               </div>
 
-              <p className="text-xs text-[#6a6a6a] leading-relaxed mb-4">
+              <p className="text-xs text-[#5B6780] leading-relaxed mb-4">
                 Test your browser microphone input to ensure clear audio shadowing recordings before entering 1v1 duels.
               </p>
 
@@ -486,7 +486,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 </div>
                 <div className="flex-1 h-3 rounded-full bg-gray-200 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-[#ff385c] transition-all duration-75"
+                    className="h-full rounded-full bg-[#4E9488] transition-all duration-75"
                     style={{ width: `${micVolume}%` }}
                   />
                 </div>
@@ -497,7 +497,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => void startMicTest()}
-                    className="px-4 py-2 rounded-xl bg-[#222222] text-white text-xs font-semibold hover:bg-black transition-all cursor-pointer flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-[#171B2A] text-white text-xs font-semibold hover:bg-black transition-all cursor-pointer flex items-center gap-1.5"
                   >
                     <Mic className="w-3.5 h-3.5" />
                     <span>Test Microphone</span>

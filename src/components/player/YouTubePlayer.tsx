@@ -320,7 +320,7 @@ export function YouTubePlayer({
             href={sourceUrl}
             target="_blank"
             rel="noreferrer"
-            className="hidden sm:flex items-center gap-1 hover:text-[#ff385c] transition-colors"
+            className="hidden sm:flex items-center gap-1 hover:text-[#4E9488] transition-colors"
             title="Open original video on YouTube"
           >
             <ExternalLink className="h-3.5 w-3.5" />

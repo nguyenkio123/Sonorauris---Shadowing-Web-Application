@@ -76,28 +76,23 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 w-full h-[80px] bg-white border-b border-[#ebebeb]">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand / Logo — Flush Left with Rausch Voltage */}
-        <Link to="/" className="flex items-center gap-2.5 group select-none">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ff385c] text-white shadow-sm transition-transform duration-150 group-hover:scale-105">
-            <svg
-              className="h-5 w-5 fill-current"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Custom Sonorauris soundwave-meets-airbnb loop */}
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l7 4.5-7 4.5z" />
-            </svg>
-          </div>
+        {/* Brand / Logo with Sonorauris Emblem from logo.jpe */}
+        <Link to="/" className="flex items-center gap-3 group select-none">
+          <img
+            src="/logo.jpe"
+            alt="Sonorauris Logo"
+            className="h-9 w-9 rounded-xl object-cover shadow-xs transition-transform duration-150 group-hover:scale-105 border border-[#e2e6ea]"
+          />
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-[19px] tracking-tight text-[#ff385c]">
+              <span className="font-bold text-[19px] tracking-tight text-[#171B2A] group-hover:text-[#4E9488] transition-colors">
                 Sonorauris
               </span>
               <span className="new-tag">
                 MVP
               </span>
             </div>
-            <p className="hidden text-[11px] text-[#6a6a6a] sm:block">
+            <p className="hidden text-[11px] text-[#5B6780] sm:block">
               English Shadowing Arena
             </p>
           </div>
@@ -110,14 +105,14 @@ export function Header() {
             to="/"
             className={`relative flex items-center gap-2 h-full px-3 text-[15px] font-medium transition-colors ${
               isHomeActive
-                ? 'text-[#222222]'
-                : 'text-[#6a6a6a] hover:text-[#222222]'
+                ? 'text-[#171B2A]'
+                : 'text-[#5B6780] hover:text-[#171B2A]'
             }`}
           >
             <Headphones className="h-4 w-4" />
             <span>Practice</span>
             {isHomeActive && (
-              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#222222]" />
+              <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#4E9488]" />
             )}
           </Link>
 
@@ -126,15 +121,15 @@ export function Header() {
             to="/battle/lobby"
             className={`relative flex items-center gap-2 h-full px-3 text-[15px] font-medium transition-colors ${
               isBattleActive
-                ? 'text-[#222222]'
-                : 'text-[#6a6a6a] hover:text-[#222222]'
+                ? 'text-[#171B2A]'
+                : 'text-[#5B6780] hover:text-[#171B2A]'
             }`}
           >
             <Swords className="h-4 w-4" />
             <span>1v1 Battle</span>
             <span className="new-tag">LIVE</span>
             {isBattleActive && (
-              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#222222]" />
+              <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#4E9488]" />
             )}
           </Link>
 
@@ -143,14 +138,14 @@ export function Header() {
             to="/shop"
             className={`relative flex items-center gap-2 h-full px-3 text-[15px] font-medium transition-colors ${
               isShopActive
-                ? 'text-[#222222]'
-                : 'text-[#6a6a6a] hover:text-[#222222]'
+                ? 'text-[#171B2A]'
+                : 'text-[#5B6780] hover:text-[#171B2A]'
             }`}
           >
-            <Sparkles className="h-4 w-4 text-[#ff385c]" />
+            <Sparkles className="h-4 w-4 text-[#4E9488]" />
             <span>Shop</span>
             {isShopActive && (
-              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#222222]" />
+              <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#4E9488]" />
             )}
           </Link>
         </nav>
@@ -164,7 +159,7 @@ export function Header() {
                 type="button"
                 onClick={() => setIsQuestsOpen(true)}
                 title={`Daily Quests (${completedCount}/${quests.length || 3})`}
-                className="relative flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-medium text-[#222222] hover:border-amber-300 hover:bg-amber-50/50 transition-all cursor-pointer group"
+                className="relative flex items-center gap-1.5 rounded-full bg-[#f7f9fa] border border-[#e2e6ea] px-3 py-1.5 text-xs font-medium text-[#171B2A] hover:border-amber-300 hover:bg-amber-50/50 transition-all cursor-pointer group"
               >
                 <Trophy className="h-3.5 w-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
                 <span className="font-semibold text-[12px] hidden md:inline">Quests</span>
@@ -173,8 +168,8 @@ export function Header() {
                 </span>
                 {hasClaimable && (
                   <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rausch opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rausch"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4E9488] opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#4E9488]"></span>
                   </span>
                 )}
               </button>
@@ -183,10 +178,10 @@ export function Header() {
               <Link
                 to="/shop"
                 title={`${user.streak} days active streak • ${user.coins} Coins (Click to visit Shop)`}
-                className="flex items-center gap-2.5 rounded-full bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 text-xs font-semibold text-[#222222] hover:border-[#dddddd] transition-all cursor-pointer group"
+                className="flex items-center gap-2.5 rounded-full bg-[#f7f9fa] border border-[#e2e6ea] px-3 py-1.5 text-xs font-semibold text-[#171B2A] hover:border-[#171B2A]/30 transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-1 text-[#ff385c]">
-                  <Flame className="h-3.5 w-3.5 fill-[#ff385c] group-hover:scale-110 transition-transform" />
+                <div className="flex items-center gap-1 text-[#4E9488]">
+                  <Flame className="h-3.5 w-3.5 fill-[#4E9488] group-hover:scale-110 transition-transform" />
                   <span className="font-mono text-[12px]">{user.streak}d</span>
                 </div>
                 <div className="h-3 w-px bg-[#dddddd]" />
@@ -200,7 +195,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-2 rounded-full border border-[#dddddd] p-1 pr-3 hover:shadow-xs hover:border-[#222222] transition-all cursor-pointer group"
+                className="flex items-center gap-2 rounded-full border border-[#dddddd] p-1 pr-3 hover:shadow-xs hover:border-[#171B2A] transition-all cursor-pointer group"
                 title={`Account & Settings (${user.displayName})`}
               >
                 <img
@@ -208,7 +203,7 @@ export function Header() {
                   alt={user.displayName}
                   className="h-7 w-7 rounded-full bg-[#f2f2f2] object-cover ring-1 ring-[#ebebeb]"
                 />
-                <span className="hidden sm:inline text-xs font-medium text-[#222222] max-w-[95px] truncate">
+                <span className="hidden sm:inline text-xs font-medium text-[#171B2A] max-w-[95px] truncate">
                   {user.displayName}
                 </span>
               </button>

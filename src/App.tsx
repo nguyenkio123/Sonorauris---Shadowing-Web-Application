@@ -9,7 +9,7 @@ export function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <div className="flex min-h-screen flex-col bg-white text-[#222222] font-sans selection:bg-[#ff385c]/15 selection:text-[#ff385c]">
+        <div className="flex min-h-screen flex-col bg-white text-[#171B2A] font-sans selection:bg-[#4E9488]/20 selection:text-[#171B2A]">
           <Header />
           <main className="flex-1">
             <AppRoutes />

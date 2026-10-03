@@ -91,9 +91,9 @@ export function ResultPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#222222] p-6 text-center font-sans">
-        <div className="h-10 w-10 rounded-full border-2 border-[#ff385c]/20 border-t-[#ff385c] animate-spin mb-4" />
-        <h2 className="text-xl font-semibold text-[#222222] mb-1">Evaluating Voice Shadowing...</h2>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#171B2A] p-6 text-center font-sans">
+        <div className="h-10 w-10 rounded-full border-2 border-[#4E9488]/20 border-t-[#4E9488] animate-spin mb-4" />
+        <h2 className="text-xl font-semibold text-[#171B2A] mb-1">Evaluating Voice Shadowing...</h2>
         <p className="text-xs text-[#6a6a6a] max-w-md leading-relaxed">
           Evaluating phoneme boundaries, speech rhythm, completeness ratio, and prosodic intonation.
         </p>
@@ -237,25 +237,25 @@ export function ResultPage() {
             </div>
 
             {/* Guest Favorite / Assessment Badge */}
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#dddddd] px-4 py-1 text-xs font-semibold text-[#222222] mb-3">
-              <CheckCircle2 className="h-4 w-4 text-[#ff385c]" />
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f9fa] border border-[#dddddd] px-4 py-1 text-xs font-semibold text-[#171B2A] mb-3">
+              <CheckCircle2 className="h-4 w-4 text-[#4E9488]" />
               <span>Assessment Completed · Verified In Ledger</span>
             </div>
 
-            <h1 className="text-[26px] sm:text-[30px] font-bold text-[#222222] mb-1.5">
+            <h1 className="text-[26px] sm:text-[30px] font-bold text-[#171B2A] mb-1.5">
               {tier.label}
             </h1>
-            <p className="text-sm text-[#6a6a6a] max-w-md leading-relaxed mb-6">
+            <p className="text-sm text-[#5B6780] max-w-md leading-relaxed mb-6">
               {tier.desc}
             </p>
 
             {/* Guaranteed Ledger Rewards Box */}
-            <div className="flex items-center gap-4 rounded-full bg-[#f7f7f7] border border-[#dddddd] px-6 py-2.5">
-              <span className="text-xs font-semibold text-[#222222]">
+            <div className="flex items-center gap-4 rounded-full bg-[#f7f9fa] border border-[#dddddd] px-6 py-2.5">
+              <span className="text-xs font-semibold text-[#171B2A]">
                 Rewards Credited:
               </span>
               <div className="flex items-center gap-3 font-mono text-xs font-bold">
-                <span className="flex items-center gap-1 text-[#460479]">
+                <span className="flex items-center gap-1 text-[#171B2A]">
                   <Zap className="h-3.5 w-3.5 fill-current" />
                   <span>+{attempt.earnedXp} XP</span>
                 </span>
@@ -272,11 +272,11 @@ export function ResultPage() {
         {/* 4 CORE METRICS GRID */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[18px] font-semibold text-[#222222] flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#ff385c]" />
+            <h2 className="text-[18px] font-semibold text-[#171B2A] flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-[#4E9488]" />
               <span>Core Pronunciation Metrics</span>
             </h2>
-            <span className="text-xs text-[#6a6a6a] font-mono">
+            <span className="text-xs text-[#5B6780] font-mono">
               Normalized: 0–100 Scale
             </span>
           </div>
@@ -285,18 +285,18 @@ export function ResultPage() {
             {/* Metric 1: Accuracy */}
             <div className="rounded-[14px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[#222222]">Accuracy</span>
-                <span className="text-xl font-bold text-[#222222] font-mono">
+                <span className="text-xs font-semibold text-[#171B2A]">Accuracy</span>
+                <span className="text-xl font-bold text-[#171B2A] font-mono">
                   {result.accuracy}%
                 </span>
               </div>
-              <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden mb-2">
+              <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden mb-2">
                 <div
-                  className="h-full bg-[#ff385c] transition-all duration-700"
+                  className="h-full bg-[#4E9488] transition-all duration-700"
                   style={{ width: `${result.accuracy}%` }}
                 />
               </div>
-              <p className="text-[12px] text-[#6a6a6a] leading-snug">
+              <p className="text-[12px] text-[#5B6780] leading-snug">
                 Phoneme &amp; word correctness vs reference.
               </p>
             </div>
@@ -304,18 +304,18 @@ export function ResultPage() {
             {/* Metric 2: Fluency */}
             <div className="rounded-[14px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[#222222]">Fluency</span>
-                <span className="text-xl font-bold text-[#222222] font-mono">
+                <span className="text-xs font-semibold text-[#171B2A]">Fluency</span>
+                <span className="text-xl font-bold text-[#171B2A] font-mono">
                   {result.fluency}%
                 </span>
               </div>
-              <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden mb-2">
+              <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden mb-2">
                 <div
-                  className="h-full bg-[#460479] transition-all duration-700"
+                  className="h-full bg-[#171B2A] transition-all duration-700"
                   style={{ width: `${result.fluency}%` }}
                 />
               </div>
-              <p className="text-[12px] text-[#6a6a6a] leading-snug">
+              <p className="text-[12px] text-[#5B6780] leading-snug">
                 Smoothness, pause cadence &amp; speaking pace.
               </p>
             </div>
@@ -323,18 +323,18 @@ export function ResultPage() {
             {/* Metric 3: Completeness */}
             <div className="rounded-[14px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[#222222]">Completeness</span>
-                <span className="text-xl font-bold text-[#222222] font-mono">
+                <span className="text-xs font-semibold text-[#171B2A]">Completeness</span>
+                <span className="text-xl font-bold text-[#171B2A] font-mono">
                   {result.completeness}%
                 </span>
               </div>
-              <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden mb-2">
+              <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden mb-2">
                 <div
                   className="h-full bg-amber-500 transition-all duration-700"
                   style={{ width: `${result.completeness}%` }}
                 />
               </div>
-              <p className="text-[12px] text-[#6a6a6a] leading-snug">
+              <p className="text-[12px] text-[#5B6780] leading-snug">
                 Ratio of original script articulated.
               </p>
             </div>
@@ -342,18 +342,18 @@ export function ResultPage() {
             {/* Metric 4: Prosody */}
             <div className="rounded-[14px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[#222222]">Prosody</span>
-                <span className="text-xl font-bold text-[#222222] font-mono">
+                <span className="text-xs font-semibold text-[#171B2A]">Prosody</span>
+                <span className="text-xl font-bold text-[#171B2A] font-mono">
                   {result.prosody}%
                 </span>
               </div>
-              <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden mb-2">
+              <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden mb-2">
                 <div
-                  className="h-full bg-[#ff385c] transition-all duration-700"
+                  className="h-full bg-[#4E9488] transition-all duration-700"
                   style={{ width: `${result.prosody}%` }}
                 />
               </div>
-              <p className="text-[12px] text-[#6a6a6a] leading-snug">
+              <p className="text-[12px] text-[#5B6780] leading-snug">
                 Pitch variations &amp; natural en-US stress.
               </p>
             </div>
@@ -364,11 +364,11 @@ export function ResultPage() {
         <section className="rounded-[14px] border border-[#dddddd] bg-white p-6 mb-8 airbnb-shadow">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-[#ebebeb] pb-4">
             <div>
-              <h2 className="text-[18px] font-semibold text-[#222222] flex items-center gap-2">
-                <Volume2 className="h-4 w-4 text-[#ff385c]" />
+              <h2 className="text-[18px] font-semibold text-[#171B2A] flex items-center gap-2">
+                <Volume2 className="h-4 w-4 text-[#4E9488]" />
                 <span>Word-Level Speech Diagnostics</span>
               </h2>
-              <p className="text-xs text-[#6a6a6a]">
+              <p className="text-xs text-[#5B6780]">
                 Granular word assessment identifying missed sounds or rhythm slips.
               </p>
             </div>
@@ -388,12 +388,12 @@ export function ResultPage() {
           </div>
 
           {/* Interactive Words Canvas */}
-          <div className="rounded-xl bg-[#f7f7f7] border border-[#ebebeb] p-6 leading-loose text-base sm:text-lg flex flex-wrap gap-2.5 items-center">
+          <div className="rounded-xl bg-[#f7f9fa] border border-[#ebebeb] p-6 leading-loose text-base sm:text-lg flex flex-wrap gap-2.5 items-center">
             {result.words.map((item, idx) => renderMiscueWord(item, idx))}
           </div>
 
-          <div className="mt-4 flex items-center gap-2 text-xs text-[#6a6a6a]">
-            <HelpCircle className="h-4 w-4 text-[#ff385c] shrink-0" />
+          <div className="mt-4 flex items-center gap-2 text-xs text-[#5B6780]">
+            <HelpCircle className="h-4 w-4 text-[#4E9488] shrink-0" />
             <span>
               Tip: Re-listen to the authentic video segment to hear how the native speaker stresses the highlighted words.
             </span>
@@ -437,17 +437,17 @@ export function ResultPage() {
 
         {/* Updated User Mini Stats Bar */}
         {user && (
-          <div className="mt-8 flex items-center justify-center gap-6 rounded-full bg-[#f7f7f7] border border-[#dddddd] py-2.5 px-6 text-xs text-[#6a6a6a]">
-            <span className="flex items-center gap-1.5 font-medium text-[#222222]">
-              <Zap className="h-3.5 w-3.5 fill-[#460479] text-[#460479]" />
+          <div className="mt-8 flex items-center justify-center gap-6 rounded-full bg-[#f7f9fa] border border-[#dddddd] py-2.5 px-6 text-xs text-[#5B6780]">
+            <span className="flex items-center gap-1.5 font-medium text-[#171B2A]">
+              <Zap className="h-3.5 w-3.5 fill-[#171B2A] text-[#171B2A]" />
               <span>Current XP: <strong className="font-mono">{user.xp}</strong></span>
             </span>
-            <span className="flex items-center gap-1.5 font-medium text-[#222222]">
+            <span className="flex items-center gap-1.5 font-medium text-[#171B2A]">
               <Coins className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
               <span>Coins Balance: <strong className="font-mono">{user.coins}</strong></span>
             </span>
-            <span className="flex items-center gap-1.5 font-medium text-[#222222]">
-              <Flame className="h-3.5 w-3.5 fill-[#ff385c] text-[#ff385c]" />
+            <span className="flex items-center gap-1.5 font-medium text-[#171B2A]">
+              <Flame className="h-3.5 w-3.5 fill-[#4E9488] text-[#4E9488]" />
               <span>Streak: <strong className="font-mono">{user.streak}d</strong></span>
             </span>
           </div>

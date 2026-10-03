@@ -100,8 +100,8 @@ export function BattleRoomPage() {
 
   if (roomLoading && !room) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center text-[#6a6a6a] text-xs font-sans">
-        <span className="h-6 w-6 rounded-full border-2 border-[#ff385c]/30 border-t-[#ff385c] animate-spin mr-3" />
+      <div className="min-h-screen bg-white flex items-center justify-center text-[#5B6780] text-xs font-sans">
+        <span className="h-6 w-6 rounded-full border-2 border-[#4E9488]/30 border-t-[#4E9488] animate-spin mr-3" />
         Connecting to battle room...
       </div>
     )
@@ -145,8 +145,8 @@ export function BattleRoomPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f7f7] border border-[#dddddd] px-3.5 py-1 text-xs font-semibold text-[#222222]">
-              <Swords className="h-3.5 w-3.5 text-[#ff385c]" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f9fa] border border-[#dddddd] px-3.5 py-1 text-xs font-semibold text-[#171B2A]">
+              <Swords className="h-3.5 w-3.5 text-[#4E9488]" />
               <span className="uppercase font-mono text-[11px]">{room.status}</span>
             </span>
 
@@ -156,11 +156,11 @@ export function BattleRoomPage() {
                 type="button"
                 onClick={handleQuickSubmit}
                 disabled={submitting}
-                className="flex items-center gap-1.5 rounded-full bg-[#f7f7f7] hover:bg-[#ebebeb] border border-[#dddddd] px-3.5 py-1 text-xs font-semibold text-[#222222] transition-all active:scale-95"
+                className="flex items-center gap-1.5 rounded-full bg-[#f7f9fa] hover:bg-[#edf0f2] border border-[#dddddd] px-3.5 py-1 text-xs font-semibold text-[#171B2A] transition-all active:scale-95"
                 title="Shortcut: Shift + S (Rapid recording testing)"
               >
-                <FastForward className="h-3 w-3 text-[#ff385c]" />
-                <span>Skip Record <span className="font-mono text-[10px] text-[#929292]">[Shift+S]</span></span>
+                <FastForward className="h-3 w-3 text-[#4E9488]" />
+                <span>Skip Record <span className="font-mono text-[10px] text-[#8895AD]">[Shift+S]</span></span>
               </button>
             )}
           </div>
@@ -170,12 +170,12 @@ export function BattleRoomPage() {
         {room.status === 'COUNTDOWN' && (
           <div className="my-16 flex flex-col items-center justify-center text-center">
             {/* Countdown Orb */}
-            <div className="relative mb-6 flex h-40 w-40 items-center justify-center rounded-full bg-[#ff385c] text-white shadow-xl shadow-[#ff385c]/25 animate-pulse">
+            <div className="relative mb-6 flex h-40 w-40 items-center justify-center rounded-full bg-[#4E9488] text-white shadow-xl shadow-[#4E9488]/25 animate-pulse">
               <span className="font-mono text-7xl font-bold tracking-tighter">
                 {countdownNum}
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#222222] mb-1.5">Get Ready Contenders!</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#171B2A] mb-1.5">Get Ready Contenders!</h2>
             <p className="text-xs sm:text-sm text-[#6a6a6a] max-w-sm leading-relaxed">
               Listen carefully to the authentic clip as it begins playing, then record your shadowing reproduction.
             </p>
@@ -217,7 +217,7 @@ export function BattleRoomPage() {
                             <div className="text-xs font-bold text-[#222222] flex items-center gap-1.5 flex-wrap">
                               <span className="truncate">{p.displayName}</span>
                               {isMe && (
-                                <span className="text-[10px] bg-[#ff385c]/10 text-[#ff385c] px-1.5 py-0.5 rounded-full font-mono font-bold">
+                                <span className="text-[10px] bg-[#4E9488]/10 text-[#4E9488] px-1.5 py-0.5 rounded-full font-mono font-bold">
                                   YOU
                                 </span>
                               )}
@@ -315,8 +315,8 @@ export function BattleRoomPage() {
                         disabled={submitting}
                         className="btn-secondary w-full text-xs font-semibold h-[40px] rounded-lg"
                       >
-                        <Send className="h-3.5 w-3.5 text-[#ff385c]" />
-                        <span>Quick Submit for Demo <span className="font-mono text-[10px] text-[#929292]">[Shift+S]</span></span>
+                        <Send className="h-3.5 w-3.5 text-[#4E9488]" />
+                        <span>Quick Submit for Demo <span className="font-mono text-[10px] text-[#8895AD]">[Shift+S]</span></span>
                       </button>
                     </>
                   )}
@@ -330,18 +330,18 @@ export function BattleRoomPage() {
         {(room.status === 'ASSESSING' || room.status === 'SUBMITTING') && (
           <div className="my-16 rounded-[14px] border border-[#dddddd] bg-white p-8 sm:p-12 airbnb-shadow text-center flex flex-col items-center justify-center">
             <div className="relative mb-6 flex items-center justify-center">
-              <span className="h-16 w-16 rounded-full border-2 border-[#ff385c]/20 border-t-[#ff385c] animate-spin" />
-              <Sparkles className="absolute h-6 w-6 text-[#ff385c] animate-pulse" />
+              <span className="h-16 w-16 rounded-full border-2 border-[#4E9488]/20 border-t-[#4E9488] animate-spin" />
+              <Sparkles className="absolute h-6 w-6 text-[#4E9488] animate-pulse" />
             </div>
 
-            <h2 className="text-2xl font-bold text-[#222222] mb-1.5">
+            <h2 className="text-2xl font-bold text-[#171B2A] mb-1.5">
               Sealed AI Assessment in Progress
             </h2>
-            <p className="text-xs sm:text-sm text-[#6a6a6a] max-w-lg mb-6 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#5B6780] max-w-lg mb-6 leading-relaxed">
               Evaluating speech accuracy, fluency rhythm, completeness, and prosody contours for both contenders independently. Scores remain sealed until verification is complete.
             </p>
 
-            <div className="flex items-center gap-6 rounded-full bg-[#f7f7f7] border border-[#dddddd] px-6 py-2.5 text-xs text-[#222222] font-medium">
+            <div className="flex items-center gap-6 rounded-full bg-[#f7f9fa] border border-[#dddddd] px-6 py-2.5 text-xs text-[#171B2A] font-medium">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[#10b981]" />
                 <span>Audio Stream Verified</span>

@@ -66,7 +66,7 @@ export function PracticePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#6a6a6a] text-sm">
-        <span className="h-8 w-8 rounded-full border-2 border-[#ff385c]/20 border-t-[#ff385c] animate-spin mb-3" />
+        <span className="h-8 w-8 rounded-full border-2 border-[#4E9488]/20 border-t-[#4E9488] animate-spin mb-3" />
         Preparing shadowing practice session...
       </div>
     )
@@ -108,8 +108,8 @@ export function PracticePage() {
             <span className="rounded-full bg-[#f7f7f7] border border-[#dddddd] px-3 py-1 text-xs font-medium text-[#222222]">
               {clip.topic}
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-[#f7f7f7] border border-[#dddddd] px-3 py-1 text-xs font-mono font-medium text-[#222222]">
-              <Clock className="h-3.5 w-3.5 text-[#ff385c]" />
+            <span className="flex items-center gap-1 rounded-full bg-[#f7f9fa] border border-[#dddddd] px-3 py-1 text-xs font-mono font-medium text-[#171B2A]">
+              <Clock className="h-3.5 w-3.5 text-[#4E9488]" />
               <span>{clip.durationSec}s</span>
             </span>
           </div>
@@ -117,28 +117,28 @@ export function PracticePage() {
 
         {/* Listing Detail Heading — display-lg (22px / 500) per DESIGN.md */}
         <div className="mb-6">
-          <h1 className="text-[24px] sm:text-[26px] font-semibold text-[#222222] tracking-tight leading-snug mb-2">
+          <h1 className="text-[24px] sm:text-[26px] font-semibold text-[#171B2A] tracking-tight leading-snug mb-2">
             {clip.title}
           </h1>
 
           {/* Meta line: Star rating in ink, reviews, host/channel, locale */}
-          <div className="flex flex-wrap items-center gap-3 text-sm text-[#222222]">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-[#171B2A]">
             <div className="flex items-center gap-1 font-semibold">
-              <Star className="h-4 w-4 fill-[#222222] text-[#222222]" />
+              <Star className="h-4 w-4 fill-[#171B2A] text-[#171B2A]" />
               <span>4.92</span>
             </div>
             <span>·</span>
-            <span className="text-[#6a6a6a] underline cursor-pointer">
+            <span className="text-[#5B6780] underline cursor-pointer">
               128 verified learners
             </span>
             <span>·</span>
-            <span className="flex items-center gap-1 font-medium text-[#222222]">
-              <ShieldCheck className="h-4 w-4 text-[#ff385c]" />
+            <span className="flex items-center gap-1 font-medium text-[#171B2A]">
+              <ShieldCheck className="h-4 w-4 text-[#4E9488]" />
               <span>Verified Authentic Audio</span>
             </span>
             <span>·</span>
-            <span className="text-[#6a6a6a]">
-              Source: <strong className="text-[#222222]">{clip.channelName}</strong> ({clip.locale})
+            <span className="text-[#5B6780]">
+              Source: <strong className="text-[#171B2A]">{clip.channelName}</strong> ({clip.locale})
             </span>
           </div>
         </div>
@@ -159,42 +159,42 @@ export function PracticePage() {
 
             {/* Amenity Rows (DESIGN.md amenity-row) */}
             <div className="border-t border-[#ebebeb] pt-6">
-              <h3 className="text-[18px] font-semibold text-[#222222] mb-4">
+              <h3 className="text-[18px] font-semibold text-[#171B2A] mb-4">
                 What this practice session offers
               </h3>
 
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-xl bg-[#f7f7f7] text-[#222222]">
+                  <div className="p-2 rounded-xl bg-[#f7f9fa] text-[#171B2A]">
                     <Volume2 className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-[#222222]">Authentic Native Cadence</h4>
-                    <p className="text-xs text-[#6a6a6a] mt-0.5">
+                    <h4 className="text-sm font-semibold text-[#171B2A]">Authentic Native Cadence</h4>
+                    <p className="text-xs text-[#5B6780] mt-0.5">
                       Unscripted real-world delivery with natural American English pitch shifts and connected speech.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-xl bg-[#f7f7f7] text-[#222222]">
-                    <Sparkles className="h-5 w-5 text-[#ff385c]" />
+                  <div className="p-2 rounded-xl bg-[#f7f9fa] text-[#171B2A]">
+                    <Sparkles className="h-5 w-5 text-[#4E9488]" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-[#222222]">4-Dimension AI Speech Assessment</h4>
-                    <p className="text-xs text-[#6a6a6a] mt-0.5">
+                    <h4 className="text-sm font-semibold text-[#171B2A]">4-Dimension AI Speech Assessment</h4>
+                    <p className="text-xs text-[#5B6780] mt-0.5">
                       Sub-second phoneme alignment scoring Accuracy, Fluency, Completeness, and Prosodic intonation.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-xl bg-[#f7f7f7] text-[#222222]">
+                  <div className="p-2 rounded-xl bg-[#f7f9fa] text-[#171B2A]">
                     <Award className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-[#222222]">Immediate Progression Payout</h4>
-                    <p className="text-xs text-[#6a6a6a] mt-0.5">
+                    <h4 className="text-sm font-semibold text-[#171B2A]">Immediate Progression Payout</h4>
+                    <p className="text-xs text-[#5B6780] mt-0.5">
                       Guaranteed idempotent XP and Coin credit added directly to your learner ledger on each attempt.
                     </p>
                   </div>
@@ -203,8 +203,8 @@ export function PracticePage() {
             </div>
 
             {/* Things to Know Guide */}
-            <div className="border-t border-[#ebebeb] pt-6 text-xs text-[#6a6a6a]">
-              <h4 className="text-sm font-semibold text-[#222222] mb-2">
+            <div className="border-t border-[#ebebeb] pt-6 text-xs text-[#5B6780]">
+              <h4 className="text-sm font-semibold text-[#171B2A] mb-2">
                 Things to know before shadowing
               </h4>
               <p className="leading-relaxed">
@@ -223,7 +223,7 @@ export function PracticePage() {
               <div className="mb-5 pb-5 border-b border-[#ebebeb]">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#222222]">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#171B2A]">
                       Target Transcript
                     </span>
                   </div>
@@ -232,8 +232,8 @@ export function PracticePage() {
                   </span>
                 </div>
 
-                <div className="rounded-xl border border-[#dddddd] bg-[#f7f7f7] p-4 text-[#222222]">
-                  <blockquote className="text-[16px] sm:text-[17px] font-normal leading-relaxed text-[#222222] select-text">
+                <div className="rounded-xl border border-[#dddddd] bg-[#f7f9fa] p-4 text-[#171B2A]">
+                  <blockquote className="text-[16px] sm:text-[17px] font-normal leading-relaxed text-[#171B2A] select-text">
                     "
                     {clip.referenceText.split(/\s+/).map((rawWord, idx) => {
                       const cleanWord = rawWord.replace(/^[.,/#!$%^&*;:{}=\-_`~()?"]+|[.,/#!$%^&*;:{}=\-_`~()?"]+$/g, '')
@@ -241,7 +241,7 @@ export function PracticePage() {
                         <span
                           key={idx}
                           onClick={() => setSelectedDictWord(cleanWord)}
-                          className="hover:text-[#ff385c] hover:bg-rose-50 hover:underline underline-offset-4 rounded px-0.5 cursor-pointer transition-colors"
+                          className="hover:text-[#4E9488] hover:bg-emerald-50 hover:underline underline-offset-4 rounded px-0.5 cursor-pointer transition-colors"
                           title={`Click to lookup definition for "${cleanWord}"`}
                         >
                           {rawWord}{' '}
@@ -250,20 +250,20 @@ export function PracticePage() {
                     })}
                     "
                   </blockquote>
-                  <div className="mt-3 pt-2.5 border-t border-[#ebebeb] flex items-center justify-between text-[11px] text-[#6a6a6a]">
-                    <span className="flex items-center gap-1 text-[#ff385c] font-medium">
+                  <div className="mt-3 pt-2.5 border-t border-[#ebebeb] flex items-center justify-between text-[11px] text-[#5B6780]">
+                    <span className="flex items-center gap-1 text-[#4E9488] font-medium">
                       <BookOpen className="h-3 w-3" />
                       <span>Click any word to look up definition &amp; IPA</span>
                     </span>
-                    <span className="text-[10px] text-[#929292]">FR-DICT-01</span>
+                    <span className="text-[10px] text-[#8895AD]">FR-DICT-01</span>
                   </div>
                 </div>
               </div>
 
               {/* Audio Recorder Component */}
               <div className="mb-5">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#222222] mb-2">
-                  <Mic className="h-3.5 w-3.5 text-[#ff385c]" />
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#171B2A] mb-2">
+                  <Mic className="h-3.5 w-3.5 text-[#4E9488]" />
                   <span>Record Your Voice</span>
                 </div>
                 <AudioRecorder

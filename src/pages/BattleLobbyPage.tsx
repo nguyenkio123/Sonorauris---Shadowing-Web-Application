@@ -131,8 +131,8 @@ export function BattleLobbyPage() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-[#f7f7f7] border border-[#dddddd] px-3.5 py-1 text-xs font-semibold text-[#222222] flex items-center gap-1.5">
-              <Swords className="h-3.5 w-3.5 text-[#ff385c]" />
+            <span className="rounded-full bg-[#f7f9fa] border border-[#dddddd] px-3.5 py-1 text-xs font-semibold text-[#171B2A] flex items-center gap-1.5">
+              <Swords className="h-3.5 w-3.5 text-[#4E9488]" />
               <span>1v1 Synchronized Arena</span>
             </span>
           </div>
@@ -144,24 +144,24 @@ export function BattleLobbyPage() {
             {/* Create Room Card */}
             <div className="rounded-[14px] border border-[#dddddd] bg-white p-6 sm:p-8 airbnb-shadow flex flex-col justify-between h-full">
               <div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ff385c]/10 text-[#ff385c] mb-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4E9488]/10 text-[#4E9488] mb-5">
                   <PlusCircle className="h-6 w-6" />
                 </div>
-                <h2 className="text-xl font-bold text-[#222222] mb-1.5">Create Battle Room</h2>
-                <p className="text-xs text-[#6a6a6a] leading-relaxed mb-6 min-h-[40px]">
+                <h2 className="text-xl font-bold text-[#171B2A] mb-1.5">Create Battle Room</h2>
+                <p className="text-xs text-[#5B6780] leading-relaxed mb-6 min-h-[40px]">
                   Host a private 1v1 match with a shareable 5-character code. An AI sparring bot steps in automatically if practicing solo.
                 </p>
 
                 {/* Challenge Clip Selector */}
                 <div className="mb-6">
-                  <label htmlFor="challenge-clip-select" className="block text-xs font-semibold text-[#222222] uppercase tracking-wider mb-2">
+                  <label htmlFor="challenge-clip-select" className="block text-xs font-semibold text-[#171B2A] uppercase tracking-wider mb-2">
                     Select Challenge Clip
                   </label>
                   <select
                     id="challenge-clip-select"
                     value={selectedClipId}
                     onChange={(e) => setSelectedClipId(e.target.value)}
-                    className="w-full h-[46px] rounded-lg bg-[#f7f7f7] border border-[#dddddd] px-3.5 py-2.5 text-xs font-medium text-[#222222] focus:outline-none focus:border-[#222222] transition-colors"
+                    className="w-full h-[46px] rounded-lg bg-[#f7f9fa] border border-[#dddddd] px-3.5 py-2.5 text-xs font-medium text-[#171B2A] focus:outline-none focus:border-[#171B2A] transition-colors"
                   >
                     {clips.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -174,7 +174,7 @@ export function BattleLobbyPage() {
                 {/* Arena Capacity Selector (FR-BAT-07) */}
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-semibold text-[#222222] uppercase tracking-wider">
+                    <label className="block text-xs font-semibold text-[#171B2A] uppercase tracking-wider">
                       Arena Mode (Capacity)
                     </label>
                     <span className="new-tag">FR-BAT-07</span>
@@ -192,8 +192,8 @@ export function BattleLobbyPage() {
                         onClick={() => setSelectedMaxPlayers(mode.count)}
                         className={`py-2 px-1 rounded-xl border text-center transition-all cursor-pointer ${
                           selectedMaxPlayers === mode.count
-                            ? 'border-[#ff385c] bg-rose-50/70 text-[#ff385c] ring-1 ring-[#ff385c]'
-                            : 'border-[#dddddd] bg-[#f7f7f7] text-[#222222] hover:border-gray-400'
+                            ? 'border-[#4E9488] bg-emerald-50/70 text-[#4E9488] ring-1 ring-[#4E9488]'
+                            : 'border-[#dddddd] bg-[#f7f9fa] text-[#171B2A] hover:border-gray-400'
                         }`}
                       >
                         <div className="font-bold text-sm font-mono">{mode.label}</div>
@@ -295,11 +295,11 @@ export function BattleLobbyPage() {
             {/* Room Header & Code Banner */}
             <div className="rounded-[14px] border border-[#dddddd] bg-white p-6 sm:p-8 airbnb-shadow flex flex-col sm:flex-row items-center justify-between gap-6">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-[#ff385c] mb-1 block">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-[#4E9488] mb-1 block">
                   Private Arena • {room?.maxPlayers || 2} Contenders
                 </span>
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl sm:text-4xl font-mono font-bold text-[#222222] tracking-widest bg-[#f7f7f7] px-4 py-1.5 rounded-xl border border-[#dddddd]">
+                  <span className="text-3xl sm:text-4xl font-mono font-bold text-[#171B2A] tracking-widest bg-[#f7f9fa] px-4 py-1.5 rounded-xl border border-[#dddddd]">
                     {activeCode}
                   </span>
                   <button
@@ -325,13 +325,13 @@ export function BattleLobbyPage() {
 
               {currentClip && (
                 <div className="text-center sm:text-right max-w-sm">
-                  <span className="text-[10px] uppercase font-bold text-[#6a6a6a] tracking-wider">
+                  <span className="text-[10px] uppercase font-bold text-[#5B6780] tracking-wider">
                     Challenge Target
                   </span>
-                  <h3 className="text-base font-semibold text-[#222222] line-clamp-1">
+                  <h3 className="text-base font-semibold text-[#171B2A] line-clamp-1">
                     {currentClip.title}
                   </h3>
-                  <p className="text-xs text-[#6a6a6a]">
+                  <p className="text-xs text-[#5B6780]">
                     {currentClip.topic} • <span className="font-mono">{currentClip.durationSec}s</span> duration
                   </p>
                 </div>
@@ -340,8 +340,8 @@ export function BattleLobbyPage() {
 
             {/* Error or Loading state */}
             {roomLoading && !room && (
-              <div className="flex items-center justify-center py-12 text-[#6a6a6a] text-xs">
-                <span className="h-5 w-5 rounded-full border-2 border-[#ff385c]/30 border-t-[#ff385c] animate-spin mr-2" />
+              <div className="flex items-center justify-center py-12 text-[#5B6780] text-xs">
+                <span className="h-5 w-5 rounded-full border-2 border-[#4E9488]/30 border-t-[#4E9488] animate-spin mr-2" />
                 Connecting to room state...
               </div>
             )}
@@ -389,40 +389,40 @@ export function BattleLobbyPage() {
                               <img
                                 src={participant.avatarUrl}
                                 alt={participant.displayName}
-                                className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover shrink-0"
+                                className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f9fa] object-cover shrink-0"
                               />
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-sm font-bold text-[#222222] truncate">
+                                  <span className="text-sm font-bold text-[#171B2A] truncate">
                                     {participant.displayName}
                                   </span>
                                   {isMe && (
-                                    <span className="rounded-full bg-[#ff385c]/10 text-[#ff385c] px-2 py-0.5 text-[9px] font-bold font-mono">
+                                    <span className="rounded-full bg-[#4E9488]/10 text-[#4E9488] px-2 py-0.5 text-[9px] font-bold font-mono">
                                       YOU
                                     </span>
                                   )}
                                   {participant.isBot && (
-                                    <span className="inline-flex items-center gap-0.5 rounded-full bg-[#460479]/10 text-[#460479] px-2 py-0.5 text-[9px] font-bold font-mono">
+                                    <span className="inline-flex items-center gap-0.5 rounded-full bg-[#171B2A]/10 text-[#171B2A] px-2 py-0.5 text-[9px] font-bold font-mono">
                                       <Bot className="h-2.5 w-2.5" />
                                       <span>BOT</span>
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-xs text-[#6a6a6a]">
+                                <span className="text-xs text-[#5B6780]">
                                   {idx === 0 ? 'Host' : `Challenger #${idx}`}
                                 </span>
                               </div>
                             </div>
 
                             <div className="flex items-center justify-between border-t border-[#ebebeb] pt-3.5 mt-4">
-                              <span className="text-xs font-semibold text-[#6a6a6a]">Status</span>
+                              <span className="text-xs font-semibold text-[#5B6780]">Status</span>
                               {participant.isReady ? (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 text-xs font-bold">
                                   <Check className="h-3 w-3" />
                                   <span>READY</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-[#f7f7f7] border border-[#dddddd] px-2.5 py-0.5 text-xs font-medium text-[#6a6a6a]">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-[#f7f9fa] border border-[#dddddd] px-2.5 py-0.5 text-xs font-medium text-[#5B6780]">
                                   <span>PREPARING...</span>
                                 </span>
                               )}
@@ -437,8 +437,8 @@ export function BattleLobbyPage() {
                           className="rounded-[14px] border border-dashed border-gray-300 bg-gray-50/50 p-6 flex flex-col items-center justify-center text-center min-h-[200px]"
                         >
                           <div className="relative mb-2.5 flex items-center justify-center">
-                            <span className="h-8 w-8 rounded-full border-2 border-[#ff385c]/20 border-t-[#ff385c] animate-spin" />
-                            <Users className="absolute h-3.5 w-3.5 text-[#ff385c]" />
+                            <span className="h-8 w-8 rounded-full border-2 border-[#4E9488]/20 border-t-[#4E9488] animate-spin" />
+                            <Users className="absolute h-3.5 w-3.5 text-[#4E9488]" />
                           </div>
                           <h4 className="text-xs font-semibold text-gray-800">
                             Waiting for gladiator #{idx + 1}...

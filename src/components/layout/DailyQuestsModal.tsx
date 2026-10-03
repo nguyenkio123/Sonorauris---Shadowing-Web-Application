@@ -74,8 +74,8 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-bold text-gray-900">Daily Quests</h3>
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-rausch/10 text-rausch font-semibold">
+                <h3 className="text-xl font-bold text-[#171B2A]">Daily Quests</h3>
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#4E9488]/10 text-[#4E9488] font-semibold">
                   {completedCount}/{quests.length} Completed
                 </span>
               </div>
@@ -120,7 +120,7 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
                 <div className="flex items-start justify-between gap-3 mb-2.5">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-gray-900">{quest.title}</h4>
+                      <h4 className="text-sm font-bold text-[#171B2A]">{quest.title}</h4>
                       {quest.completed && !quest.claimed && (
                         <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500 text-white font-bold animate-pulse">
                           Ready to claim
@@ -132,7 +132,7 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
 
                   {/* Rewards preview */}
                   <div className="flex items-center gap-1.5 shrink-0 text-xs font-semibold text-gray-700 bg-gray-100/80 px-2.5 py-1 rounded-lg">
-                    <span className="text-rausch flex items-center gap-0.5">
+                    <span className="text-[#4E9488] flex items-center gap-0.5">
                       <Zap className="w-3.5 h-3.5 fill-current" />+{quest.rewardXp}
                     </span>
                     <span className="text-gray-300">•</span>
@@ -154,7 +154,7 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
                     <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
-                          quest.completed ? 'bg-emerald-500' : 'bg-rausch'
+                          quest.completed ? 'bg-emerald-500' : 'bg-[#4E9488]'
                         }`}
                         style={{ width: `${Math.min(100, progressPct)}%` }}
                       />
@@ -170,7 +170,7 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
                       <button
                         onClick={() => handleClaim(quest.id)}
                         disabled={claimingId === quest.id}
-                        className="px-4 py-1.5 rounded-xl bg-rausch hover:bg-[#e0314f] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                        className="px-4 py-1.5 rounded-xl bg-[#4E9488] hover:bg-[#3D7A70] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
                         {claimingId === quest.id ? 'Claiming...' : 'Claim Reward'}

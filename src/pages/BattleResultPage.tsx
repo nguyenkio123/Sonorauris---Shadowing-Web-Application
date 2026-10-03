@@ -36,8 +36,8 @@ export function BattleResultPage() {
 
   if (loading && !room) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center text-[#6a6a6a] text-xs font-sans">
-        <span className="h-6 w-6 rounded-full border-2 border-[#ff385c]/30 border-t-[#ff385c] animate-spin mr-3" />
+      <div className="min-h-screen bg-white flex items-center justify-center text-[#5B6780] text-xs font-sans">
+        <span className="h-6 w-6 rounded-full border-2 border-[#4E9488]/30 border-t-[#4E9488] animate-spin mr-3" />
         Loading battle scoreboard...
       </div>
     )
@@ -257,12 +257,12 @@ export function BattleResultPage() {
                               {p.displayName}
                             </span>
                             {isMe && (
-                              <span className="rounded-full bg-[#ff385c]/10 text-[#ff385c] px-2 py-0.5 text-[10px] font-bold font-mono">
+                              <span className="rounded-full bg-[#4E9488]/10 text-[#4E9488] px-2 py-0.5 text-[10px] font-bold font-mono">
                                 YOU
                               </span>
                             )}
                             {p.isBot && (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-[#460479]/10 text-[#460479] px-2 py-0.5 text-[10px] font-bold font-mono">
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-[#171B2A]/10 text-[#171B2A] px-2 py-0.5 text-[10px] font-bold font-mono">
                                 <Bot className="h-3 w-3" />
                                 <span>BOT</span>
                               </span>
@@ -274,13 +274,13 @@ export function BattleResultPage() {
 
                       <div className="flex items-baseline gap-2 sm:text-right">
                         <div>
-                          <span className="text-3xl sm:text-4xl font-bold text-[#222222] font-mono">
+                          <span className="text-3xl sm:text-4xl font-bold text-[#171B2A] font-mono">
                             {score}
                           </span>
-                          <span className="text-xs text-[#6a6a6a] ml-1 uppercase font-bold">
+                          <span className="text-xs text-[#5B6780] ml-1 uppercase font-bold">
                             / 100
                           </span>
-                          <div className="text-[10px] uppercase font-bold text-[#6a6a6a] tracking-wider">
+                          <div className="text-[10px] uppercase font-bold text-[#5B6780] tracking-wider">
                             Battle Score
                           </div>
                         </div>
@@ -291,43 +291,43 @@ export function BattleResultPage() {
                     {p.assessment && (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#ebebeb]">
                         <div>
-                          <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                          <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                             <span>Accuracy</span>
-                            <span className="text-[#ff385c] font-bold font-mono">
+                            <span className="text-[#4E9488] font-bold font-mono">
                               {p.assessment.accuracy}%
                             </span>
                           </div>
-                          <div className="h-1.5 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                          <div className="h-1.5 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
                             <div
-                              className="h-full bg-[#ff385c] rounded-full"
+                              className="h-full bg-[#4E9488] rounded-full"
                               style={{ width: `${p.assessment.accuracy}%` }}
                             />
                           </div>
                         </div>
 
                         <div>
-                          <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                          <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                             <span>Fluency</span>
-                            <span className="text-[#460479] font-bold font-mono">
+                            <span className="text-[#171B2A] font-bold font-mono">
                               {p.assessment.fluency}%
                             </span>
                           </div>
-                          <div className="h-1.5 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                          <div className="h-1.5 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
                             <div
-                              className="h-full bg-[#460479] rounded-full"
+                              className="h-full bg-[#171B2A] rounded-full"
                               style={{ width: `${p.assessment.fluency}%` }}
                             />
                           </div>
                         </div>
 
                         <div>
-                          <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                          <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                             <span>Completeness</span>
                             <span className="text-amber-600 font-bold font-mono">
                               {p.assessment.completeness}%
                             </span>
                           </div>
-                          <div className="h-1.5 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                          <div className="h-1.5 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
                             <div
                               className="h-full bg-amber-500 rounded-full"
                               style={{ width: `${p.assessment.completeness}%` }}
@@ -336,15 +336,15 @@ export function BattleResultPage() {
                         </div>
 
                         <div>
-                          <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                          <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                             <span>Prosody</span>
-                            <span className="text-[#ff385c] font-bold font-mono">
+                            <span className="text-[#4E9488] font-bold font-mono">
                               {p.assessment.prosody}%
                             </span>
                           </div>
-                          <div className="h-1.5 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                          <div className="h-1.5 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
                             <div
-                              className="h-full bg-[#ff385c] rounded-full"
+                              className="h-full bg-[#4E9488] rounded-full"
                               style={{ width: `${p.assessment.prosody}%` }}
                             />
                           </div>
@@ -359,11 +359,11 @@ export function BattleResultPage() {
         ) : (
           <section className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base sm:text-lg font-bold text-[#222222] flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#ff385c]" />
+              <h2 className="text-base sm:text-lg font-bold text-[#171B2A] flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[#4E9488]" />
                 <span>Contender Head-to-Head Comparison</span>
               </h2>
-              <span className="text-xs text-[#6a6a6a]">
+              <span className="text-xs text-[#5B6780]">
                 Evaluated by Sonorauris Speech AI
               </span>
             </div>
@@ -382,24 +382,24 @@ export function BattleResultPage() {
                     <img
                       src={player.avatarUrl}
                       alt={player.displayName}
-                      className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
+                      className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f9fa] object-cover"
                     />
                     <div>
-                      <div className="text-sm font-bold text-[#222222] flex items-center gap-1.5">
+                      <div className="text-sm font-bold text-[#171B2A] flex items-center gap-1.5">
                         <span>{player.displayName}</span>
-                        <span className="text-[10px] bg-[#ff385c]/10 text-[#ff385c] px-2 py-0.5 rounded-full font-bold font-mono">
+                        <span className="text-[10px] bg-[#4E9488]/10 text-[#4E9488] px-2 py-0.5 rounded-full font-bold font-mono">
                           YOU
                         </span>
                       </div>
-                      <span className="text-xs text-[#6a6a6a]">Host Contender</span>
+                      <span className="text-xs text-[#5B6780]">Host Contender</span>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-3xl sm:text-4xl font-bold text-[#222222] font-mono">
+                    <span className="text-3xl sm:text-4xl font-bold text-[#171B2A] font-mono">
                       {playerScore}
                     </span>
-                    <div className="text-[10px] uppercase font-bold text-[#6a6a6a] tracking-wider">
+                    <div className="text-[10px] uppercase font-bold text-[#5B6780] tracking-wider">
                       Battle Score
                     </div>
                   </div>
@@ -409,42 +409,42 @@ export function BattleResultPage() {
                 {player.assessment && (
                   <div className="space-y-2.5 pt-3 border-t border-[#ebebeb]">
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                      <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Accuracy</span>
-                        <span className="text-[#ff385c] font-bold font-mono">{player.assessment.accuracy}%</span>
+                        <span className="text-[#4E9488] font-bold font-mono">{player.assessment.accuracy}%</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                        <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${player.assessment.accuracy}%` }} />
+                      <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
+                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${player.assessment.accuracy}%` }} />
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                      <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Fluency</span>
-                        <span className="text-[#460479] font-bold font-mono">{player.assessment.fluency}%</span>
+                        <span className="text-[#171B2A] font-bold font-mono">{player.assessment.fluency}%</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                        <div className="h-full bg-[#460479] rounded-full" style={{ width: `${player.assessment.fluency}%` }} />
+                      <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
+                        <div className="h-full bg-[#171B2A] rounded-full" style={{ width: `${player.assessment.fluency}%` }} />
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                      <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Completeness</span>
                         <span className="text-amber-600 font-bold font-mono">{player.assessment.completeness}%</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                      <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
                         <div className="h-full bg-amber-500 rounded-full" style={{ width: `${player.assessment.completeness}%` }} />
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                      <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Prosody</span>
-                        <span className="text-[#ff385c] font-bold font-mono">{player.assessment.prosody}%</span>
+                        <span className="text-[#4E9488] font-bold font-mono">{player.assessment.prosody}%</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                        <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${player.assessment.prosody}%` }} />
+                      <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
+                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${player.assessment.prosody}%` }} />
                       </div>
                     </div>
                   </div>
@@ -453,7 +453,7 @@ export function BattleResultPage() {
 
               {/* Center VS Badge (1 Col) */}
               <div className="md:col-span-1 flex flex-col items-center justify-center py-2 my-auto">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f7f7f7] border border-[#dddddd] font-bold text-xs text-[#222222]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f7f9fa] border border-[#dddddd] font-bold text-xs text-[#171B2A]">
                   VS
                 </div>
                 <span
@@ -482,22 +482,22 @@ export function BattleResultPage() {
                     <img
                       src={opponent?.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot'}
                       alt={opponent?.displayName || 'Opponent'}
-                      className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
+                      className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f9fa] object-cover"
                     />
                     <div>
-                      <div className="text-sm font-bold text-[#222222] flex items-center gap-1.5">
+                      <div className="text-sm font-bold text-[#171B2A] flex items-center gap-1.5">
                         <span>{opponent?.displayName || 'ShadowBot AI'}</span>
                         <Bot className="h-3.5 w-3.5 text-amber-500" />
                       </div>
-                      <span className="text-xs text-[#6a6a6a]">Challenger</span>
+                      <span className="text-xs text-[#5B6780]">Challenger</span>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-3xl sm:text-4xl font-bold text-[#222222] font-mono">
+                    <span className="text-3xl sm:text-4xl font-bold text-[#171B2A] font-mono">
                       {opponentScore}
                     </span>
-                    <div className="text-[10px] uppercase font-bold text-[#6a6a6a] tracking-wider">
+                    <div className="text-[10px] uppercase font-bold text-[#5B6780] tracking-wider">
                       Battle Score
                     </div>
                   </div>
@@ -507,42 +507,42 @@ export function BattleResultPage() {
                 {opponent?.assessment && (
                   <div className="space-y-2.5 pt-3 border-t border-[#ebebeb]">
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                      <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Accuracy</span>
-                        <span className="text-[#ff385c] font-bold font-mono">{opponent.assessment.accuracy}%</span>
+                        <span className="text-[#4E9488] font-bold font-mono">{opponent.assessment.accuracy}%</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                        <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${opponent.assessment.accuracy}%` }} />
+                      <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
+                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${opponent.assessment.accuracy}%` }} />
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                      <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Fluency</span>
-                        <span className="text-[#460479] font-bold font-mono">{opponent.assessment.fluency}%</span>
+                        <span className="text-[#171B2A] font-bold font-mono">{opponent.assessment.fluency}%</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                        <div className="h-full bg-[#460479] rounded-full" style={{ width: `${opponent.assessment.fluency}%` }} />
+                      <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
+                        <div className="h-full bg-[#171B2A] rounded-full" style={{ width: `${opponent.assessment.fluency}%` }} />
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                      <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Completeness</span>
                         <span className="text-amber-600 font-bold font-mono">{opponent.assessment.completeness}%</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
+                      <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
                         <div className="h-full bg-amber-500 rounded-full" style={{ width: `${opponent.assessment.completeness}%` }} />
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-[11px] font-medium text-[#222222] mb-1">
+                      <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Prosody</span>
-                        <span className="text-[#ff385c] font-bold font-mono">{opponent.assessment.prosody}%</span>
+                        <span className="text-[#4E9488] font-bold font-mono">{opponent.assessment.prosody}%</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-[#f2f2f2] overflow-hidden">
-                        <div className="h-full bg-[#ff385c] rounded-full" style={{ width: `${opponent.assessment.prosody}%` }} />
+                      <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
+                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${opponent.assessment.prosody}%` }} />
                       </div>
                     </div>
                   </div>

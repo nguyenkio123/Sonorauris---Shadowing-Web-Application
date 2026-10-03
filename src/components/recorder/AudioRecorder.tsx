@@ -132,18 +132,18 @@ export function AudioRecorder({
     <div className="rounded-[14px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
       {/* Microphone Advice Tip before first recording */}
       {showMicTip && state === 'idle' && (
-        <div className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-[#dddddd] bg-[#f7f7f7] p-3.5 text-xs text-[#3f3f3f]">
+        <div className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-[#dddddd] bg-[#f7f9fa] p-3.5 text-xs text-[#283044]">
           <div className="flex items-start gap-2.5">
-            <Info className="h-4 w-4 shrink-0 text-[#ff385c] mt-0.5" />
+            <Info className="h-4 w-4 shrink-0 text-[#4E9488] mt-0.5" />
             <div>
-              <span className="font-semibold text-[#222222]">Audio Quality Tip: </span>
+              <span className="font-semibold text-[#171B2A]">Audio Quality Tip: </span>
               Position your microphone about 15–20 cm from your mouth, speak with a steady natural volume, and avoid background noise for the most accurate AI feedback.
             </div>
           </div>
           <button
             type="button"
             onClick={() => setShowMicTip(false)}
-            className="text-[#929292] hover:text-[#222222] font-semibold px-1"
+            className="text-[#8895AD] hover:text-[#171B2A] font-semibold px-1"
             title="Dismiss tip"
           >
             ✕
@@ -183,17 +183,17 @@ export function AudioRecorder({
             type="button"
             onClick={handleStart}
             disabled={disabled || submitting}
-            className="group relative flex h-20 w-20 items-center justify-center rounded-full bg-[#ff385c] hover:bg-[#e00b41] text-white shadow-md transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50"
+            className="group relative flex h-20 w-20 items-center justify-center rounded-full bg-[#4E9488] hover:bg-[#3D7A70] text-white shadow-md transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50"
             title="Click to start recording"
           >
-            <span className="absolute inset-0 rounded-full bg-[#ff385c]/20 group-hover:scale-110 transition-transform duration-200" />
+            <span className="absolute inset-0 rounded-full bg-[#4E9488]/20 group-hover:scale-110 transition-transform duration-200" />
             <Mic className="h-8 w-8 text-white relative z-10" />
           </button>
-          <p className="mt-4 text-[15px] font-semibold text-[#222222]">
+          <p className="mt-4 text-[15px] font-semibold text-[#171B2A]">
             Click to Start Recording
           </p>
-          <p className="text-xs text-[#6a6a6a] mt-1">
-            Max duration: <span className="font-mono font-medium text-[#222222]">{maxDurationSec}s</span>
+          <p className="text-xs text-[#5B6780] mt-1">
+            Max duration: <span className="font-mono font-medium text-[#171B2A]">{maxDurationSec}s</span>
           </p>
         </div>
       )}
@@ -203,11 +203,11 @@ export function AudioRecorder({
         <div className="flex flex-col items-center justify-center py-4 text-center">
           {/* Pulsing indicator */}
           <div className="relative mb-4 flex items-center justify-center">
-            <span className="absolute h-24 w-24 rounded-full bg-[#ff385c]/20 animate-ping" />
+            <span className="absolute h-24 w-24 rounded-full bg-[#4E9488]/20 animate-ping" />
             <button
               type="button"
               onClick={handleStop}
-              className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#222222] hover:bg-black text-white shadow-lg transition-all active:scale-95"
+              className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#171B2A] hover:bg-black text-white shadow-lg transition-all active:scale-95"
               title="Click to stop recording"
             >
               <Square className="h-7 w-7 fill-white" />
@@ -215,23 +215,23 @@ export function AudioRecorder({
           </div>
 
           {/* Timer and Waveform animation */}
-          <div className="flex items-center gap-2 text-base font-mono font-bold text-[#222222]">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#ff385c] animate-pulse" />
+          <div className="flex items-center gap-2 text-base font-mono font-bold text-[#171B2A]">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#4E9488] animate-pulse" />
             <span>
               00:{elapsedSec < 10 ? `0${elapsedSec}` : elapsedSec} / 00:{maxDurationSec < 10 ? `0${maxDurationSec}` : maxDurationSec}
             </span>
           </div>
 
-          {/* Animated audio level bars — Rausch & Ink */}
+          {/* Animated audio level bars — Turquoise & Navy */}
           <div className="mt-3.5 flex items-center gap-1.5 h-6">
-            <span className="w-1.5 bg-[#ff385c] rounded-full h-3 animate-bounce" />
-            <span className="w-1.5 bg-[#222222] rounded-full h-5 animate-bounce [animation-delay:0.15s]" />
-            <span className="w-1.5 bg-[#ff385c] rounded-full h-2 animate-bounce [animation-delay:0.3s]" />
-            <span className="w-1.5 bg-[#222222] rounded-full h-6 animate-bounce [animation-delay:0.45s]" />
-            <span className="w-1.5 bg-[#ff385c] rounded-full h-4 animate-bounce [animation-delay:0.2s]" />
+            <span className="w-1.5 bg-[#4E9488] rounded-full h-3 animate-bounce" />
+            <span className="w-1.5 bg-[#171B2A] rounded-full h-5 animate-bounce [animation-delay:0.15s]" />
+            <span className="w-1.5 bg-[#4E9488] rounded-full h-2 animate-bounce [animation-delay:0.3s]" />
+            <span className="w-1.5 bg-[#171B2A] rounded-full h-6 animate-bounce [animation-delay:0.45s]" />
+            <span className="w-1.5 bg-[#4E9488] rounded-full h-4 animate-bounce [animation-delay:0.2s]" />
           </div>
 
-          <p className="mt-3 text-xs text-[#6a6a6a]">
+          <p className="mt-3 text-xs text-[#5B6780]">
             Speaking now... Click black square to finish.
           </p>
         </div>
