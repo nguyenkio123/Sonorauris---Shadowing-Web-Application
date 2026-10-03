@@ -81,14 +81,69 @@ export function HomeCatalogPage() {
   })
 
   return (
-    <div className="min-h-screen bg-white text-[#222222] font-sans pb-16">
+    <div className="min-h-screen bg-white text-[#171B2A] font-sans pb-16">
+      {/* HERO EDITORIAL SECTION — Airbnb Style High-Impact Welcome */}
+      <section className="bg-gradient-to-b from-[#f7f9fa] to-white border-b border-[#ebebeb] pt-8 pb-7">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#dddddd] px-3.5 py-1 text-xs font-semibold text-[#171B2A] mb-3 shadow-2xs">
+                <Sparkles className="h-3.5 w-3.5 text-[#4E9488]" />
+                <span>Authentic Voice Shadowing • Real-Time AI Diagnostics</span>
+              </div>
+              <h1 className="text-[28px] sm:text-[34px] font-bold text-[#171B2A] leading-[1.25] tracking-tight">
+                Inspiration for spoken English rhythm
+              </h1>
+              <p className="text-[15px] sm:text-[16px] text-[#5B6780] mt-2 max-w-2xl font-normal leading-relaxed">
+                Imitate native speaker intonation, pauses, and cadence with short authentic video clips. Challenge other learners in 1v1 synchronized duels.
+              </p>
+            </div>
+
+            {/* User Progression Ledger Cards */}
+            {user && (
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-[#4E9488]/10 flex items-center justify-center text-[#4E9488]">
+                    <Flame className="h-4 w-4 fill-current" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-[#5B6780]">Streak</div>
+                    <div className="text-[14px] font-bold text-[#171B2A] font-mono">{user.streak} Days</div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+                    <Coins className="h-4 w-4 fill-current" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-[#5B6780]">Coins</div>
+                    <div className="text-[14px] font-bold text-[#171B2A] font-mono">{user.coins}</div>
+                  </div>
+                </div>
+
+                <div className="hidden sm:flex rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-[#171B2A]/10 flex items-center justify-center text-[#171B2A]">
+                    <Zap className="h-4 w-4 fill-current" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-[#5B6780]">Total XP</div>
+                    <div className="text-[14px] font-bold text-[#171B2A] font-mono">{user.xp} XP</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* GLOBAL SEARCH BAR — Signature Airbnb Pill (search-bar-pill & search-orb) */}
       <section className="border-b border-[#ebebeb] py-6 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="mx-auto max-w-2xl">
           <div className="search-bar-pill flex items-center justify-between p-2 pl-6 gap-3">
             {/* Search Keyword Input */}
             <div className="flex-1 min-w-0 pr-2">
-              <label htmlFor="search-input" className="block text-[12px] font-semibold text-[#222222] leading-none mb-1">
+              <label htmlFor="search-input" className="block text-[12px] font-semibold text-[#171B2A] leading-none mb-1">
                 Search Clips
               </label>
               <input
@@ -97,7 +152,7 @@ export function HomeCatalogPage() {
                 placeholder="By title, speaker, topic, or transcript..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent text-[14px] text-[#222222] placeholder-[#6a6a6a] outline-none truncate"
+                className="w-full bg-transparent text-[14px] text-[#171B2A] placeholder-[#5B6780] outline-none truncate"
               />
             </div>
 
@@ -106,7 +161,7 @@ export function HomeCatalogPage() {
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="p-1 text-[#6a6a6a] hover:text-[#222222] hover:bg-[#f7f7f7] rounded-full transition-colors cursor-pointer"
+                className="p-1 text-[#5B6780] hover:text-[#171B2A] hover:bg-[#f7f7f7] rounded-full transition-colors cursor-pointer"
                 title="Clear search"
               >
                 <X className="h-4 w-4" />
@@ -177,62 +232,8 @@ export function HomeCatalogPage() {
         </div>
       </section>
 
-      {/* HERO EDITORIAL BANNER — Airbnb Trust & Generous Whitespace */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#ebebeb] pb-6">
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f9fa] border border-[#dddddd] px-3 py-0.5 text-xs font-semibold text-[#171B2A] mb-2.5">
-              <Sparkles className="h-3.5 w-3.5 text-[#4E9488]" />
-              <span>Authentic Voice Shadowing • Real-Time AI Diagnostics</span>
-            </div>
-            {/* Display-XL (28px / 700) per DESIGN.md */}
-            <h1 className="text-[28px] font-bold text-[#171B2A] leading-[1.3] tracking-tight">
-              Inspiration for spoken English rhythm
-            </h1>
-            <p className="text-[16px] text-[#5B6780] mt-1 max-w-2xl font-normal leading-normal">
-              Imitate native speaker intonation, pauses, and cadence with short authentic video clips. Challenge other learners in 1v1 synchronized duels.
-            </p>
-          </div>
-
-          {/* User Progression Ledger Cards */}
-          {user && (
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-[#4E9488]/10 flex items-center justify-center text-[#4E9488]">
-                  <Flame className="h-4 w-4 fill-current" />
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase font-bold text-[#5B6780]">Streak</div>
-                  <div className="text-[14px] font-bold text-[#171B2A] font-mono">{user.streak} Days</div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
-                  <Coins className="h-4 w-4 fill-current" />
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase font-bold text-[#5B6780]">Coins</div>
-                  <div className="text-[14px] font-bold text-[#171B2A] font-mono">{user.coins}</div>
-                </div>
-              </div>
-
-              <div className="hidden sm:flex rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-[#171B2A]/10 flex items-center justify-center text-[#171B2A]">
-                  <Zap className="h-4 w-4 fill-current" />
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase font-bold text-[#5B6780]">Total XP</div>
-                  <div className="text-[14px] font-bold text-[#171B2A] font-mono">{user.xp} XP</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* PROPERTY CARDS GRID (DESIGN.md property-card) */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <h2 className="text-[20px] font-semibold text-[#171B2A]">
