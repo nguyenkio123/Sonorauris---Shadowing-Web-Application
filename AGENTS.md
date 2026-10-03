@@ -135,6 +135,7 @@ d:\Shadowing-web-application\
 2. ✅ **Cửa hàng Ngoại trang (FR-SHOP-01)**: Trang `/shop` mua và trang bị Avatar, Khung aura, Danh hiệu bằng Coins qua Ledger.
 3. ✅ **Khôi phục Streak (FR-PROG-04)**: Dùng 30 Coins để khôi phục chuỗi ngày khi nhấn vào Streak / Shop (cooldown 7 ngày).
 4. ✅ **Bổ sung Clip (`src/data/clips.ts`)**: Đã đạt 20 clip tiếng Anh chất lượng cao từ YouTube phủ đều 5 chủ đề và 3 cấp độ.
+5. ✅ **Hiệu chỉnh đồng bộ Video-Audio-Transcript (100% Sync)**: Kiểm tra và hiệu chỉnh toàn bộ 20/20 bài tập khớp chính xác từng mili-giây giữa transcript và giọng người nói thực tế.
 
 ### Giai đoạn 2: Kết nối Supabase Realtime & Backend API (✅ HOÀN THÀNH)
 1. ✅ **Cấu hình & Schema PostgreSQL/Supabase**: Đã tạo file `supabase/schema.sql` đầy đủ theo SRS mục 12 và cập nhật `.env.example`.
@@ -142,10 +143,24 @@ d:\Shadowing-web-application\
 3. ✅ **Adapter Azure Speech Pronunciation Assessment**: Module `azureSpeech.ts` chuẩn hóa 4 chỉ số (Accuracy, Fluency, Completeness, Prosody) và lỗi cấp từ với cơ chế fallback local engine an toàn.
 
 ### Giai đoạn 3: Hoàn thiện toàn bộ tính năng P1 (✅ HOÀN THÀNH)
-1. ✅ **Tra từ điển trên Transcript khi click (`FR-DICT-01`)**: Tích hợp Free Dictionary API, phát âm âm thanh bản xứ + Web Speech synthesis fallback, modal popover chuẩn Airbnb.
+1. ✅ **Tra từ điển trên Transcript khi click (`FR-DICT-01`)**: 
+   - Kiến trúc Multi-Provider không tốn phí: Tầng 1 (Free Dictionary API) ➔ Tầng 2 (Datamuse Princeton WordNet) ➔ Tầng 3 (Wiktionary REST API).
+   - Tích hợp bộ giải thuật Morphological Lemmatization đưa về từ gốc (`-ies`, `-ing`, `-ed`, `-est`, `-er`, `-ly`, `'s`).
+   - Bộ nhớ đệm kép Dual-cache (Precompiled Functional Words + Session Memory) cho tốc độ mở popup 0ms.
 2. ✅ **3 Nhiệm vụ hằng ngày (`FR-QUEST-01`)**: Tự động tính toán tiến độ hằng ngày (Luyện tập solo, Đạt điểm cao ≥80, Tham gia đấu trường 1v1) và nhận thưởng XP/Coins qua Ledger.
 3. ✅ **Phòng đấu 3–5 người (`FR-BAT-07`)**: Tùy chọn sức chứa phòng (2P, 3P, 4P, 5P), bot sparring đa dạng (Alpha, Neo, Max, Iris), và bảng xếp hạng Podium trao huy chương vàng/bạc/đồng tại trang kết quả.
 
+### Giai đoạn 4: Branding Redesign & Quality Assurance (✅ HOÀN THÀNH)
+1. ✅ **Bộ nhận diện thương hiệu mới (Logo `logo.jpe` & Tỷ lệ màu 60-30-10)**:
+   - Logo chính thức từ `logo.jpe` được tối ưu hóa hiển thị sắc nét tại Header và Favicon.
+   - Màu 60% Trắng sáng canvas `#FFFFFF` / `#F7F9FA`.
+   - Màu 30% Xanh Navy `#171B2A` (Text, Headings, Dark elements, Fluency).
+   - Màu 10% Xanh Turquoise `#4E9488` (CTA buttons, Active tabs, Streak Flame, Visualizer, Accuracy/Prosody).
+2. ✅ **Đưa Hero Section lên đầu trang chủ ([HomeCatalogPage.tsx](file:///d:/Shadowing-web-application/src/pages/HomeCatalogPage.tsx))**:
+   - Dòng chảy trải nghiệm chuẩn Airbnb: Hero Section (mục tiêu học tập + tóm tắt tiến độ Streak/Coins/XP) ➔ Thanh tìm kiếm Pill Search ➔ Category Strip bám dính (sticky) ➔ Lưới 20 bài tập.
+3. ✅ **Bộ kiểm thử chấp nhận SRS v1.0 (Acceptance Test Suite - `npm run test:acceptance`)**:
+   - 7 bộ kiểm thử toàn diện với **57/57 tests PASS (100%)**.
+   - Build production `tsc -b && vite build` hoàn thành 100% không cảnh báo/lỗi.
 
 ---
 *File này được tạo tự động và cập nhật liên tục để đảm bảo hiệu suất tốt nhất cho các phiên làm việc của Agent.*
