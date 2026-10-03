@@ -16,7 +16,8 @@ export function getForcedOutcome(): BattleOutcome | null {
   if (typeof window === 'undefined') return null
 
   // Check URL query override first: ?outcome=win|lose|draw
-  const params = new URLSearchParams(window.location.search)
+  const searchStr = typeof window !== 'undefined' && window.location ? window.location.search : ''
+  const params = new URLSearchParams(searchStr)
   const queryOutcome = params.get('outcome')?.toUpperCase()
   if (queryOutcome === 'WIN' || queryOutcome === 'LOSE' || queryOutcome === 'DRAW') {
     return queryOutcome as BattleOutcome
@@ -42,7 +43,8 @@ export function setForcedOutcome(outcome: BattleOutcome | null): void {
 export function isDemoModeEnabled(): boolean {
   if (typeof window === 'undefined') return false
 
-  const params = new URLSearchParams(window.location.search)
+  const searchStr = typeof window !== 'undefined' && window.location ? window.location.search : ''
+  const params = new URLSearchParams(searchStr)
   if (params.get('demo') === '1' || params.get('demo') === 'true') {
     return true
   }
