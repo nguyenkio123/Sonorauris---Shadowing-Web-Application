@@ -262,6 +262,21 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModal
           <span>Continue as Guest (Demo Player)</span>
         </button>
 
+        {/* Quick Demo Admin Login */}
+        <div className="mt-2.5 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setMode('signin')
+              setEmail('admin@sonorauris.com')
+              setPassword('admin123')
+            }}
+            className="text-[11px] text-purple-700 hover:text-purple-900 font-semibold transition-colors cursor-pointer"
+          >
+            ⚡ Demo: Fill Admin Account (admin@sonorauris.com)
+          </button>
+        </div>
+
         <p className="mt-4 text-center text-[11px] text-[#5B6780] leading-relaxed">
           By continuing, you agree to Sonorauris Terms of Service and Privacy Policy. All practice rewards are immutably tracked.
         </p>

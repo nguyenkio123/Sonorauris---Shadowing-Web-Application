@@ -1,3 +1,5 @@
+import type { UserRole } from './auth'
+
 export interface UserProfile {
   id: string
   displayName: string
@@ -5,6 +7,7 @@ export interface UserProfile {
   xp: number
   coins: number
   streak: number
+  role?: UserRole
   lastPracticeDate: string | null
   equippedAvatarId?: string
   equippedFrameId?: string

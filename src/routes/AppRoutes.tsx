@@ -7,6 +7,9 @@ import { PracticePage } from '../pages/PracticePage'
 import { ResultPage } from '../pages/ResultPage'
 import { ShopPage } from '../pages/ShopPage'
 
+import { AdminRoute } from '../components/admin/AdminRoute'
+import { AdminDashboardPage } from '../pages/AdminDashboardPage'
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -17,6 +20,14 @@ export function AppRoutes() {
       <Route path="/battle/lobby" element={<BattleLobbyPage />} />
       <Route path="/battle/room/:roomCode" element={<BattleRoomPage />} />
       <Route path="/battle/result/:roomCode" element={<BattleResultPage />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminDashboardPage />
+          </AdminRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

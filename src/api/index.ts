@@ -1,6 +1,5 @@
 import { DEMO_CONFIG } from '../config/demo'
 import { REWARDS } from '../config/scoring'
-import { SAMPLE_CLIPS } from '../data/clips'
 import type { Attempt } from '../types/attempt'
 import type { BattleRoom } from '../types/battle'
 import type { Clip } from '../types/clip'
@@ -25,6 +24,7 @@ import {
   getAttempts,
   getDailyQuestsState,
   getRoomByCode,
+  getStoredClips,
   getUserInventory,
   getUserProfile,
   resetAllStorage,
@@ -33,6 +33,7 @@ import {
   saveRoom,
   updateDisplayName,
 } from './storage'
+export * from './admin'
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -61,8 +62,8 @@ export async function getMe(): Promise<UserProfile> {
  * Retrieves curated list of shadowing clips.
  */
 export async function getClips(): Promise<Clip[]> {
-  await delay(120)
-  return [...SAMPLE_CLIPS]
+  await delay(60)
+  return getStoredClips()
 }
 
 /**
@@ -70,8 +71,9 @@ export async function getClips(): Promise<Clip[]> {
  * Retrieves details and reference transcript for a specific clip.
  */
 export async function getClip(id: string): Promise<Clip | null> {
-  await delay(80)
-  const clip = SAMPLE_CLIPS.find((c) => c.id === id)
+  await delay(40)
+  const clips = getStoredClips()
+  const clip = clips.find((c) => c.id === id)
   return clip || null
 }
 

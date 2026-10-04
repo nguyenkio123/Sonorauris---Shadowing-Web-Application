@@ -60,6 +60,7 @@
 | **FR-QUEST-01**| 3 Nhiệm vụ hằng ngày | P1 | 🟢 Hoàn thành | 3 nhiệm vụ ngày (Solo, Điểm cao ≥80, Đấu 1v1), theo dõi thời gian thực, modal nhận thưởng XP/Coins qua Ledger. |
 | **FR-DICT-01** | Tra từ điển transcript | P1 | 🟢 Hoàn thành | Click vào từ trong transcript hiển thị nghĩa, phiên âm IPA, câu ví dụ và phát âm audio qua Free Dictionary API + Web Speech. |
 | **FR-BAT-07** | Phòng đấu 3–5 người | P1 | 🟢 Hoàn thành | Sức chứa 2–5 người (1v1, Trio, Squad, Royale), bot sparring tự lấp đầy, bảng xếp hạng Podium và huy chương tại kết quả. |
+| **FR-ADMIN-01**| Role Admin & Quản trị | P1 | 🟢 Hoàn thành | Quản lý Users (Thêm/Sửa/Xóa/Phân quyền), Quản lý Videos/Clips (YouTube parser, Preview, CRUD), Cấp vật phẩm/EXP/Coins qua Immutable Ledger. |
 
 ---
 
@@ -161,6 +162,13 @@ d:\Shadowing-web-application\
 3. ✅ **Bộ kiểm thử chấp nhận SRS v1.0 (Acceptance Test Suite - `npm run test:acceptance`)**:
    - 7 bộ kiểm thử toàn diện với **57/57 tests PASS (100%)**.
    - Build production `tsc -b && vite build` hoàn thành 100% không cảnh báo/lỗi.
+
+### Giai đoạn 5: Role Admin & Quản Trị Hệ Thống (✅ HOÀN THÀNH)
+1. ✅ **Role Admin & Phân quyền (`FR-ADMIN-01`)**: Phân biệt `role: 'user'` và `role: 'admin'`, seed tài khoản admin mẫu (`admin@sonorauris.com` / `admin123`), bảo vệ route `/admin` bằng `<AdminRoute>`.
+2. ✅ **Quản lý Video & Clips**: CRUD Clips hoàn chỉnh, bóc tách YouTube ID tự động, Live preview theo mốc giây, đồng bộ tức thì sang toàn bộ trang web.
+3. ✅ **Quản lý Người Dùng & Phân quyền**: CRUD tài khoản người học/admin, thống kê chi tiết XP, Coins, Streak, lượt nộp bài.
+4. ✅ **Cấp EXP, Coins & Vật phẩm qua Ledger**: Cấp/thu hồi ngoại trang Shop (Avatars, Frames, Titles) không tốn coins; cấp/trừ XP & Coins với khóa `ADMIN_GRANT` tuân thủ nghiêm ngặt Zero-drift Ledger.
+5. ✅ **Bộ kiểm thử chấp nhận mở rộng**: Mở rộng lên **8 bộ kiểm thử (85/85 tests PASS 100%)**.
 
 ---
 *File này được tạo tự động và cập nhật liên tục để đảm bảo hiệu suất tốt nhất cho các phiên làm việc của Agent.*

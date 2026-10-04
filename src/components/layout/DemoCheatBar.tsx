@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   getForcedOutcome,
   isDemoMode,
@@ -138,6 +139,14 @@ export function DemoCheatBar() {
           AUTO
         </button>
       </div>
+
+      <Link
+        to="/admin"
+        className="px-2.5 py-1 rounded-full font-bold font-mono text-[11px] bg-purple-100 hover:bg-purple-200 text-purple-800 transition-colors"
+        title="Open Sonorauris Admin Console (/admin)"
+      >
+        ADMIN
+      </Link>
 
       <button
         type="button"

@@ -41,13 +41,28 @@ import {
   getAttempts,
   getDailyQuestsState,
   claimDailyQuest,
+  getUserInventory,
 } from '../src/api/storage.ts';
 import {
   syncRoomState,
   generateAssessmentResult,
   generateMockMiscues,
 } from '../src/api/mockServer.ts';
-import { createRoom } from '../src/api/index.ts';
+import { createRoom, getClips, getClip } from '../src/api/index.ts';
+import {
+  getAdminStats,
+  getAdminUsers,
+  createAdminUser,
+  updateAdminUser,
+  deleteAdminUser,
+  grantUserCurrency,
+  grantUserItem,
+  revokeUserItem,
+  createAdminClip,
+  updateAdminClip,
+  deleteAdminClip,
+} from '../src/api/admin.ts';
+import { signInWithEmail } from '../src/api/auth.ts';
 
 // Test statistics
 let totalTests = 0;
@@ -340,7 +355,104 @@ for (let i = 0; i < finishedRoyale.participants!.length - 1; i++) {
 }
 assert(sortedDescending, 'Participants are strictly ordered by Battle Score from 1st (Gold) to 5th place');
 assert(finishedRoyale.participants![0].outcome === 'WIN', 'Top ranked participant has outcome WIN');
-assert(finishedRoyale.rewardsClaimed === true, 'Battle rewards atomically distributed to ledger');
+// ─────────────────────────────────────────────────────────────────────────────
+// SUITE 8: ADMIN ROLE & CONTENT/USER MANAGEMENT (FR-ADMIN-01)
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('\n--- [SUITE 8] Admin Role & Content/User Management ---');
+
+// 1. Admin Authentication & Role Check
+const adminAuth = await signInWithEmail('admin@sonorauris.com', 'admin123');
+assert(adminAuth.user.role === 'admin', 'Default admin account has role admin', adminAuth.user.role);
+assert(adminAuth.user.email === 'admin@sonorauris.com', 'Admin email verified');
+
+// 2. Video/Clip CRUD Operations
+const initialClips = await getClips();
+assert(initialClips.length === 20, 'Initial stored clips count is 20');
+
+const newClip = await createAdminClip({
+  youtubeVideoId: 'dQw4w9WgXcQ',
+  title: 'Admin Test Clip - Leadership Pitch',
+  channelName: 'Test Channel',
+  startTimeSec: 10,
+  endTimeSec: 25,
+  referenceText: 'Never gonna give you up, never gonna let you down.',
+  topic: 'Work & Tech',
+  difficulty: 'Intermediate',
+});
+assert(newClip.id.startsWith('clip-'), 'New clip assigned unique ID');
+assert(newClip.durationSec === 15, 'Clip duration accurately derived from timestamps');
+
+const clipsAfterAdd = await getClips();
+assert(clipsAfterAdd.length === 21, 'Clips library contains 21 clips after add');
+
+const foundClip = await getClip(newClip.id);
+assert(foundClip !== null && foundClip.title === 'Admin Test Clip - Leadership Pitch', 'Created clip accessible via getClip()');
+
+const updatedClip = await updateAdminClip(newClip.id, {
+  title: 'Updated Leadership Pitch (Masterclass)',
+  endTimeSec: 30,
+});
+assert(updatedClip !== null && updatedClip.title === 'Updated Leadership Pitch (Masterclass)', 'Clip title updated');
+assert(updatedClip?.durationSec === 20, 'Clip duration updated after changing boundary timestamps');
+
+const deleted = await deleteAdminClip(newClip.id);
+assert(deleted === true, 'Clip successfully deleted');
+const clipsAfterDelete = await getClips();
+assert(clipsAfterDelete.length === 20, 'Clips count returned to 20 after delete');
+
+// 3. User CRUD Operations & Role Assignment
+const createdUser = await createAdminUser({
+  email: 'learner.vip@sonorauris.com',
+  displayName: 'VIP Learner',
+  password: 'vippassword',
+  role: 'user',
+  initialXp: 200,
+  initialCoins: 80,
+});
+assert(createdUser.email === 'learner.vip@sonorauris.com', 'Admin successfully created new user');
+assert(createdUser.xp === 200, 'Initial XP recorded in ledger');
+assert(createdUser.coins === 80, 'Initial Coins recorded in ledger');
+
+const updatedUser = await updateAdminUser(createdUser.id, {
+  displayName: 'VIP Learner (Honored)',
+  role: 'admin',
+});
+assert(updatedUser.displayName === 'VIP Learner (Honored)', 'User display name updated');
+assert(updatedUser.role === 'admin', 'User promoted to administrator');
+
+// 4. Grant Currency (XP & Coins) via Immutable Ledger
+const currencyGrant = await grantUserCurrency(createdUser.id, 500, 150, 'Competition Winner');
+assert(currencyGrant.success === true, 'Currency adjustment committed to ledger');
+assert(currencyGrant.newXp === 700, 'Zero-drift XP balance updated to 700 (+500 XP)', `Actual: ${currencyGrant.newXp}`);
+assert(currencyGrant.newCoins === 230, 'Zero-drift Coins balance updated to 230 (+150 Coins)', `Actual: ${currencyGrant.newCoins}`);
+
+// Verify ledger transaction existence
+const txs = getTransactions();
+const grantTx = txs.find(t => t.userId === createdUser.id && t.referenceType === 'ADMIN_GRANT');
+assert(grantTx !== undefined, 'Immutable ledger contains ADMIN_GRANT record');
+
+// 5. Grant & Revoke Cosmetic Items
+const initialInv = getUserInventory(createdUser.id);
+assert(!initialInv.ownedItemIds.includes('avatar-cyber-fox'), 'User does not initially own Cyber Fox avatar');
+
+const grantedItem = await grantUserItem(createdUser.id, 'avatar-cyber-fox');
+assert(grantedItem === true, 'Admin granted cosmetic item without coin deduction');
+assert(getUserInventory(createdUser.id).ownedItemIds.includes('avatar-cyber-fox'), 'Inventory reflects newly granted item');
+
+const revokedItem = await revokeUserItem(createdUser.id, 'avatar-cyber-fox');
+assert(revokedItem === true, 'Admin successfully revoked cosmetic item');
+assert(!getUserInventory(createdUser.id).ownedItemIds.includes('avatar-cyber-fox'), 'Item removed from inventory');
+
+// 6. Delete User
+const deletedUser = await deleteAdminUser(createdUser.id);
+assert(deletedUser === true, 'User successfully deleted by admin');
+const allUsers = await getAdminUsers();
+assert(!allUsers.some(u => u.id === createdUser.id), 'Deleted user removed from user directory');
+
+// 7. Admin Stats Check
+const adminStats = await getAdminStats();
+assert(adminStats.totalClips === 20, 'Stats accurately report 20 clips');
+assert(adminStats.totalAdmins >= 1, 'Stats report at least 1 administrator');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUMMARY

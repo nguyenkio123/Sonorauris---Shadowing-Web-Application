@@ -5,12 +5,15 @@ import {
   DEFAULT_TITLE_ID,
   SHOP_ITEMS,
 } from '../data/shopItems'
+import { SAMPLE_CLIPS } from '../data/clips'
 import type { Attempt } from '../types/attempt'
 import type { BattleRoom } from '../types/battle'
+import type { Clip } from '../types/clip'
 import type { DailyQuest } from '../types/quest'
 import type { CosmeticType, UserInventory } from '../types/shop'
 import type { ReferenceType, RewardTransaction, RewardType } from '../types/transaction'
 import type { UserProfile } from '../types/user'
+import type { UserRole } from '../types/auth'
 
 const STORAGE_KEYS = {
   USER_BASE: 'shadowing_user_base',
@@ -18,6 +21,7 @@ const STORAGE_KEYS = {
   ATTEMPTS: 'shadowing_attempts',
   ROOMS: 'shadowing_rooms',
   INVENTORY: 'shadowing_user_inventory',
+  CLIPS: 'shadowing_clips',
 } as const
 
 interface UserBase {
@@ -25,6 +29,7 @@ interface UserBase {
   displayName: string
   avatarUrl: string
   streak: number
+  role?: UserRole
   lastPracticeDate: string | null
   lastStreakRestoreDate: string | null
 }
@@ -34,6 +39,7 @@ const DEFAULT_USER_BASE: UserBase = {
   displayName: 'Demo Player',
   avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoPlayer',
   streak: 3,
+  role: 'user',
   lastPracticeDate: '2026-09-28',
   lastStreakRestoreDate: null,
 }
@@ -94,12 +100,88 @@ export function saveUserBase(base: UserBase): void {
   writeJson(STORAGE_KEYS.USER_BASE, base)
 }
 
-export function getUserInventory(): UserInventory {
-  return readJson<UserInventory>(STORAGE_KEYS.INVENTORY, DEFAULT_INVENTORY)
+export function getUserInventory(userId?: string): UserInventory {
+  const currentUserId = userId || getUserBase().id
+  if (currentUserId === 'user-demo-player') {
+    return readJson<UserInventory>(STORAGE_KEYS.INVENTORY, DEFAULT_INVENTORY)
+  }
+  const key = `shadowing_inventory_${currentUserId}`
+  return readJson<UserInventory>(key, DEFAULT_INVENTORY)
 }
 
-export function saveUserInventory(inv: UserInventory): void {
-  writeJson(STORAGE_KEYS.INVENTORY, inv)
+export function saveUserInventory(inv: UserInventory, userId?: string): void {
+  const currentUserId = userId || getUserBase().id
+  const key = `shadowing_inventory_${currentUserId}`
+  writeJson(key, inv)
+  if (currentUserId === 'user-demo-player') {
+    writeJson(STORAGE_KEYS.INVENTORY, inv)
+  }
+}
+
+export function grantUserCosmetic(userId: string, itemId: string): boolean {
+  const inv = getUserInventory(userId)
+  if (!inv.ownedItemIds.includes(itemId)) {
+    inv.ownedItemIds.push(itemId)
+    saveUserInventory(inv, userId)
+    return true
+  }
+  return false
+}
+
+export function revokeUserCosmetic(userId: string, itemId: string): boolean {
+  const inv = getUserInventory(userId)
+  const idx = inv.ownedItemIds.indexOf(itemId)
+  if (idx >= 0) {
+    inv.ownedItemIds.splice(idx, 1)
+    if (inv.equippedAvatarId === itemId) inv.equippedAvatarId = DEFAULT_AVATAR_ID
+    if (inv.equippedFrameId === itemId) inv.equippedFrameId = DEFAULT_FRAME_ID
+    if (inv.equippedTitleId === itemId) inv.equippedTitleId = DEFAULT_TITLE_ID
+    saveUserInventory(inv, userId)
+    return true
+  }
+  return false
+}
+
+export function getStoredClips(): Clip[] {
+  return readJson<Clip[]>(STORAGE_KEYS.CLIPS, SAMPLE_CLIPS)
+}
+
+export function saveStoredClips(clips: Clip[]): void {
+  writeJson(STORAGE_KEYS.CLIPS, clips)
+}
+
+export function addStoredClip(clipData: Omit<Clip, 'id'>): Clip {
+  const clips = getStoredClips()
+  const newClip: Clip = {
+    ...clipData,
+    id: `clip-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  }
+  clips.unshift(newClip)
+  saveStoredClips(clips)
+  return newClip
+}
+
+export function updateStoredClip(id: string, updates: Partial<Clip>): Clip | null {
+  const clips = getStoredClips()
+  const idx = clips.findIndex((c) => c.id === id)
+  if (idx < 0) return null
+  const updated = { ...clips[idx], ...updates, id }
+  clips[idx] = updated
+  saveStoredClips(clips)
+  return updated
+}
+
+export function deleteStoredClip(id: string): boolean {
+  const clips = getStoredClips()
+  const filtered = clips.filter((c) => c.id !== id)
+  if (filtered.length === clips.length) return false
+  saveStoredClips(filtered)
+  return true
+}
+
+export function resetStoredClips(): Clip[] {
+  saveStoredClips(SAMPLE_CLIPS)
+  return [...SAMPLE_CLIPS]
 }
 
 export function getTransactions(): RewardTransaction[] {
@@ -113,10 +195,11 @@ export function saveTransactions(txs: RewardTransaction[]): void {
 /**
  * Derives full UserProfile where XP and Coins are purely calculated from the ledger.
  */
-export function getUserProfile(): UserProfile {
+export function getUserProfile(targetUserId?: string): UserProfile {
   const base = getUserBase()
-  const inventory = getUserInventory()
-  const txs = getTransactions().filter((t) => t.userId === base.id)
+  const currentUserId = targetUserId || base.id
+  const inventory = getUserInventory(currentUserId)
+  const txs = getTransactions().filter((t) => t.userId === currentUserId)
 
   const xp = txs
     .filter((t) => t.type === 'XP')
@@ -128,8 +211,34 @@ export function getUserProfile(): UserProfile {
 
   const titleItem = SHOP_ITEMS.find((i) => i.id === inventory.equippedTitleId)
 
+  if (targetUserId && targetUserId !== base.id) {
+    const accounts = readJson<Array<{ id: string; email: string; displayName: string; avatarUrl: string; role?: UserRole }>>(
+      'shadowing_local_accounts',
+      []
+    )
+    const acc = accounts.find((a) => a.id === targetUserId)
+    if (acc) {
+      return {
+        id: acc.id,
+        displayName: acc.displayName,
+        avatarUrl: acc.avatarUrl,
+        xp,
+        coins,
+        streak: 0,
+        role: acc.role || 'user',
+        equippedAvatarId: inventory.equippedAvatarId,
+        equippedFrameId: inventory.equippedFrameId,
+        equippedTitleId: inventory.equippedTitleId,
+        equippedTitle: titleItem ? titleItem.name : 'Shadowing Learner',
+        lastPracticeDate: null,
+        lastStreakRestoreDate: null,
+      }
+    }
+  }
+
   return {
     ...base,
+    role: (base as { role?: UserRole }).role || 'user',
     xp,
     coins,
     equippedAvatarId: inventory.equippedAvatarId,
@@ -423,6 +532,7 @@ export function resetAllStorage(): void {
   writeJson(STORAGE_KEYS.TRANSACTIONS, SEED_TRANSACTIONS)
   writeJson(STORAGE_KEYS.ATTEMPTS, [])
   writeJson(STORAGE_KEYS.ROOMS, {})
+  writeJson(STORAGE_KEYS.CLIPS, SAMPLE_CLIPS)
   localStorage.removeItem('shadowing_forced_outcome')
 }
 

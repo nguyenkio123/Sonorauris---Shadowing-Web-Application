@@ -1,4 +1,4 @@
-import { Flame, Coins, Swords, Headphones, Sparkles, Trophy, LogIn } from 'lucide-react'
+import { Flame, Coins, Swords, Headphones, Sparkles, Trophy, LogIn, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { getDailyQuests, getMe } from '../../api'
@@ -152,6 +152,27 @@ export function Header() {
               <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#4E9488]" />
             )}
           </Link>
+
+          {/* Product Tab 4: Admin Panel (if admin) */}
+          {authUser?.role === 'admin' && (
+            <Link
+              to="/admin"
+              className={`relative flex items-center gap-1.5 h-full px-3 text-[15px] font-medium transition-colors ${
+                location.pathname.startsWith('/admin')
+                  ? 'text-purple-700'
+                  : 'text-[#5B6780] hover:text-purple-700'
+              }`}
+            >
+              <ShieldCheck className="h-4 w-4 text-purple-600" />
+              <span>Admin</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800">
+                PANEL
+              </span>
+              {location.pathname.startsWith('/admin') && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-purple-600" />
+              )}
+            </Link>
+          )}
         </nav>
 
         {/* Right Utilities: Quests, Quick Stats, and Profile */}

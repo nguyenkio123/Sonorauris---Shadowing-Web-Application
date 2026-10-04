@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     equipped_avatar_id TEXT DEFAULT 'avatar-default',
     equipped_frame_id TEXT DEFAULT 'frame-none',
     equipped_title_id TEXT DEFAULT 'title-learner',
+    role TEXT NOT NULL DEFAULT 'user', -- 'user' | 'admin'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
