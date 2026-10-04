@@ -14,6 +14,7 @@ async function main() {
     process.exit(1);
   } finally {
     await vite.close();
+    process.exit(0);
   }
 }
 
