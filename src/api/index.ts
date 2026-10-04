@@ -9,7 +9,7 @@ import { generateAssessmentResult, syncRoomState } from './mockServer'
 import { SHOP_ITEMS } from '../data/shopItems'
 import type { CosmeticType } from '../types/shop'
 import { assessPronunciation } from './azureSpeech'
-import { broadcastRoomRealtime } from './realtimeRoom'
+import { broadcastRoomRealtime, requestRemoteRoomState } from './realtimeRoom'
 import type { DailyQuest } from '../types/quest'
 import {
   addRewardTransactions,
@@ -186,25 +186,39 @@ export async function createRoom(clipId: string, maxPlayers: number = 2): Promis
 export async function joinRoom(code: string): Promise<BattleRoom> {
   await delay(120)
   const normalizedCode = code.trim().toUpperCase()
-  const existing = getRoomByCode(normalizedCode)
+  let existing = getRoomByCode(normalizedCode)
 
   if (!existing) {
-    throw new Error(`Room code "${normalizedCode}" not found.`)
+    // Discover room state across computers/browsers via Supabase Realtime Broadcast
+    existing = await requestRemoteRoomState(normalizedCode, 1500)
+  }
+
+  if (!existing) {
+    throw new Error(`Room code "${normalizedCode}" not found. Ensure host is waiting in lobby.`)
   }
 
   const user = await getMe()
   const maxPlayers = existing.maxPlayers || 2
+
+  // Support separate players even if both are default guests without collision
+  let participantUserId = user.id
+  let participantDisplayName = user.displayName
+
+  if (existing.hostUserId === user.id) {
+    participantUserId = `user-peer-${Math.random().toString(36).slice(2, 7)}`
+    participantDisplayName = `${user.displayName} (P2)`
+  }
 
   if (!existing.participants) {
     existing.participants = [existing.player]
     if (existing.opponent) existing.participants.push(existing.opponent)
   }
 
-  const alreadyIn = existing.participants.some((p) => p.userId === user.id)
+  const alreadyIn = existing.participants.some((p) => p.userId === participantUserId)
   if (!alreadyIn && existing.participants.length < maxPlayers) {
     const newParticipant = {
-      userId: user.id,
-      displayName: user.displayName,
+      userId: participantUserId,
+      displayName: participantDisplayName,
       avatarUrl: user.avatarUrl,
       isBot: false,
       isReady: false,
@@ -217,7 +231,7 @@ export async function joinRoom(code: string): Promise<BattleRoom> {
       existing.participants.push(newParticipant)
     }
 
-    if (existing.hostUserId !== user.id && (!existing.opponent || existing.opponent.isBot)) {
+    if (existing.hostUserId !== participantUserId && (!existing.opponent || existing.opponent.isBot)) {
       existing.opponent = newParticipant
     }
 
@@ -241,16 +255,21 @@ export async function setReady(code: string, ready = true): Promise<BattleRoom> 
   }
 
   const user = await getMe()
-  if (room.hostUserId === user.id) {
+  const myParticipant = room.participants?.find(
+    (p) => !p.isBot && (p.userId === user.id || (room.hostUserId !== user.id && p.userId !== room.hostUserId))
+  )
+  const myUserId = myParticipant ? myParticipant.userId : user.id
+
+  if (room.hostUserId === myUserId) {
     room.player.isReady = ready
-  } else if (room.opponent && room.opponent.userId === user.id) {
+  } else if (room.opponent && room.opponent.userId === myUserId) {
     room.opponent.isReady = ready
   } else {
     room.player.isReady = ready
   }
 
   if (room.participants) {
-    const p = room.participants.find((item) => item.userId === user.id)
+    const p = room.participants.find((item) => item.userId === myUserId)
     if (p) p.isReady = ready
   }
 
@@ -266,7 +285,13 @@ export async function setReady(code: string, ready = true): Promise<BattleRoom> 
  */
 export async function getRoom(code: string): Promise<BattleRoom | null> {
   const normalizedCode = code.trim().toUpperCase()
-  const room = getRoomByCode(normalizedCode)
+  let room = getRoomByCode(normalizedCode)
+  if (!room) {
+    room = await requestRemoteRoomState(normalizedCode, 800)
+    if (room) {
+      saveRoom(room)
+    }
+  }
   if (!room) return null
 
   return syncRoomState(room)

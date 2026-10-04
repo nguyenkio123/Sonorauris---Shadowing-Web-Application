@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getRoom } from '../api'
 import { subscribeToRoomRealtime } from '../api/realtimeRoom'
-import { saveRoom } from '../api/storage'
+import { getRoomByCode, saveRoom } from '../api/storage'
 import type { BattleRoom } from '../types/battle'
 
 /**
@@ -47,13 +47,17 @@ export function useRoom(code: string | undefined): {
 
     let isMounted = true
 
-    // 1. Subscribe to Supabase Realtime Broadcast Channel for instant push updates
-    const unsubscribe = subscribeToRoomRealtime(code, (remoteRoom) => {
-      if (!isMounted) return
-      setRoom(remoteRoom)
-      saveRoom(remoteRoom)
-      setError(null)
-    })
+    // 1. Subscribe to Supabase Realtime Broadcast Channel for instant push updates & state responding
+    const unsubscribe = subscribeToRoomRealtime(
+      code,
+      (remoteRoom) => {
+        if (!isMounted) return
+        setRoom(remoteRoom)
+        saveRoom(remoteRoom)
+        setError(null)
+      },
+      () => getRoomByCode(code)
+    )
 
     // 2. Heartbeat polling as reliable fallback & state machine ticker
     const poll = async () => {

@@ -18,7 +18,8 @@ export function isRealtimeAvailable(): boolean {
  */
 export function subscribeToRoomRealtime(
   roomCode: string,
-  onUpdate: RoomListener
+  onUpdate: RoomListener,
+  getLatestRoom?: () => BattleRoom | null
 ): () => void {
   if (!supabase) {
     return () => {}
@@ -46,6 +47,18 @@ export function subscribeToRoomRealtime(
         onUpdate(payload.payload as BattleRoom)
       }
     })
+    .on('broadcast', { event: 'request_state' }, () => {
+      if (getLatestRoom) {
+        const latest = getLatestRoom()
+        if (latest) {
+          void channel.send({
+            type: 'broadcast',
+            event: 'room_state',
+            payload: latest,
+          })
+        }
+      }
+    })
     .subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         console.info(`[Realtime] Connected to room channel: ${channelName}`)
@@ -58,6 +71,70 @@ export function subscribeToRoomRealtime(
     channel.unsubscribe()
     activeChannels.delete(channelName)
   }
+}
+
+/**
+ * Requests room state from peer over Supabase Realtime broadcast channel.
+ * Enables 2 players on separate computers or separate browsers to discover rooms.
+ */
+export async function requestRemoteRoomState(
+  roomCode: string,
+  timeoutMs = 1200
+): Promise<BattleRoom | null> {
+  if (!supabase) return null
+
+  const normalizedCode = roomCode.toUpperCase()
+  const channelName = `battle_room_${normalizedCode}`
+
+  let channel = activeChannels.get(channelName)
+  let shouldCleanup = false
+
+  if (!channel) {
+    channel = supabase.channel(channelName, {
+      config: { broadcast: { self: false } },
+    })
+    activeChannels.set(channelName, channel)
+    shouldCleanup = true
+  }
+
+  return new Promise((resolve) => {
+    let resolved = false
+
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true
+        if (shouldCleanup) {
+          channel?.unsubscribe()
+          activeChannels.delete(channelName)
+        }
+        resolve(null)
+      }
+    }, timeoutMs)
+
+    channel?.on('broadcast', { event: 'room_state' }, (payload) => {
+      if (!resolved && payload.payload) {
+        resolved = true
+        clearTimeout(timer)
+        resolve(payload.payload as BattleRoom)
+      }
+    })
+
+    const doSend = () => {
+      channel?.send({
+        type: 'broadcast',
+        event: 'request_state',
+        payload: { roomCode: normalizedCode },
+      }).catch(() => {})
+    }
+
+    channel?.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        doSend()
+      }
+    })
+
+    doSend()
+  })
 }
 
 /**
