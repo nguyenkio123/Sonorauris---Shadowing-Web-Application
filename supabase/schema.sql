@@ -135,3 +135,23 @@ SELECT
 FROM public.users u
 LEFT JOIN public.reward_transactions rt ON u.id = rt.user_id
 GROUP BY u.id, u.display_name, u.avatar_url, u.streak;
+
+-- ==============================================================================
+-- PERMISSIONS & RLS CONFIGURATION FOR CLIENT APP (MVP / Competition)
+-- ==============================================================================
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated;
+
+-- Disable RLS so client app can access tables without blocking:
+ALTER TABLE IF EXISTS public.users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.videos DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.clips DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.attempts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.rooms DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.room_participants DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.reward_transactions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.shop_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.user_items DISABLE ROW LEVEL SECURITY;
+
