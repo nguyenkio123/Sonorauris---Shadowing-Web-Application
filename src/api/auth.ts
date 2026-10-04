@@ -18,7 +18,7 @@ export interface StoredLocalAccount {
 }
 
 export const DEFAULT_ADMIN_ACCOUNT: StoredLocalAccount = {
-  id: 'user-admin-default',
+  id: 'a0000000-0000-0000-0000-000000000001',
   email: 'admin@sonorauris.com',
   passwordHash: btoa('admin123'),
   displayName: 'System Admin',
@@ -74,7 +74,22 @@ export async function getCurrentAuthUser(): Promise<AuthUser | null> {
       if (session && session.user && !error) {
         const u = session.user
         const meta = u.user_metadata || {}
-        const role: UserRole = meta.role === 'admin' ? 'admin' : 'user'
+        let role: UserRole = meta.role === 'admin' ? 'admin' : 'user'
+
+        // Check if role has been updated directly in public.users
+        try {
+          const { data: dbUser } = await supabase
+            .from('users')
+            .select('role, display_name, avatar_url')
+            .eq('id', u.id)
+            .maybeSingle()
+          if (dbUser?.role) {
+            role = dbUser.role as UserRole
+          }
+        } catch {
+          // ignore
+        }
+
         return {
           id: u.id,
           email: u.email || '',
@@ -161,6 +176,22 @@ export async function signUpWithEmail(
         role,
         isGuest: false,
         createdAt: data.user.created_at,
+      }
+
+      // Explicitly upsert profile into public.users
+      try {
+        await supabase.from('users').upsert(
+          {
+            id: data.user.id,
+            email: data.user.email || trimmedEmail,
+            display_name: trimmedName,
+            avatar_url: authUser.avatarUrl,
+            role,
+          },
+          { onConflict: 'id' }
+        )
+      } catch (dbErr) {
+        console.warn('[Auth] Optional public.users sync error:', dbErr)
       }
 
       // Sync with user base
@@ -255,7 +286,22 @@ export async function signInWithEmail(
 
       if (!error && data?.user) {
         const meta = data.user.user_metadata || {}
-        const role: UserRole = meta.role === 'admin' ? 'admin' : 'user'
+        let role: UserRole = meta.role === 'admin' ? 'admin' : 'user'
+
+        // Check if role has been updated directly in public.users
+        try {
+          const { data: dbUser } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', data.user.id)
+            .maybeSingle()
+          if (dbUser?.role) {
+            role = dbUser.role as UserRole
+          }
+        } catch {
+          // ignore
+        }
+
         const authUser: AuthUser = {
           id: data.user.id,
           email: data.user.email || trimmedEmail,

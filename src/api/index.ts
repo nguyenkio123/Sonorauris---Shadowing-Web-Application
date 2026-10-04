@@ -31,9 +31,16 @@ import {
   restoreStreak,
   saveAttempt,
   saveRoom,
+  saveStoredClips,
   updateDisplayName,
 } from './storage'
+import {
+  fetchRemoteClips,
+  recordRemoteAttempt,
+  recordRemoteRewardTransactions,
+} from './supabaseSync'
 export * from './admin'
+export * from './supabaseSync'
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -59,10 +66,15 @@ export async function getMe(): Promise<UserProfile> {
 
 /**
  * SRS Baseline API: GET /api/clips
- * Retrieves curated list of shadowing clips.
+ * Retrieves curated list of shadowing clips (Supabase Cloud with Sandbox fallback).
  */
 export async function getClips(): Promise<Clip[]> {
   await delay(60)
+  const remote = await fetchRemoteClips()
+  if (remote && remote.length > 0) {
+    saveStoredClips(remote)
+    return remote
+  }
   return getStoredClips()
 }
 
@@ -72,7 +84,7 @@ export async function getClips(): Promise<Clip[]> {
  */
 export async function getClip(id: string): Promise<Clip | null> {
   await delay(40)
-  const clips = getStoredClips()
+  const clips = await getClips()
   const clip = clips.find((c) => c.id === id)
   return clip || null
 }
@@ -97,23 +109,28 @@ export async function submitAttempt(
 
   const attemptId = `attempt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
-  // Atomically record rewards into ledger with strict idempotency
-  addRewardTransactions([
+  const rewardItems = [
     {
       userId: user.id,
-      type: 'XP',
+      type: 'XP' as const,
       amount: REWARDS.soloPractice.xp,
-      referenceType: 'ATTEMPT',
+      referenceType: 'ATTEMPT' as const,
       referenceId: attemptId,
     },
     {
       userId: user.id,
-      type: 'COINS',
+      type: 'COINS' as const,
       amount: REWARDS.soloPractice.coins,
-      referenceType: 'ATTEMPT',
+      referenceType: 'ATTEMPT' as const,
       referenceId: attemptId,
     },
-  ])
+  ]
+
+  // Atomically record rewards into ledger with strict idempotency
+  addRewardTransactions(rewardItems)
+
+  // Async sync to Supabase Cloud if available
+  void recordRemoteRewardTransactions(rewardItems)
 
   const attempt: Attempt = {
     id: attemptId,
@@ -126,6 +143,8 @@ export async function submitAttempt(
   }
 
   saveAttempt(attempt)
+  void recordRemoteAttempt(attempt)
+
   return attempt
 }
 

@@ -170,5 +170,10 @@ d:\Shadowing-web-application\
 4. ✅ **Cấp EXP, Coins & Vật phẩm qua Ledger**: Cấp/thu hồi ngoại trang Shop (Avatars, Frames, Titles) không tốn coins; cấp/trừ XP & Coins với khóa `ADMIN_GRANT` tuân thủ nghiêm ngặt Zero-drift Ledger.
 5. ✅ **Bộ kiểm thử chấp nhận mở rộng**: Mở rộng lên **8 bộ kiểm thử (85/85 tests PASS 100%)**.
 
+### Giai đoạn 6: Đồng Bộ Supabase Cloud Backend & Database Migration (✅ HOÀN THÀNH)
+1. ✅ **Database Migration & Idempotent Schema (`supabase/schema.sql`)**: Bổ sung khối migration an toàn tự động chuyển đổi kiểu dữ liệu `UUID -> TEXT`, thêm cột `role`, `channel_name`, `source_url`, `last_streak_restore_date`, và đăng ký Realtime idempotent (`supabase_realtime`).
+2. ✅ **Client-side Supabase Synchronization Layer (`src/api/supabaseSync.ts`)**: Tự động đồng bộ Clips, Users, Reward Transactions (Ledger), User Items (Ngoại trang), và Solo Attempts hai chiều giữa trình duyệt và Supabase Cloud.
+3. ✅ **Hybrid Cloud & Offline Fallback**: Hoạt động mượt mà ở cả hai chế độ (Cloud Sync khi có credentials và Local Sandbox Mode khi offline), 85/85 acceptance tests PASS 100%.
+
 ---
 *File này được tạo tự động và cập nhật liên tục để đảm bảo hiệu suất tốt nhất cho các phiên làm việc của Agent.*

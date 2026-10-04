@@ -21,6 +21,17 @@ import {
   saveUserBase,
   updateStoredClip,
 } from './storage'
+import {
+  deleteRemoteClip,
+  deleteRemoteUser,
+  fetchRemoteClips,
+  fetchRemoteUsers,
+  grantRemoteUserItem,
+  recordRemoteRewardTransactions,
+  revokeRemoteUserItem,
+  upsertRemoteClip,
+  upsertRemoteUser,
+} from './supabaseSync'
 
 function delay(ms = 50): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -64,14 +75,16 @@ export async function getAdminUsers(): Promise<AdminUserSummary[]> {
   const attempts = getAttempts()
 
   const result: AdminUserSummary[] = []
+  const seenIds = new Set<string>()
 
   // 1. Add Demo Player
   const demoProfile = getUserProfile('user-demo-player')
   const demoInv = getUserInventory('user-demo-player')
   const demoAttempts = attempts.filter((a) => a.userId === 'user-demo-player').length
 
+  const demoId = demoBase.id || 'user-demo-player'
   result.push({
-    id: demoBase.id || 'user-demo-player',
+    id: demoId,
     email: 'guest@sonorauris.com',
     displayName: demoBase.displayName || 'Demo Player',
     avatarUrl: demoBase.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoPlayer',
@@ -84,11 +97,40 @@ export async function getAdminUsers(): Promise<AdminUserSummary[]> {
     createdAt: '2026-09-01T00:00:00.000Z',
     isGuest: true,
   })
+  seenIds.add(demoId)
 
-  // 2. Add Local Accounts
+  // 2. Add Remote Supabase Users (if connected)
+  const remoteUsers = await fetchRemoteUsers()
+  if (remoteUsers && remoteUsers.length > 0) {
+    for (const ru of remoteUsers) {
+      if (seenIds.has(ru.id)) continue
+      seenIds.add(ru.id)
+
+      const prof = getUserProfile(ru.id)
+      const inv = getUserInventory(ru.id)
+      const attCount = attempts.filter((a) => a.userId === ru.id).length
+
+      result.push({
+        id: ru.id,
+        email: ru.email,
+        displayName: ru.display_name || ru.email.split('@')[0],
+        avatarUrl: ru.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${ru.id}`,
+        role: ru.role || 'user',
+        xp: prof.xp,
+        coins: prof.coins,
+        streak: ru.streak || 0,
+        attemptsCount: attCount,
+        ownedItemCount: inv.ownedItemIds.length,
+        createdAt: ru.created_at || new Date().toISOString(),
+        isGuest: false,
+      })
+    }
+  }
+
+  // 3. Add Local Accounts
   for (const acc of localAccounts) {
-    // Avoid duplicate if demo user id equals account id
-    if (acc.id === demoBase.id) continue
+    if (seenIds.has(acc.id)) continue
+    seenIds.add(acc.id)
 
     const prof = getUserProfile(acc.id)
     const inv = getUserInventory(acc.id)
@@ -156,7 +198,7 @@ export async function createAdminUser(data: {
   const initialXp = data.initialXp || 0
   const initialCoins = data.initialCoins || 0
   if (initialXp > 0 || initialCoins > 0) {
-    addRewardTransactions([
+    const rewardTxItems = [
       ...(initialXp > 0
         ? [
             {
@@ -179,8 +221,20 @@ export async function createAdminUser(data: {
             },
           ]
         : []),
-    ])
+    ]
+    addRewardTransactions(rewardTxItems)
+    void recordRemoteRewardTransactions(rewardTxItems)
   }
+
+  // Sync to Supabase Cloud if available
+  void upsertRemoteUser({
+    id: newId,
+    email: trimmedEmail,
+    displayName: trimmedName,
+    avatarUrl,
+    role: data.role,
+    streak: 0,
+  })
 
   return {
     id: newId,
@@ -252,6 +306,15 @@ export async function updateAdminUser(
   accounts[idx] = updatedAcc
   saveLocalAccounts(accounts)
 
+  // Sync update to Supabase Cloud
+  void upsertRemoteUser({
+    id,
+    email: updatedAcc.email,
+    displayName: updatedAcc.displayName,
+    role: updatedAcc.role,
+    streak: updates.streak,
+  })
+
   const prof = getUserProfile(id)
   const inv = getUserInventory(id)
 
@@ -286,6 +349,7 @@ export async function deleteAdminUser(id: string): Promise<boolean> {
   if (filtered.length === accounts.length) return false
 
   saveLocalAccounts(filtered)
+  void deleteRemoteUser(id)
   return true
 }
 
@@ -330,6 +394,7 @@ export async function grantUserCurrency(
 
   if (items.length > 0) {
     addRewardTransactions(items)
+    void recordRemoteRewardTransactions(items)
   }
 
   const updatedProfile = getUserProfile(userId)
@@ -345,6 +410,7 @@ export async function grantUserCurrency(
  */
 export async function grantUserItem(userId: string, itemId: string): Promise<boolean> {
   await delay()
+  void grantRemoteUserItem(userId, itemId)
   return grantUserCosmetic(userId, itemId)
 }
 
@@ -353,14 +419,19 @@ export async function grantUserItem(userId: string, itemId: string): Promise<boo
  */
 export async function revokeUserItem(userId: string, itemId: string): Promise<boolean> {
   await delay()
+  void revokeRemoteUserItem(userId, itemId)
   return revokeUserCosmetic(userId, itemId)
 }
 
 /**
- * Retrieves all clips for Admin Management
+ * Retrieves all clips for Admin Management (Supabase Cloud with Sandbox fallback)
  */
 export async function getAdminClips(): Promise<Clip[]> {
   await delay()
+  const remote = await fetchRemoteClips()
+  if (remote && remote.length > 0) {
+    return remote
+  }
   return getStoredClips()
 }
 
@@ -376,7 +447,7 @@ export async function createAdminClip(input: AdminClipInput): Promise<Clip> {
   const source =
     input.sourceUrl?.trim() || `https://www.youtube.com/watch?v=${videoId}`
 
-  return addStoredClip({
+  const newClip = addStoredClip({
     youtubeVideoId: videoId,
     title: input.title.trim(),
     sourceUrl: source,
@@ -390,6 +461,9 @@ export async function createAdminClip(input: AdminClipInput): Promise<Clip> {
     difficulty: input.difficulty,
     locale: 'en-US',
   })
+
+  void upsertRemoteClip(newClip)
+  return newClip
 }
 
 /**
@@ -404,7 +478,11 @@ export async function updateAdminClip(id: string, updates: Partial<Clip>): Promi
     const end = updates.endTimeSec !== undefined ? updates.endTimeSec : existing.endTimeSec
     updates.durationSec = Math.max(1, end - start)
   }
-  return updateStoredClip(id, updates)
+  const updated = updateStoredClip(id, updates)
+  if (updated) {
+    void upsertRemoteClip(updated)
+  }
+  return updated
 }
 
 /**
@@ -412,6 +490,7 @@ export async function updateAdminClip(id: string, updates: Partial<Clip>): Promi
  */
 export async function deleteAdminClip(id: string): Promise<boolean> {
   await delay()
+  void deleteRemoteClip(id)
   return deleteStoredClip(id)
 }
 
