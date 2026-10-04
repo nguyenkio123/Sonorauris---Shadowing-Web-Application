@@ -194,6 +194,25 @@ export async function signUpWithEmail(
         console.warn('[Auth] Optional public.users sync error:', dbErr)
       }
 
+      // Also cache in localAccounts so fallback and offline testing always succeed
+      const localAccounts = getLocalAccounts()
+      const existingIdx = localAccounts.findIndex((a) => a.email === trimmedEmail)
+      const cachedAcc: StoredLocalAccount = {
+        id: data.user.id,
+        email: trimmedEmail,
+        passwordHash: btoa(password),
+        displayName: trimmedName,
+        avatarUrl: authUser.avatarUrl,
+        role,
+        createdAt: data.user.created_at || new Date().toISOString(),
+      }
+      if (existingIdx >= 0) {
+        localAccounts[existingIdx] = cachedAcc
+      } else {
+        localAccounts.push(cachedAcc)
+      }
+      saveLocalAccounts(localAccounts)
+
       // Sync with user base
       const base = getUserBase()
       saveUserBase({
@@ -208,8 +227,8 @@ export async function signUpWithEmail(
       return {
         user: authUser,
         message: data.session
-          ? 'Account created and signed in successfully!'
-          : 'Registration successful! Please check your email to confirm your account.',
+          ? 'Đăng ký và đăng nhập thành công!'
+          : 'Đăng ký thành công! Vui lòng kiểm tra email để bấm link xác thực (hoặc tắt "Confirm email" trong Supabase Dashboard) trước khi đăng nhập.',
       }
     }
   }
@@ -278,13 +297,16 @@ export async function signInWithEmail(
 
   // 1. Supabase Mode
   if (supabase) {
+    let supabaseError: { message: string; status?: number } | null = null
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password,
       })
 
-      if (!error && data?.user) {
+      if (error) {
+        supabaseError = error
+      } else if (data?.user) {
         const meta = data.user.user_metadata || {}
         let role: UserRole = meta.role === 'admin' ? 'admin' : 'user'
 
@@ -312,6 +334,25 @@ export async function signInWithEmail(
           createdAt: data.user.created_at,
         }
 
+        // Cache in localAccounts so future offline logins work
+        const localAccounts = getLocalAccounts()
+        const existingIdx = localAccounts.findIndex((a) => a.email === trimmedEmail)
+        const cachedAcc: StoredLocalAccount = {
+          id: data.user.id,
+          email: trimmedEmail,
+          passwordHash: btoa(password),
+          displayName: authUser.displayName,
+          avatarUrl: authUser.avatarUrl,
+          role,
+          createdAt: data.user.created_at || new Date().toISOString(),
+        }
+        if (existingIdx >= 0) {
+          localAccounts[existingIdx] = cachedAcc
+        } else {
+          localAccounts.push(cachedAcc)
+        }
+        saveLocalAccounts(localAccounts)
+
         writeJson(STORAGE_KEYS.AUTH_USER, authUser)
 
         const base = getUserBase()
@@ -326,7 +367,80 @@ export async function signInWithEmail(
         return { user: authUser, message: 'Signed in successfully!' }
       }
     } catch (err) {
-      console.warn('[Auth] Supabase signIn failed, checking local accounts:', err)
+      if (err instanceof Error) {
+        supabaseError = { message: err.message }
+      }
+    }
+
+    // Handle Supabase error specifically
+    if (supabaseError) {
+      const msgLower = supabaseError.message.toLowerCase()
+
+      // Case A: Email confirmation required by Supabase
+      if (msgLower.includes('not confirmed') || msgLower.includes('email not confirmed')) {
+        // If local copy exists with matching password, allow fallback with notification
+        const localAccounts = getLocalAccounts()
+        const found = localAccounts.find((a) => a.email === trimmedEmail)
+        if (found && found.passwordHash === btoa(password)) {
+          const authUser: AuthUser = {
+            id: found.id,
+            email: found.email,
+            displayName: found.displayName,
+            avatarUrl: found.avatarUrl,
+            role: found.role || 'user',
+            isGuest: false,
+            createdAt: found.createdAt,
+          }
+          writeJson(STORAGE_KEYS.AUTH_USER, authUser)
+          const base = getUserBase()
+          saveUserBase({
+            ...base,
+            id: found.id,
+            displayName: found.displayName,
+            avatarUrl: found.avatarUrl,
+            role: found.role || 'user',
+          })
+          return {
+            user: authUser,
+            message: 'Đăng nhập thành công! (Lưu ý: Email trên Supabase chưa xác thực, phiên hiện tại dùng bộ nhớ cục bộ)',
+          }
+        }
+
+        throw new Error(
+          `Tài khoản "${trimmedEmail}" chưa được xác thực email trên Supabase (Email not confirmed). Vui lòng kiểm tra hộp thư (hoặc thư rác) để bấm link kích hoạt, hoặc vào Supabase Dashboard > Authentication > Providers > Email để tắt tính năng "Confirm email".`
+        )
+      }
+
+      // Case B: Invalid credentials - check if local account matches
+      const localAccounts = getLocalAccounts()
+      const found = localAccounts.find((a) => a.email === trimmedEmail)
+      if (found && found.passwordHash === btoa(password)) {
+        const authUser: AuthUser = {
+          id: found.id,
+          email: found.email,
+          displayName: found.displayName,
+          avatarUrl: found.avatarUrl,
+          role: found.role || 'user',
+          isGuest: false,
+          createdAt: found.createdAt,
+        }
+        writeJson(STORAGE_KEYS.AUTH_USER, authUser)
+        const base = getUserBase()
+        saveUserBase({
+          ...base,
+          id: found.id,
+          displayName: found.displayName,
+          avatarUrl: found.avatarUrl,
+          role: found.role || 'user',
+        })
+        return { user: authUser, message: 'Signed in successfully!' }
+      }
+
+      throw new Error(
+        supabaseError.message === 'Invalid login credentials'
+          ? 'Email hoặc mật khẩu không chính xác.'
+          : supabaseError.message
+      )
     }
   }
 

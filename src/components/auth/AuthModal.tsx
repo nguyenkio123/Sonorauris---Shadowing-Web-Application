@@ -32,9 +32,13 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModal
         const res = await signUp(email, password, displayName)
         if (res.success) {
           setSuccessMsg(res.message)
-          setTimeout(() => {
-            onClose()
-          }, 1000)
+          if (res.message.includes('xác thực') || res.message.includes('confirm')) {
+            setMode('signin')
+          } else {
+            setTimeout(() => {
+              onClose()
+            }, 1000)
+          }
         } else {
           setErrorMsg(res.message)
         }
