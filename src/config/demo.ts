@@ -1,8 +1,8 @@
 import type { BattleOutcome } from '../types/battle'
 
 export const DEMO_CONFIG = {
-  botJoinDelayMs: 3000,
-  botReadyDelayMs: 1200,
+  botJoinDelayMs: 45000,
+  botReadyDelayMs: 1500,
   countdownSeconds: 3,
   assessmentDelayMs: 1500,
 } as const

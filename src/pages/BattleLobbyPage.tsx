@@ -10,7 +10,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
-import { createRoom, getClips, joinRoom, setReady } from '../api'
+import { addBotToRoom, createRoom, getClips, joinRoom, setReady } from '../api'
 import { useRoom } from '../hooks/useRoom'
 import type { Clip } from '../types/clip'
 
@@ -103,6 +103,15 @@ export function BattleLobbyPage() {
     } catch {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handleAddBot = async () => {
+    if (!activeCode) return
+    try {
+      await addBotToRoom(activeCode)
+    } catch (err) {
+      console.error('Failed to add bot to room:', err)
     }
   }
 
@@ -319,6 +328,15 @@ export function BattleLobbyPage() {
                         <span>Copy Code</span>
                       </>
                     )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddBot}
+                    className="btn-secondary text-xs font-semibold h-[40px] px-3.5 rounded-lg flex items-center gap-1.5 border-[#4E9488]/40 hover:border-[#4E9488]"
+                    title="Ghép Bot AI sparring ngay lập tức"
+                  >
+                    <Bot className="h-4 w-4 text-[#4E9488]" />
+                    <span>Thêm Bot AI</span>
                   </button>
                 </div>
               </div>

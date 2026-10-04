@@ -74,14 +74,56 @@ export function subscribeToRoomRealtime(
 }
 
 /**
+ * Persists room state to Supabase database table `public.rooms` if permissions are active.
+ */
+export async function saveRoomToSupabase(room: BattleRoom): Promise<void> {
+  if (!supabase) return
+  try {
+    await supabase.from('rooms').upsert({
+      id: room.id,
+      code: room.code.toUpperCase(),
+      clip_id: room.clipId,
+      status: room.status,
+      room_data: room,
+    })
+  } catch {
+    // Non-blocking fallback
+  }
+}
+
+/**
+ * Fetches room state from Supabase database table `public.rooms`.
+ */
+export async function fetchRoomFromSupabase(code: string): Promise<BattleRoom | null> {
+  if (!supabase) return null
+  try {
+    const { data, error } = await supabase
+      .from('rooms')
+      .select('room_data')
+      .eq('code', code.toUpperCase())
+      .maybeSingle()
+    if (!error && data && data.room_data) {
+      return data.room_data as BattleRoom
+    }
+  } catch {
+    // Non-blocking fallback
+  }
+  return null
+}
+
+/**
  * Requests room state from peer over Supabase Realtime broadcast channel.
  * Enables 2 players on separate computers or separate browsers to discover rooms.
  */
 export async function requestRemoteRoomState(
   roomCode: string,
-  timeoutMs = 1200
+  timeoutMs = 3000
 ): Promise<BattleRoom | null> {
   if (!supabase) return null
+
+  // 1. Try DB first (instant if table accessible)
+  const fromDb = await fetchRoomFromSupabase(roomCode)
+  if (fromDb) return fromDb
 
   const normalizedCode = roomCode.toUpperCase()
   const channelName = `battle_room_${normalizedCode}`
@@ -99,22 +141,29 @@ export async function requestRemoteRoomState(
 
   return new Promise((resolve) => {
     let resolved = false
+    let retryInterval: ReturnType<typeof setInterval> | null = null
+
+    const cleanup = () => {
+      if (retryInterval) clearInterval(retryInterval)
+      if (shouldCleanup) {
+        channel?.unsubscribe()
+        activeChannels.delete(channelName)
+      }
+    }
 
     const timer = setTimeout(() => {
       if (!resolved) {
         resolved = true
-        if (shouldCleanup) {
-          channel?.unsubscribe()
-          activeChannels.delete(channelName)
-        }
+        cleanup()
         resolve(null)
       }
     }, timeoutMs)
 
     channel?.on('broadcast', { event: 'room_state' }, (payload) => {
-      if (!resolved && payload.payload) {
+      if (!resolved && payload && payload.payload) {
         resolved = true
         clearTimeout(timer)
+        cleanup()
         resolve(payload.payload as BattleRoom)
       }
     })
@@ -130,6 +179,13 @@ export async function requestRemoteRoomState(
     channel?.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         doSend()
+        retryInterval = setInterval(() => {
+          if (!resolved) {
+            doSend()
+          } else if (retryInterval) {
+            clearInterval(retryInterval)
+          }
+        }, 500)
       }
     })
 

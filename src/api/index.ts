@@ -9,7 +9,11 @@ import { generateAssessmentResult, syncRoomState } from './mockServer'
 import { SHOP_ITEMS } from '../data/shopItems'
 import type { CosmeticType } from '../types/shop'
 import { assessPronunciation } from './azureSpeech'
-import { broadcastRoomRealtime, requestRemoteRoomState } from './realtimeRoom'
+import {
+  broadcastRoomRealtime,
+  requestRemoteRoomState,
+  saveRoomToSupabase,
+} from './realtimeRoom'
 import type { DailyQuest } from '../types/quest'
 import {
   addRewardTransactions,
@@ -175,6 +179,7 @@ export async function createRoom(clipId: string, maxPlayers: number = 2): Promis
 
   saveRoom(room)
   void broadcastRoomRealtime(room)
+  void saveRoomToSupabase(room)
   return room
 }
 
@@ -189,8 +194,8 @@ export async function joinRoom(code: string): Promise<BattleRoom> {
   let existing = getRoomByCode(normalizedCode)
 
   if (!existing) {
-    // Discover room state across computers/browsers via Supabase Realtime Broadcast
-    existing = await requestRemoteRoomState(normalizedCode, 1500)
+    // Discover room state across computers/browsers via Supabase Realtime Broadcast or DB
+    existing = await requestRemoteRoomState(normalizedCode, 3000)
   }
 
   if (!existing) {
@@ -237,9 +242,28 @@ export async function joinRoom(code: string): Promise<BattleRoom> {
 
     saveRoom(existing)
     void broadcastRoomRealtime(existing)
+    void saveRoomToSupabase(existing)
   }
 
   return syncRoomState(existing)
+}
+
+/**
+ * Manually summons bot sparring partner into the room immediately.
+ */
+export async function addBotToRoom(code: string): Promise<BattleRoom> {
+  const normalizedCode = code.trim().toUpperCase()
+  const room = getRoomByCode(normalizedCode)
+  if (!room) {
+    throw new Error(`Room "${normalizedCode}" not found.`)
+  }
+  room.botJoinAt = Date.now() - 1000
+  room.botReadyAt = Date.now() + DEMO_CONFIG.botReadyDelayMs
+  const updated = syncRoomState(room)
+  saveRoom(updated)
+  void broadcastRoomRealtime(updated)
+  void saveRoomToSupabase(updated)
+  return updated
 }
 
 /**
@@ -276,6 +300,7 @@ export async function setReady(code: string, ready = true): Promise<BattleRoom> 
   const updated = syncRoomState(room)
   saveRoom(updated)
   void broadcastRoomRealtime(updated)
+  void saveRoomToSupabase(updated)
   return updated
 }
 
@@ -347,6 +372,7 @@ export async function submitBattleAttempt(
   const updated = syncRoomState(room)
   saveRoom(updated)
   void broadcastRoomRealtime(updated)
+  void saveRoomToSupabase(updated)
   return updated
 }
 
