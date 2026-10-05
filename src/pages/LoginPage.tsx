@@ -1,7 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  ArrowLeft,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -21,7 +20,7 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) => {
-  const { signIn, signUp, setGuest, user: currentAuthUser } = useAuth()
+  const { signIn, signUp, loginDemo, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -48,6 +47,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) 
       navigate(redirectTarget, { replace: true })
     }
   }
+
+  // If already authenticated with active account, forward immediately
+  useEffect(() => {
+    if (user && !user.isGuest) {
+      handleRedirect(user.role)
+    }
+  }, [user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,13 +92,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) 
     }
   }
 
-  // Quick 1-click Demo Logins
-  const handleQuickDemo = () => {
-    setGuest()
-    setSuccessMsg('Logged in as Demo Player!')
-    setTimeout(() => {
-      navigate('/', { replace: true })
-    }, 400)
+  // Quick 1-click Demo Logins (Sets authenticated learner session)
+  const handleQuickDemo = async () => {
+    setSubmitting(true)
+    setErrorMsg(null)
+    try {
+      await loginDemo()
+      setSuccessMsg('Logged in as Demo Player!')
+      setTimeout(() => {
+        handleRedirect()
+      }, 400)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleQuickAdmin = async () => {
@@ -117,26 +129,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) 
 
   return (
     <div className="min-h-screen bg-[#F7F9FA] flex flex-col justify-between text-[#171B2A] font-sans pb-10">
-      {/* Top Header Navigation */}
-      <header className="w-full bg-white border-b border-[#ebebeb] py-4 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl flex items-center justify-between">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-[#5B6780] hover:text-[#171B2A] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to practice catalog</span>
-          </Link>
-
-          {/* Current login indicator if logged in */}
-          {currentAuthUser && !currentAuthUser.isGuest && (
-            <div className="text-xs text-[#5B6780] flex items-center gap-2">
-              <span>Signed in as:</span>
-              <span className="font-semibold text-[#171B2A]">{currentAuthUser.displayName}</span>
-            </div>
-          )}
-        </div>
-      </header>
 
       {/* Main Authentication Card */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">

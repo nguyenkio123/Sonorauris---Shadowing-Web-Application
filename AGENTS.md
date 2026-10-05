@@ -194,5 +194,16 @@ d:\Shadowing-web-application\
    - Trang `/login` chuyên dụng phong cách Airbnb, hỗ trợ tab Đăng nhập / Đăng ký, 1-click Quick Login (Demo Player & System Admin), tự động chuyển hướng thông minh.
 6. ✅ **Bộ kiểm thử chấp nhận mở rộng**: Mở rộng lên **9 bộ kiểm thử (91/91 tests PASS 100%)**.
 
+### Giai đoạn 8: App-wide Authentication Guard & Headerless Login View (✅ HOÀN THÀNH)
+1. ✅ **Bảo vệ toàn bộ ứng dụng bằng ProtectedRoute (`<ProtectedRoute>`)**:
+   - Yêu cầu bắt buộc phải đăng nhập tài khoản trước khi truy cập bất kỳ tính năng nào (`/`, `/shop`, `/practice/:id`, `/result/:id`, `/battle/*`, `/admin`).
+   - Người dùng chưa đăng nhập hoặc tài khoản Guest được tự động chặn và chuyển hướng an toàn về `/login?redirect=...`.
+2. ✅ **Ẩn hoàn toàn Header tại trang Login/Register**:
+   - `AppLayout` tự động ẩn toàn bộ `<Header />` và `<Footer />` trên các route `/login` và `/register`.
+   - Gỡ bỏ thanh header con trong `LoginPage.tsx`, mang lại giao diện đăng nhập tinh gọn, tập trung chuẩn Airbnb.
+3. ✅ **1-Click Quick Demo Player Authenticated Access**:
+   - Bổ sung `loginAsDemoPlayer` / `loginDemo` cho phép vào ngay vai trò người học chính thức (`isGuest: false`) chỉ với 1 click từ trang Login mà không bị loop redirect.
+
 ---
 *File này được tạo tự động và cập nhật liên tục để đảm bảo hiệu suất tốt nhất cho các phiên làm việc của Agent.*
+

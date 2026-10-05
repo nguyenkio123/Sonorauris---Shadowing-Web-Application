@@ -435,9 +435,8 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   <button
                     type="button"
                     onClick={async () => {
+                      onClose()
                       await signOut()
-                      void loadProfile()
-                      onProfileUpdated?.()
                     }}
                     className="w-full py-2 px-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-600 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >

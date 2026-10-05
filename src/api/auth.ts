@@ -530,6 +530,31 @@ export function continueAsGuest(): AuthUser {
 }
 
 /**
+ * Logs in as Demo Player (Authenticated Learner with isGuest: false)
+ */
+export function loginAsDemoPlayer(): AuthUser {
+  const base = getUserBase()
+  const demoAuthUser: AuthUser = {
+    id: 'user-demo-player',
+    email: 'demo@sonorauris.com',
+    displayName: base.displayName || 'Demo Player',
+    avatarUrl: base.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoPlayer',
+    role: (base as { role?: UserRole }).role || 'user',
+    isGuest: false,
+    createdAt: '2026-09-01T00:00:00.000Z',
+  }
+  writeJson(STORAGE_KEYS.AUTH_USER, demoAuthUser)
+  saveUserBase({
+    ...base,
+    id: demoAuthUser.id,
+    displayName: demoAuthUser.displayName,
+    avatarUrl: demoAuthUser.avatarUrl,
+    role: demoAuthUser.role,
+  })
+  return demoAuthUser
+}
+
+/**
  * Toggles the role of the currently logged-in user or active session (useful for Demo/Sandbox testing)
  */
 export async function toggleCurrentRole(): Promise<UserRole> {

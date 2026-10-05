@@ -3,6 +3,7 @@ import {
   continueAsGuest,
   getCurrentAuthUser,
   isSupabaseConfigured,
+  loginAsDemoPlayer,
   signInWithEmail,
   signOutUser,
   signUpWithEmail,
@@ -18,6 +19,7 @@ interface AuthContextType {
   signUp: (email: string, pass: string, name: string) => Promise<{ success: boolean; message: string }>
   signOut: () => Promise<void>
   setGuest: () => void
+  loginDemo: () => Promise<void>
   refreshUser: () => Promise<void>
 }
 
@@ -108,6 +110,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(new Event('storage'))
   }
 
+  const loginDemo = async () => {
+    setLoading(true)
+    try {
+      const demo = loginAsDemoPlayer()
+      setUser(demo)
+      window.dispatchEvent(new Event('storage'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -118,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signOut,
         setGuest,
+        loginDemo,
         refreshUser,
       }}
     >
