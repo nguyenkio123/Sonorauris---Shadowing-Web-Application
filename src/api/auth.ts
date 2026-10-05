@@ -15,6 +15,10 @@ export interface StoredLocalAccount {
   avatarUrl: string
   role: UserRole
   createdAt: string
+  streak?: number
+  lastPracticeDate?: string | null
+  lastStreakRestoreDate?: string | null
+  brokenStreak?: number
 }
 
 export const DEFAULT_ADMIN_ACCOUNT: StoredLocalAccount = {
@@ -25,6 +29,9 @@ export const DEFAULT_ADMIN_ACCOUNT: StoredLocalAccount = {
   avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=AdminSonorauris',
   role: 'admin',
   createdAt: '2026-09-01T00:00:00.000Z',
+  streak: 3,
+  lastPracticeDate: null,
+  lastStreakRestoreDate: null,
 }
 
 function readJson<T>(key: string, defaultValue: T): T {

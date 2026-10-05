@@ -32,6 +32,13 @@ interface UserBase {
   role?: UserRole
   lastPracticeDate: string | null
   lastStreakRestoreDate: string | null
+  brokenStreak?: number
+}
+
+function getYesterdayDateString(): string {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  return d.toISOString().split('T')[0]
 }
 
 const DEFAULT_USER_BASE: UserBase = {
@@ -40,8 +47,9 @@ const DEFAULT_USER_BASE: UserBase = {
   avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoPlayer',
   streak: 3,
   role: 'user',
-  lastPracticeDate: '2026-09-28',
+  lastPracticeDate: getYesterdayDateString(),
   lastStreakRestoreDate: null,
+  brokenStreak: 0,
 }
 
 const DEFAULT_INVENTORY: UserInventory = {
@@ -92,12 +100,74 @@ function writeJson<T>(key: string, value: T): void {
   }
 }
 
+export function notifyUserUpdated(): void {
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+    try {
+      if (typeof CustomEvent !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('shadowing_user_updated'))
+      }
+      if (typeof Event !== 'undefined') {
+        window.dispatchEvent(new Event('storage'))
+      }
+    } catch {
+      // ignore in test / headless environments
+    }
+  }
+}
+
+export function checkAndApplyStreakDecay(base: UserBase): UserBase {
+  if (base.streak <= 0) return base
+  if (!base.lastPracticeDate) {
+    const updated: UserBase = { ...base, brokenStreak: base.streak, streak: 0 }
+    writeJson(STORAGE_KEYS.USER_BASE, updated)
+    return updated
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+  const yesterday = getYesterdayDateString()
+
+  // If user practiced today or yesterday, streak is active
+  if (base.lastPracticeDate === today || base.lastPracticeDate === yesterday) {
+    return base
+  }
+
+  // Missed practicing yesterday and today -> streak is completely lost (reset to 0)
+  const updated: UserBase = {
+    ...base,
+    brokenStreak: base.streak,
+    streak: 0,
+  }
+  writeJson(STORAGE_KEYS.USER_BASE, updated)
+  return updated
+}
+
 export function getUserBase(): UserBase {
-  return readJson<UserBase>(STORAGE_KEYS.USER_BASE, DEFAULT_USER_BASE)
+  const base = readJson<UserBase>(STORAGE_KEYS.USER_BASE, DEFAULT_USER_BASE)
+  return checkAndApplyStreakDecay(base)
 }
 
 export function saveUserBase(base: UserBase): void {
   writeJson(STORAGE_KEYS.USER_BASE, base)
+
+  // Sync to local accounts list if applicable
+  const accounts = readJson<Array<{ id: string; email: string; displayName: string; avatarUrl: string; role?: UserRole; streak?: number; lastPracticeDate?: string | null; lastStreakRestoreDate?: string | null; brokenStreak?: number }>>(
+    'shadowing_local_accounts',
+    []
+  )
+  const idx = accounts.findIndex((a) => a.id === base.id)
+  if (idx >= 0) {
+    accounts[idx] = {
+      ...accounts[idx],
+      displayName: base.displayName,
+      avatarUrl: base.avatarUrl,
+      role: (base as { role?: UserRole }).role || accounts[idx].role || 'user',
+      streak: base.streak,
+      lastPracticeDate: base.lastPracticeDate,
+      lastStreakRestoreDate: base.lastStreakRestoreDate,
+      brokenStreak: base.brokenStreak,
+    }
+    writeJson('shadowing_local_accounts', accounts)
+  }
 }
 
 export function getUserInventory(userId?: string): UserInventory {
@@ -212,7 +282,7 @@ export function getUserProfile(targetUserId?: string): UserProfile {
   const titleItem = SHOP_ITEMS.find((i) => i.id === inventory.equippedTitleId)
 
   if (targetUserId && targetUserId !== base.id) {
-    const accounts = readJson<Array<{ id: string; email: string; displayName: string; avatarUrl: string; role?: UserRole }>>(
+    const accounts = readJson<Array<{ id: string; email: string; displayName: string; avatarUrl: string; role?: UserRole; streak?: number; lastPracticeDate?: string | null; lastStreakRestoreDate?: string | null }>>(
       'shadowing_local_accounts',
       []
     )
@@ -224,14 +294,14 @@ export function getUserProfile(targetUserId?: string): UserProfile {
         avatarUrl: acc.avatarUrl,
         xp,
         coins,
-        streak: 0,
+        streak: acc.streak ?? 0,
         role: acc.role || 'user',
         equippedAvatarId: inventory.equippedAvatarId,
         equippedFrameId: inventory.equippedFrameId,
         equippedTitleId: inventory.equippedTitleId,
         equippedTitle: titleItem ? titleItem.name : 'Shadowing Learner',
-        lastPracticeDate: null,
-        lastStreakRestoreDate: null,
+        lastPracticeDate: acc.lastPracticeDate || null,
+        lastStreakRestoreDate: acc.lastStreakRestoreDate || null,
       }
     }
   }
@@ -307,6 +377,8 @@ export function addRewardTransactions(
         })
       }
     }
+
+    notifyUserUpdated()
   }
 
   return hasNew
@@ -386,6 +458,7 @@ export function buyShopItem(itemId: string): { success: boolean; message: string
     ownedItemIds: [...inventory.ownedItemIds, itemId],
   }
   saveUserInventory(updatedInv)
+  notifyUserUpdated()
 
   return { success: true, message: `Successfully purchased ${item.name}!` }
 }
@@ -414,6 +487,7 @@ export function equipShopItem(type: CosmeticType, itemId: string): boolean {
   }
 
   saveUserInventory(updatedInv)
+  notifyUserUpdated()
   return true
 }
 
@@ -490,13 +564,16 @@ export function restoreStreak(): { success: boolean; message: string } {
 
   // Recover streak and set lastPracticeDate to yesterday so it can continue today
   const base = getUserBase()
-  const newStreak = Math.max(1, base.streak + 1)
+  const newStreak = Math.max(1, base.brokenStreak || (base.streak + 1))
   saveUserBase({
     ...base,
     streak: newStreak,
+    brokenStreak: 0,
     lastPracticeDate: yesterday,
     lastStreakRestoreDate: nowStr,
   })
+
+  notifyUserUpdated()
 
   return {
     success: true,

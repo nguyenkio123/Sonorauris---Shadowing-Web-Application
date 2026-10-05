@@ -39,6 +39,7 @@ export function HomeCatalogPage() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [selectedTopic, setSelectedTopic] = useState<string>('All')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All')
+  const [sortBy, setSortBy] = useState<'level' | 'alphabetical' | 'duration'>('level')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [favorites, setFavorites] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(true)
@@ -56,6 +57,16 @@ export function HomeCatalogPage() {
       }
     }
     void loadData()
+
+    const handleUserUpdate = () => {
+      void getMe().then(setUser).catch(() => {})
+    }
+    window.addEventListener('shadowing_user_updated', handleUserUpdate)
+    window.addEventListener('storage', handleUserUpdate)
+    return () => {
+      window.removeEventListener('shadowing_user_updated', handleUserUpdate)
+      window.removeEventListener('storage', handleUserUpdate)
+    }
   }, [])
 
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
@@ -67,18 +78,37 @@ export function HomeCatalogPage() {
     }))
   }
 
-  const filteredClips = clips.filter((clip) => {
-    const matchTopic = selectedTopic === 'All' || clip.topic === selectedTopic
-    const matchDiff =
-      selectedDifficulty === 'All' || clip.difficulty === selectedDifficulty
-    const matchQuery =
-      searchQuery.trim() === '' ||
-      clip.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      clip.referenceText.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      clip.channelName.toLowerCase().includes(searchQuery.toLowerCase())
+  const DIFFICULTY_RANK: Record<string, number> = {
+    Beginner: 1,
+    Intermediate: 2,
+    Advanced: 3,
+  }
 
-    return matchTopic && matchDiff && matchQuery
-  })
+  const filteredClips = clips
+    .filter((clip) => {
+      const matchTopic = selectedTopic === 'All' || clip.topic === selectedTopic
+      const matchDiff =
+        selectedDifficulty === 'All' || clip.difficulty === selectedDifficulty
+      const matchQuery =
+        searchQuery.trim() === '' ||
+        clip.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        clip.referenceText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        clip.channelName.toLowerCase().includes(searchQuery.toLowerCase())
+
+      return matchTopic && matchDiff && matchQuery
+    })
+    .sort((a, b) => {
+      if (sortBy === 'level') {
+        const diffRank = (DIFFICULTY_RANK[a.difficulty] || 2) - (DIFFICULTY_RANK[b.difficulty] || 2)
+        if (diffRank !== 0) return diffRank
+        return a.title.localeCompare(b.title)
+      } else if (sortBy === 'alphabetical') {
+        return a.title.localeCompare(b.title)
+      } else if (sortBy === 'duration') {
+        return a.durationSec - b.durationSec
+      }
+      return 0
+    })
 
   return (
     <div className="min-h-screen bg-white text-[#171B2A] font-sans pb-16">
@@ -103,8 +133,8 @@ export function HomeCatalogPage() {
             {user && (
               <div className="flex items-center gap-3 shrink-0">
                 <div className="rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-[#4E9488]/10 flex items-center justify-center text-[#4E9488]">
-                    <Flame className="h-4 w-4 fill-current" />
+                  <div className="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
+                    <Flame className="h-4 w-4 fill-orange-500 text-orange-500" />
                   </div>
                   <div>
                     <div className="text-[10px] uppercase font-bold text-[#5B6780]">Streak</div>
@@ -122,13 +152,13 @@ export function HomeCatalogPage() {
                   </div>
                 </div>
 
-                <div className="hidden sm:flex rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-[#171B2A]/10 flex items-center justify-center text-[#171B2A]">
-                    <Zap className="h-4 w-4 fill-current" />
+                <div className="hidden sm:flex rounded-xl border border-purple-100 bg-[#ffffff] p-3 airbnb-shadow items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                    <Zap className="h-4 w-4 fill-purple-600 text-purple-600" />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-[#5B6780]">Total XP</div>
-                    <div className="text-[14px] font-bold text-[#171B2A] font-mono">{user.xp} XP</div>
+                    <div className="text-[10px] uppercase font-bold text-purple-600/80">Total XP</div>
+                    <div className="text-[14px] font-bold text-purple-700 font-mono">{user.xp} XP</div>
                   </div>
                 </div>
               </div>
@@ -234,7 +264,7 @@ export function HomeCatalogPage() {
 
       {/* PROPERTY CARDS GRID (DESIGN.md property-card) */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-2">
             <h2 className="text-[20px] font-semibold text-[#171B2A]">
               Available practice clips
@@ -244,15 +274,58 @@ export function HomeCatalogPage() {
             </span>
           </div>
 
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="text-xs text-[#4E9488] hover:underline font-medium"
-            >
-              Clear search filter
-            </button>
-          )}
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="text-xs text-[#4E9488] hover:underline font-medium mr-2"
+              >
+                Clear search filter
+              </button>
+            )}
+            <div className="flex items-center gap-1.5 text-xs text-[#5B6780]">
+              <span className="hidden sm:inline font-medium">Sort:</span>
+              <div className="inline-flex rounded-xl bg-[#f7f9fa] border border-[#e2e6ea] p-0.5 text-xs font-medium">
+                <button
+                  type="button"
+                  onClick={() => setSortBy('level')}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    sortBy === 'level'
+                      ? 'bg-white text-[#171B2A] font-semibold shadow-xs'
+                      : 'text-[#5B6780] hover:text-[#171B2A]'
+                  }`}
+                  title="Sort by Difficulty Level: Beginner ➔ Intermediate ➔ Advanced"
+                >
+                  Level (Easy ➔ Hard)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSortBy('alphabetical')}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    sortBy === 'alphabetical'
+                      ? 'bg-white text-[#171B2A] font-semibold shadow-xs'
+                      : 'text-[#5B6780] hover:text-[#171B2A]'
+                  }`}
+                  title="Sort Alphabetically A to Z"
+                >
+                  A ➔ Z
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSortBy('duration')}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    sortBy === 'duration'
+                      ? 'bg-white text-[#171B2A] font-semibold shadow-xs'
+                      : 'text-[#5B6780] hover:text-[#171B2A]'
+                  }`}
+                  title="Sort by Duration (Shortest first)"
+                >
+                  Duration
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -380,7 +453,7 @@ export function HomeCatalogPage() {
                         className="btn-secondary text-xs font-semibold h-[40px] px-3 rounded-lg"
                       >
                         <Swords className="h-3.5 w-3.5" />
-                        <span>1v1 Battle</span>
+                        <span>Battle</span>
                       </Link>
                     </div>
                   </div>

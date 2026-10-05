@@ -455,6 +455,46 @@ assert(adminStats.totalClips === 20, 'Stats accurately report 20 clips');
 assert(adminStats.totalAdmins >= 1, 'Stats report at least 1 administrator');
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SUITE 9: STREAK DECAY ON INACTIVITY & ADMIN STREAK PARITY
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('\n--- [SUITE 9] Streak Inactivity Decay & Admin Table Parity ---');
+
+// 1. Inactivity Streak Loss
+const threeDaysAgo = new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString().split('T')[0];
+saveUserBase({
+  id: 'user-demo-player',
+  displayName: 'Demo Player',
+  avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoPlayer',
+  streak: 7,
+  lastPracticeDate: threeDaysAgo,
+  lastStreakRestoreDate: null,
+});
+
+const decayedUser = getUserBase();
+assert(decayedUser.streak === 0, 'Streak immediately drops to 0 after missing practicing yesterday', `Got ${decayedUser.streak}`);
+assert(decayedUser.brokenStreak === 7, 'Broken streak value 7 preserved for restoration', `Got ${decayedUser.brokenStreak}`);
+
+// 2. Restoring broken streak recovers original count
+addRewardTransactions([{
+  userId: 'user-demo-player',
+  type: 'COINS',
+  amount: 100,
+  referenceType: 'ADMIN_GRANT',
+  referenceId: 'streak-fund-tx',
+}]);
+
+const restored = restoreStreak();
+assert(restored.success === true, 'Streak restore succeeded');
+const postRestoreBase = getUserBase();
+assert(postRestoreBase.streak === 7, 'Streak accurately restored back to 7 days', `Got ${postRestoreBase.streak}`);
+
+// 3. Admin Table Parity Check
+const adminUsersList = await getAdminUsers();
+const activeUserInAdmin = adminUsersList.find(u => u.id === 'user-demo-player');
+assert(activeUserInAdmin !== undefined, 'Active user found in admin list');
+assert(activeUserInAdmin!.streak === postRestoreBase.streak, 'Streak in admin table matches user UI streak exactly', `Admin got ${activeUserInAdmin?.streak}, user base was ${postRestoreBase.streak}`);
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SUMMARY
 // ─────────────────────────────────────────────────────────────────────────────
 console.log('\n======================================================================');

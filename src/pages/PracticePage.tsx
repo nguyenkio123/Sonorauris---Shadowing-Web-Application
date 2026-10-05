@@ -305,7 +305,7 @@ export function PracticePage() {
                   className="btn-secondary w-full text-xs font-semibold h-[44px] rounded-lg"
                 >
                   <Swords className="h-4 w-4" />
-                  <span>Challenge in 1v1 Real-Time Battle</span>
+                  <span>Challenge in Real-Time Battle</span>
                 </Link>
               </div>
             </div>

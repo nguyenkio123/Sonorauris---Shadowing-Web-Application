@@ -173,7 +173,26 @@ d:\Shadowing-web-application\
 ### Giai đoạn 6: Đồng Bộ Supabase Cloud Backend & Database Migration (✅ HOÀN THÀNH)
 1. ✅ **Database Migration & Idempotent Schema (`supabase/schema.sql`)**: Bổ sung khối migration an toàn tự động chuyển đổi kiểu dữ liệu `UUID -> TEXT`, thêm cột `role`, `channel_name`, `source_url`, `last_streak_restore_date`, và đăng ký Realtime idempotent (`supabase_realtime`).
 2. ✅ **Client-side Supabase Synchronization Layer (`src/api/supabaseSync.ts`)**: Tự động đồng bộ Clips, Users, Reward Transactions (Ledger), User Items (Ngoại trang), và Solo Attempts hai chiều giữa trình duyệt và Supabase Cloud.
-3. ✅ **Hybrid Cloud & Offline Fallback**: Hoạt động mượt mà ở cả hai chế độ (Cloud Sync khi có credentials và Local Sandbox Mode khi offline), 85/85 acceptance tests PASS 100%.
+3. ✅ **Hybrid Cloud & Offline Fallback**: Hoạt động mượt mà ở cả hai chế độ (Cloud Sync khi có credentials và Local Sandbox Mode khi offline).
+
+### Giai đoạn 7: UI Branding, Sorting Clips, Streak Logic & Dedicated Login Page (✅ HOÀN THÀNH)
+1. ✅ **Bộ nhận diện thương hiệu & Màu sắc**:
+   - Tên thương hiệu: **Sonor** (xanh đen `#171B2A`) + **auris** (xanh lá `#10B981` / emerald).
+   - Streak Flame: Giữ nguyên màu đỏ vàng (`amber-500` / `orange-500`) tại Header, Home, Shop, Result, Profile.
+   - Thẻ Total XP: Phong cách màu tím nổi bật (`purple-600` / `purple-100` / `text-purple-700`).
+   - Đổi tên tab navbar từ "1v1 Battle" thành "Battle" (hỗ trợ phòng thi đấu 2-5 người).
+2. ✅ **Sắp xếp bài nghe (Clips Sorting)**:
+   - Sắp xếp mặc định theo Cấp độ (Beginner ➔ Intermediate ➔ Advanced) kết hợp A–Z.
+   - Bổ sung bộ lọc chuyển đổi linh hoạt: Level (Easy ➔ Hard), A ➔ Z, và Duration (Thời lượng).
+3. ✅ **Cơ chế mất chuỗi khi nghỉ & Cập nhật tức thì (Reactive Streak & Ledger)**:
+   - Khi không luyện tập quá 1 ngày (lỡ ngày hôm trước), chuỗi tự động reset về `0`, lưu trữ `brokenStreak`.
+   - Bấm khôi phục chuỗi (30 Coins) phục hồi lại chính xác số chuỗi bị đứt.
+   - Phát sự kiện `shadowing_user_updated`: Cả số Coins và Streak trên Header, Shop, Catalog được cập nhật tức thì **0ms mà không cần F5/refresh trang**.
+4. ✅ **Đồng bộ chuỗi User & Admin Table**:
+   - Sửa `getAdminUsers()` để đồng bộ 100% với chuỗi của active user và local accounts thay vì hardcode `0`.
+5. ✅ **Tách trang Đăng nhập / Đăng ký riêng (`/login` & `/register`)**:
+   - Trang `/login` chuyên dụng phong cách Airbnb, hỗ trợ tab Đăng nhập / Đăng ký, 1-click Quick Login (Demo Player & System Admin), tự động chuyển hướng thông minh.
+6. ✅ **Bộ kiểm thử chấp nhận mở rộng**: Mở rộng lên **9 bộ kiểm thử (91/91 tests PASS 100%)**.
 
 ---
 *File này được tạo tự động và cập nhật liên tục để đảm bảo hiệu suất tốt nhất cho các phiên làm việc của Agent.*

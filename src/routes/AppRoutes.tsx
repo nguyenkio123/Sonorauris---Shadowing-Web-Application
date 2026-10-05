@@ -6,6 +6,7 @@ import { HomeCatalogPage } from '../pages/HomeCatalogPage'
 import { PracticePage } from '../pages/PracticePage'
 import { ResultPage } from '../pages/ResultPage'
 import { ShopPage } from '../pages/ShopPage'
+import { LoginPage } from '../pages/LoginPage'
 
 import { AdminRoute } from '../components/admin/AdminRoute'
 import { AdminDashboardPage } from '../pages/AdminDashboardPage'
@@ -14,6 +15,8 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomeCatalogPage />} />
+      <Route path="/login" element={<LoginPage initialMode="signin" />} />
+      <Route path="/register" element={<LoginPage initialMode="signup" />} />
       <Route path="/shop" element={<ShopPage />} />
       <Route path="/practice/:clipId" element={<PracticePage />} />
       <Route path="/result/:attemptId" element={<ResultPage />} />

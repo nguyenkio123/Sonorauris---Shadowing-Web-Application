@@ -1,6 +1,6 @@
 import { Flame, Coins, Swords, Headphones, Sparkles, Trophy, LogIn, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getDailyQuests, getMe } from '../../api'
 import type { UserProfile } from '../../types/user'
 import type { DailyQuest } from '../../types/quest'
@@ -17,6 +17,7 @@ export function Header() {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     let isMounted = true
@@ -53,11 +54,13 @@ export function Header() {
 
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('focus', handleStorageChange)
+    window.addEventListener('shadowing_user_updated', handleStorageChange)
 
     return () => {
       isMounted = false
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('focus', handleStorageChange)
+      window.removeEventListener('shadowing_user_updated', handleStorageChange)
     }
   }, [location.pathname])
 
@@ -89,8 +92,9 @@ export function Header() {
           />
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-[19px] tracking-tight text-[#171B2A] group-hover:text-[#4E9488] transition-colors">
-                Sonorauris
+              <span className="font-bold text-[19px] tracking-tight">
+                <span className="text-[#171B2A]">Sonor</span>
+                <span className="text-[#10B981]">auris</span>
               </span>
               <span className="new-tag">
                 MVP
@@ -120,7 +124,7 @@ export function Header() {
             )}
           </Link>
 
-          {/* Product Tab 2: 1v1 Battle Arena */}
+          {/* Product Tab 2: Battle Arena (2-5 Players) */}
           <Link
             to="/battle/lobby"
             className={`relative flex items-center gap-2 h-full px-3 text-[15px] font-medium transition-colors ${
@@ -130,7 +134,7 @@ export function Header() {
             }`}
           >
             <Swords className="h-4 w-4" />
-            <span>1v1 Battle</span>
+            <span>Battle</span>
             <span className="new-tag">LIVE</span>
             {isBattleActive && (
               <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#4E9488]" />
@@ -205,8 +209,8 @@ export function Header() {
                 title={`${user.streak} days active streak • ${user.coins} Coins (Click to visit Shop)`}
                 className="flex items-center gap-2.5 rounded-full bg-[#f7f9fa] border border-[#e2e6ea] px-3 py-1.5 text-xs font-semibold text-[#171B2A] hover:border-[#171B2A]/30 transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-1 text-[#4E9488]">
-                  <Flame className="h-3.5 w-3.5 fill-[#4E9488] group-hover:scale-110 transition-transform" />
+                <div className="flex items-center gap-1 text-orange-500">
+                  <Flame className="h-3.5 w-3.5 fill-orange-500 text-orange-500 group-hover:scale-110 transition-transform" />
                   <span className="font-mono text-[12px]">{user.streak}d</span>
                 </div>
                 <div className="h-3 w-px bg-[#dddddd]" />
@@ -218,15 +222,14 @@ export function Header() {
 
               {/* Sign In Button for Guest / Anonymous Users */}
               {authUser?.isGuest && (
-                <button
-                  type="button"
-                  onClick={() => setIsAuthOpen(true)}
+                <Link
+                  to="/login"
                   className="hidden sm:flex items-center gap-1.5 rounded-full bg-[#171B2A] hover:bg-[#2b3445] text-white text-xs font-semibold px-3 py-1.5 transition-all shadow-xs cursor-pointer"
                   title="Sign In or Register"
                 >
                   <LogIn className="h-3.5 w-3.5" />
                   <span>Sign In</span>
-                </button>
+                </Link>
               )}
 
               {/* User Profile & Settings Trigger */}
@@ -262,7 +265,10 @@ export function Header() {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         onProfileUpdated={() => void reloadData()}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={() => {
+          setIsProfileOpen(false)
+          navigate('/login')
+        }}
       />
 
       {/* Authentication Modal (Sign In / Register) */}

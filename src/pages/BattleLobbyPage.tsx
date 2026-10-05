@@ -158,7 +158,7 @@ export function BattleLobbyPage() {
                 </div>
                 <h2 className="text-xl font-bold text-[#171B2A] mb-1.5">Create Battle Room</h2>
                 <p className="text-xs text-[#5B6780] leading-relaxed mb-6 min-h-[40px]">
-                  Host a private 1v1 match with a shareable 5-character code. An AI sparring bot steps in automatically if practicing solo.
+                  Host a multiplayer match (2–5 players) with a shareable 5-character code. AI sparring bots step in automatically to fill empty slots.
                 </p>
 
                 {/* Challenge Clip Selector */}

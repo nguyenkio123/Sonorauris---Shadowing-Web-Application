@@ -439,15 +439,15 @@ export function ResultPage() {
         {user && (
           <div className="mt-8 flex items-center justify-center gap-6 rounded-full bg-[#f7f9fa] border border-[#dddddd] py-2.5 px-6 text-xs text-[#5B6780]">
             <span className="flex items-center gap-1.5 font-medium text-[#171B2A]">
-              <Zap className="h-3.5 w-3.5 fill-[#171B2A] text-[#171B2A]" />
-              <span>Current XP: <strong className="font-mono">{user.xp}</strong></span>
+              <Zap className="h-3.5 w-3.5 fill-purple-600 text-purple-600" />
+              <span>Current XP: <strong className="font-mono text-purple-700">{user.xp}</strong></span>
             </span>
             <span className="flex items-center gap-1.5 font-medium text-[#171B2A]">
               <Coins className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
               <span>Coins Balance: <strong className="font-mono">{user.coins}</strong></span>
             </span>
             <span className="flex items-center gap-1.5 font-medium text-[#171B2A]">
-              <Flame className="h-3.5 w-3.5 fill-[#4E9488] text-[#4E9488]" />
+              <Flame className="h-3.5 w-3.5 fill-orange-500 text-orange-500" />
               <span>Streak: <strong className="font-mono">{user.streak}d</strong></span>
             </span>
           </div>

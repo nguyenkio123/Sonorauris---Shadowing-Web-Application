@@ -110,6 +110,8 @@ export async function getAdminUsers(): Promise<AdminUserSummary[]> {
       const inv = getUserInventory(ru.id)
       const attCount = attempts.filter((a) => a.userId === ru.id).length
 
+      const streak = ru.id === demoId ? demoBase.streak : (ru.streak || prof.streak || 0)
+
       result.push({
         id: ru.id,
         email: ru.email,
@@ -118,7 +120,7 @@ export async function getAdminUsers(): Promise<AdminUserSummary[]> {
         role: ru.role || 'user',
         xp: prof.xp,
         coins: prof.coins,
-        streak: ru.streak || 0,
+        streak,
         attemptsCount: attCount,
         ownedItemCount: inv.ownedItemIds.length,
         createdAt: ru.created_at || new Date().toISOString(),
@@ -135,6 +137,7 @@ export async function getAdminUsers(): Promise<AdminUserSummary[]> {
     const prof = getUserProfile(acc.id)
     const inv = getUserInventory(acc.id)
     const attCount = attempts.filter((a) => a.userId === acc.id).length
+    const streak = acc.id === demoId ? demoBase.streak : (acc.streak ?? prof.streak ?? 0)
 
     result.push({
       id: acc.id,
@@ -144,7 +147,7 @@ export async function getAdminUsers(): Promise<AdminUserSummary[]> {
       role: acc.role || 'user',
       xp: prof.xp,
       coins: prof.coins,
-      streak: 0,
+      streak,
       attemptsCount: attCount,
       ownedItemCount: inv.ownedItemIds.length,
       createdAt: acc.createdAt,

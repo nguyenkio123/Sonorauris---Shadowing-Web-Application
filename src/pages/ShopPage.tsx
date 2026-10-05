@@ -61,6 +61,16 @@ export function ShopPage() {
 
   useEffect(() => {
     void loadData()
+
+    const handleUserUpdate = () => {
+      void loadData()
+    }
+    window.addEventListener('shadowing_user_updated', handleUserUpdate)
+    window.addEventListener('storage', handleUserUpdate)
+    return () => {
+      window.removeEventListener('shadowing_user_updated', handleUserUpdate)
+      window.removeEventListener('storage', handleUserUpdate)
+    }
   }, [])
 
   const handlePurchase = async (item: ShopItem) => {
@@ -290,9 +300,9 @@ export function ShopPage() {
             {/* Streak Restore Section (FR-PROG-04) */}
             <div className="rounded-[16px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
               <div className="flex items-center gap-2 mb-2 text-[#171B2A] font-semibold text-sm">
-                <Flame className="h-4 w-4 fill-[#4E9488] text-[#4E9488]" />
+                <Flame className="h-4 w-4 fill-orange-500 text-orange-500" />
                 <span>Streak Insurance</span>
-                <span className="text-[10px] uppercase font-bold text-[#4E9488] bg-emerald-50 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] uppercase font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
                   P0 RULE
                 </span>
               </div>

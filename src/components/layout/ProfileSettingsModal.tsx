@@ -488,7 +488,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               <div className="p-3.5 rounded-2xl border border-[#ebebeb] bg-white flex flex-col justify-between">
                 <div className="flex items-center justify-between text-xs text-[#5B6780]">
                   <span>Active Streak</span>
-                  <Flame className="w-4 h-4 text-[#4E9488] fill-[#4E9488]" />
+                  <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
                 </div>
                 <div className="text-lg font-bold font-mono text-[#171B2A] mt-2">
                   {user.streak} Days
