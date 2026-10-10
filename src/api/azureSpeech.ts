@@ -149,15 +149,38 @@ function evaluateAcousticSignal(
     frameRms.push(Math.sqrt(sumSq / (end - i)))
   }
 
-  const noiseFloor = 0.007
+  const noiseFloor = 0.025
   const voicedFrames = frameRms.filter((r) => r > noiseFloor)
   const voicedDurationSec = voicedFrames.length * 0.05
   const totalDurationSec = Math.max(0.1, audioBuffer.duration)
   const peakRms = frameRms.reduce((max, r) => (r > max ? r : max), 0)
   const hasSpokenWords = Boolean(recognizedText && recognizedText.trim().length > 0)
+  const speechRecSupported =
+    typeof window !== 'undefined' &&
+    Boolean(
+      (window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition ||
+        (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
+    )
 
-  // Silence guard: if user stayed silent (<0.35s voiced speech and no recognized words)
-  if ((voicedDurationSec < 0.35 || peakRms < 0.01) && !hasSpokenWords) {
+  // Count speech syllable/phrase bursts above human voice threshold
+  let bursts = 0
+  let inBurst = false
+  for (const rms of frameRms) {
+    if (rms > noiseFloor * 1.4 && !inBurst) {
+      bursts++
+      inBurst = true
+    } else if (rms <= noiseFloor) {
+      inBurst = false
+    }
+  }
+
+  // Silence guard:
+  // 1) If acoustic energy has no real human voice peak (<0.45s voiced, peakRms < 0.05, or <2 syllable bursts) and no recognized words
+  // 2) Or if browser Web Speech Recognition is supported and heard 0 words
+  if (
+    (!hasSpokenWords && (voicedDurationSec < 0.45 || peakRms < 0.05 || bursts < 2)) ||
+    (speechRecSupported && !hasSpokenWords)
+  ) {
     return {
       accuracy: 0,
       fluency: 0,
@@ -177,18 +200,6 @@ function evaluateAcousticSignal(
     .filter(Boolean)
   const wordCount = Math.max(1, refWords.length)
   const expectedDurationSec = Math.max(1.8, wordCount / 2.4)
-
-  // Count speech syllable/phrase bursts
-  let bursts = 0
-  let inBurst = false
-  for (const rms of frameRms) {
-    if (rms > noiseFloor * 1.3 && !inBurst) {
-      bursts++
-      inBurst = true
-    } else if (rms <= noiseFloor) {
-      inBurst = false
-    }
-  }
 
   const avgVoicedRms =
     voicedFrames.length > 0
@@ -227,6 +238,19 @@ function evaluateAcousticSignal(
   if (hasSpokenWords) {
     const cleanCount = miscueWords.filter((w) => !w.type).length
     const mispronouncedCount = miscueWords.filter((w) => w.type === 'mispronunciation').length
+    if (cleanCount === 0 && mispronouncedCount === 0) {
+      return {
+        accuracy: 0,
+        fluency: 0,
+        completeness: 0,
+        prosody: 0,
+        battleScore: 0,
+        words: generateMockMiscues(referenceText, 0, 0),
+        engine: 'browser-dsp',
+        recognizedText: recognizedText?.trim() || '',
+        spokenWpm: 0,
+      }
+    }
     const lexicalRatio = (cleanCount + mispronouncedCount * 0.5) / wordCount
     completeness = Math.min(
       99,
@@ -513,6 +537,21 @@ export async function assessPronunciation(
     return evaluateAcousticSignal(decodedBuffer, referenceText, recognizedText, targetScore)
   }
 
+  if (typeof window !== 'undefined' && !recognizedText?.trim()) {
+    return {
+      accuracy: 0,
+      fluency: 0,
+      completeness: 0,
+      prosody: 0,
+      battleScore: 0,
+      words: generateMockMiscues(referenceText, 0, 0),
+      engine: 'browser-dsp',
+      recognizedText: '',
+      spokenWpm: 0,
+    }
+  }
+
   return generateAssessmentResult(referenceText, targetScore)
 }
+
 

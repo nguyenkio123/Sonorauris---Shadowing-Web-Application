@@ -107,33 +107,38 @@ export async function submitAttempt(
     }
   }
 
-  const rewardItems = [
-    {
-      userId: user.id,
-      type: 'XP' as const,
-      amount: REWARDS.soloPractice.xp,
-      referenceType: 'ATTEMPT' as const,
-      referenceId: attemptId,
-    },
-    {
-      userId: user.id,
-      type: 'COINS' as const,
-      amount: REWARDS.soloPractice.coins,
-      referenceType: 'ATTEMPT' as const,
-      referenceId: attemptId,
-    },
-  ]
+  const earnedXp = result.battleScore > 0 ? REWARDS.soloPractice.xp : 0
+  const earnedCoins = result.battleScore > 0 ? REWARDS.soloPractice.coins : 0
 
-  addRewardTransactions(rewardItems)
-  void recordRemoteRewardTransactions(rewardItems)
+  if (result.battleScore > 0) {
+    const rewardItems = [
+      {
+        userId: user.id,
+        type: 'XP' as const,
+        amount: earnedXp,
+        referenceType: 'ATTEMPT' as const,
+        referenceId: attemptId,
+      },
+      {
+        userId: user.id,
+        type: 'COINS' as const,
+        amount: earnedCoins,
+        referenceType: 'ATTEMPT' as const,
+        referenceId: attemptId,
+      },
+    ]
+
+    addRewardTransactions(rewardItems)
+    void recordRemoteRewardTransactions(rewardItems)
+  }
 
   const attempt: Attempt = {
     id: attemptId,
     userId: user.id,
     clipId,
     result,
-    earnedXp: REWARDS.soloPractice.xp,
-    earnedCoins: REWARDS.soloPractice.coins,
+    earnedXp,
+    earnedCoins,
     createdAt: new Date().toISOString(),
   }
 

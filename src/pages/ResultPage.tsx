@@ -131,6 +131,12 @@ export function ResultPage() {
       : 'Tier 3 · Browser WebAudio DSP'
 
   const getTier = (s: number) => {
+    if (s === 0) {
+      return {
+        label: 'No Speech Detected',
+        desc: 'Your recording was silent or contained no recognizable words from the script. Check your microphone and speak clearly.',
+      }
+    }
     if (s >= 90) return { label: 'Outstanding Cadence!', desc: 'Flawless speech rhythm & crisp phonetic execution.' }
     if (s >= 80) return { label: 'Great Flow!', desc: 'Natural delivery with strong pronunciation cadence.' }
     if (s >= 70) return { label: 'Solid Effort!', desc: 'Good rhythm. Focus on accented syllables and vowels.' }

@@ -126,24 +126,26 @@ def extract_pcm_features(audio_bytes: bytes) -> dict:
             raw = wf.readframes(n_frames)
             samples = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
     except Exception:
-        return {"voiced_sec": 1.5, "prosody_score": 78}
+        return {"voiced_sec": 0.0, "peak_rms": 0.0, "prosody_score": 0}
 
     if len(samples) < 400:
-        return {"voiced_sec": 0.0, "prosody_score": 0}
+        return {"voiced_sec": 0.0, "peak_rms": 0.0, "prosody_score": 0}
 
     frame_len = max(1, int(sample_rate * 0.05))  # 50ms window
     n_chunks = len(samples) // frame_len
     if n_chunks == 0:
-        return {"voiced_sec": 0.0, "prosody_score": 0}
+        return {"voiced_sec": 0.0, "peak_rms": 0.0, "prosody_score": 0}
 
     trimmed = samples[: n_chunks * frame_len].reshape((n_chunks, frame_len))
     rms = np.sqrt(np.mean(trimmed**2, axis=1))
-    voiced_mask = rms > 0.007
+    peak_rms = float(np.max(rms)) if len(rms) > 0 else 0.0
+    # Use 0.022 RMS threshold so WebRTC autoGainControl mic hiss is not mistaken for speech
+    voiced_mask = rms > 0.022
     voiced_rms = rms[voiced_mask]
     voiced_sec = float(np.sum(voiced_mask) * 0.05)
 
-    if len(voiced_rms) < 3:
-        return {"voiced_sec": voiced_sec, "prosody_score": 0}
+    if len(voiced_rms) < 4 or peak_rms < 0.035:
+        return {"voiced_sec": 0.0, "peak_rms": peak_rms, "prosody_score": 0}
 
     # Zero-crossing rate per voiced frame (proxy for pitch/intonation contour)
     signs = np.sign(trimmed[voiced_mask])
@@ -155,7 +157,7 @@ def extract_pcm_features(audio_bytes: bytes) -> dict:
     # Natural English speech has moderate energy & pitch variation
     mod_index = min(1.2, (rms_cv * 0.6 + zcr_cv * 0.4))
     prosody_score = int(round(min(98, max(45, 68 + mod_index * 26))))
-    return {"voiced_sec": voiced_sec, "prosody_score": prosody_score}
+    return {"voiced_sec": voiced_sec, "peak_rms": peak_rms, "prosody_score": prosody_score}
 
 
 @app.on_event("startup")
@@ -197,6 +199,19 @@ async def assess_audio(
 
     acoustic = extract_pcm_features(audio_bytes)
 
+    # Hard acoustic silence gate BEFORE running Whisper so Whisper never hallucinates on silent mic hiss
+    if acoustic["voiced_sec"] < 0.30 or acoustic["peak_rms"] < 0.035:
+        return AssessmentResponse(
+            accuracy=0,
+            fluency=0,
+            completeness=0,
+            prosody=0,
+            battleScore=0,
+            words=[MiscueWord(word=w, type="omission") for w in clean_ref_tokens],
+            recognizedText="",
+            spokenWpm=0,
+        )
+
     suffix = ".wav" if (audio.content_type and "wav" in audio.content_type) else ".webm"
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(audio_bytes)
@@ -212,14 +227,18 @@ async def assess_audio(
             word_timestamps=True,
             condition_on_previous_text=False,
             vad_filter=True,
+            no_speech_threshold=0.5,
         )
 
         spoken_words = []
         for seg in segments:
+            # Skip segments that Whisper suspects are non-speech noise/hallucinations
+            if getattr(seg, "no_speech_prob", 0.0) > 0.55:
+                continue
             if seg.words:
                 for w in seg.words:
                     token_clean = re.sub(r"[.,/#!$%^&*;:{}=\-_`~()?\"']", "", w.word).strip()
-                    if token_clean:
+                    if token_clean and float(w.probability) >= 0.20:
                         spoken_words.append(
                             {
                                 "word": token_clean,
@@ -235,8 +254,8 @@ async def assess_audio(
         except OSError:
             pass
 
-    # Silence or empty speech check
-    if not spoken_words or acoustic["voiced_sec"] < 0.25:
+    # Silence or empty speech check after VAD + hallucination filtering
+    if not spoken_words:
         return AssessmentResponse(
             accuracy=0,
             fluency=0,
@@ -251,11 +270,6 @@ async def assess_audio(
     recognized_text = " ".join(w["word"] for w in spoken_words)
 
     # Needleman-Wunsch Dynamic Programming Sequence Alignment
-    # Aligns clean_ref_tokens (length M) with spoken_words (length N) to detect:
-    # - clean match
-    # - mispronunciation (fuzzy phonetic edit distance or low acoustic probability)
-    # - omission (reference word skipped)
-    # - insertion (extra spoken word not in reference)
     m_len = len(clean_ref_tokens)
     n_len = len(spoken_words)
     gap_penalty = -2
@@ -280,7 +294,8 @@ async def assess_audio(
             elif dist <= max_dist:
                 pair_score = 2
             else:
-                pair_score = -3
+                # Must be strictly worse than UP + LEFT (-4) so unrelated words are never paired as DIAG
+                pair_score = -6
 
             diag = score_dp[i - 1][j - 1] + pair_score
             up = score_dp[i - 1][j] + gap_penalty
@@ -367,18 +382,8 @@ async def assess_audio(
                     )
                 )
             else:
-                # Completely mismatched substitution -> mark reference word as mispronounced
-                word_accuracy_scores.append(25.0)
-                miscue_words.append(
-                    MiscueWord(
-                        word=ref_word,
-                        type="mispronunciation",
-                        phoneticHint=to_phonetic_hint(ref_word),
-                        confidence=conf_pct,
-                        startSec=round(sw["start"], 2),
-                        endSec=round(sw["end"], 2),
-                    )
-                )
+                word_accuracy_scores.append(0.0)
+                miscue_words.append(MiscueWord(word=ref_word, type="omission"))
         elif op == "OMIT":
             ref_word = clean_ref_tokens[r_idx]
             word_accuracy_scores.append(0.0)
@@ -396,6 +401,19 @@ async def assess_audio(
                     endSec=round(sw["end"], 2),
                 )
             )
+
+    # If 0 reference words were matched at all, return 0 across all metrics
+    if matched_count == 0:
+        return AssessmentResponse(
+            accuracy=0,
+            fluency=0,
+            completeness=0,
+            prosody=0,
+            battleScore=0,
+            words=[MiscueWord(word=w, type="omission") for w in clean_ref_tokens],
+            recognizedText=recognized_text,
+            spokenWpm=0,
+        )
 
     total_ref = len(clean_ref_tokens)
     completeness = int(round(min(100.0, (matched_count / total_ref) * 100.0)))
@@ -429,8 +447,8 @@ async def assess_audio(
             min(
                 99.0,
                 max(
-                    20.0,
-                    (wpm_score - total_pause_penalty) * (0.4 + 0.6 * (completeness / 100.0)),
+                    0.0,
+                    (wpm_score - total_pause_penalty) * (0.2 + 0.8 * (completeness / 100.0)),
                 ),
             )
         )
@@ -445,9 +463,9 @@ async def assess_audio(
             min(
                 98.0,
                 max(
-                    25.0,
+                    0.0,
                     (acoustic_prosody * 0.55 + fluency * 0.30 + min(95.0, 75.0 + prob_std * 100.0) * 0.15)
-                    * (0.35 + 0.65 * (completeness / 100.0)),
+                    * (0.2 + 0.8 * (completeness / 100.0)),
                 ),
             )
         )
