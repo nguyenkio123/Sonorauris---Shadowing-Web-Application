@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, KeyRound, ShieldAlert, Sparkles } from 'lucide-react'
+import { ArrowLeft, KeyRound, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { toggleCurrentRole } from '../../api/auth'
 
 interface AdminRouteProps {
   children: React.ReactNode
@@ -10,8 +9,8 @@ interface AdminRouteProps {
 
 export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { user, loading, signIn, refreshUser } = useAuth()
-  const [email, setEmail] = useState('admin@sonorauris.com')
-  const [password, setPassword] = useState('admin123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -50,18 +49,6 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     }
   }
 
-  const handleElevateCurrentSession = async () => {
-    setIsSubmitting(true)
-    try {
-      await toggleCurrentRole()
-      await refreshUser()
-    } catch {
-      setErrorMsg('Failed to elevate session role.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   return (
     <div className="min-h-[85vh] bg-[#F7F9FA] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md bg-white rounded-3xl border border-[#E2E6EA] shadow-xl p-6 sm:p-8">
@@ -80,34 +67,6 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
             {errorMsg}
           </div>
         )}
-
-        {/* 1-Click Sandbox Elevate (Ideal for Demo / Evaluation) */}
-        <div className="mb-5 p-3.5 rounded-2xl bg-[#f0fdf4] border border-emerald-200 flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
-            <span>Sandbox Quick Elevate</span>
-          </div>
-          <p className="text-[11px] text-emerald-700 leading-normal">
-            Grant Admin privileges to your current session ({user?.displayName || 'Active User'}) instantly without logging out.
-          </p>
-          <button
-            type="button"
-            onClick={handleElevateCurrentSession}
-            disabled={isSubmitting}
-            className="w-full mt-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {isSubmitting ? 'Elevating...' : '⚡ Switch Current Session to Admin'}
-          </button>
-        </div>
-
-        <div className="relative my-5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#E2E6EA]" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-3 text-[#5B6780]">or sign in as administrator</span>
-          </div>
-        </div>
 
         {/* Admin Login Form */}
         <form onSubmit={handleAdminSignIn} className="space-y-3.5">

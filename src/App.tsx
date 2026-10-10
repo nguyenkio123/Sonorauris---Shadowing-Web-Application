@@ -1,7 +1,6 @@
 import { BrowserRouter, useLocation } from 'react-router-dom'
 import { Header } from './components/layout/Header'
 import { Footer } from './components/layout/Footer'
-import { DemoCheatBar } from './components/layout/DemoCheatBar'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { AppRoutes } from './routes/AppRoutes'
 import { AuthProvider } from './context/AuthContext'
@@ -17,7 +16,6 @@ function AppLayout() {
         <AppRoutes />
       </main>
       {!isAuthPage && <Footer />}
-      <DemoCheatBar />
     </div>
   )
 }

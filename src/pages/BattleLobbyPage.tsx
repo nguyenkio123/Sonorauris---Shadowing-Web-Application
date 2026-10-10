@@ -180,13 +180,12 @@ export function BattleLobbyPage() {
                   </select>
                 </div>
 
-                {/* Arena Capacity Selector (FR-BAT-07) */}
+                {/* Arena Capacity Selector */}
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <label className="block text-xs font-semibold text-[#171B2A] uppercase tracking-wider">
                       Arena Mode (Capacity)
                     </label>
-                    <span className="new-tag">FR-BAT-07</span>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {[

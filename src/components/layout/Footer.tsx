@@ -1,25 +1,6 @@
-import { Globe, RotateCcw, Sparkles } from 'lucide-react'
-import { isDemoMode, setDemoMode } from '../../config/demo'
-import { resetDemo } from '../../api'
+import { Globe, Sparkles } from 'lucide-react'
 
-interface FooterProps {
-  onDataReset?: () => void
-}
-
-export function Footer({ onDataReset }: FooterProps) {
-  const demoActive = isDemoMode()
-
-  const handleReset = async () => {
-    if (window.confirm('Reset demo state? This will restore 120 XP, 45 Coins, and clear battle rooms.')) {
-      await resetDemo()
-      if (onDataReset) {
-        onDataReset()
-      } else {
-        window.location.reload()
-      }
-    }
-  }
-
+export function Footer() {
   return (
     <footer className="w-full border-t border-[#ebebeb] bg-white text-[#222222] font-sans">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -118,7 +99,7 @@ export function Footer({ onDataReset }: FooterProps) {
             <span>·</span>
             <a href="#sitemap" className="hover:underline hover:text-[#222222]">Sitemap</a>
             <span>·</span>
-            <span className="text-[#929292]">English Shadowing Platform MVP</span>
+            <span className="text-[#929292]">English Shadowing Platform</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -133,32 +114,6 @@ export function Footer({ onDataReset }: FooterProps) {
                 $ USD (Coins)
               </span>
             </div>
-
-            {/* Subtle Demo Reset Button */}
-            {demoActive && (
-              <button
-                onClick={handleReset}
-                type="button"
-                className="flex items-center gap-1 rounded-full bg-[#f7f7f7] hover:bg-[#ebebeb] border border-[#dddddd] px-3 py-1 text-[#4E9488] text-xs font-medium transition-all"
-                title="Reset demo state (Shift + R)"
-              >
-                <RotateCcw className="h-3 w-3" />
-                <span>Reset Demo State</span>
-              </button>
-            )}
-
-            {/* Toggle demo indicator */}
-            <button
-              type="button"
-              onClick={() => {
-                setDemoMode(!demoActive)
-                window.location.reload()
-              }}
-              className="text-[#929292] hover:text-[#4E9488] transition-colors select-none font-mono text-xs"
-              title="Toggle Demo Bar (Shift + D)"
-            >
-              {demoActive ? '[Demo Mode Active]' : '•'}
-            </button>
           </div>
         </div>
       </div>

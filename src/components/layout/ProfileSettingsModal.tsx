@@ -606,12 +606,12 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               </div>
             </div>
 
-            {/* Demo Reset Danger Zone */}
+            {/* Progress Reset Danger Zone */}
             <div className="p-4 rounded-2xl border border-rose-200 bg-rose-50/20 flex items-center justify-between gap-4">
               <div>
-                <h4 className="text-xs font-bold text-gray-900">Reset Demo Data</h4>
+                <h4 className="text-xs font-bold text-gray-900">Reset Progress Data</h4>
                 <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
-                  Clear local records and return profile to pristine seed defaults (120 XP, 45 Coins).
+                  Clear local records and restore your profile to default stats.
                 </p>
               </div>
               <button
@@ -628,7 +628,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
         {/* Modal Footer */}
         <div className="pt-2 flex items-center justify-between text-xs text-[#6a6a6a] border-t border-[#ebebeb]">
-          <span>Sonorauris MVP • Competitive Shadowing</span>
+          <span>Sonorauris • Competitive Shadowing</span>
           <button
             type="button"
             onClick={onClose}

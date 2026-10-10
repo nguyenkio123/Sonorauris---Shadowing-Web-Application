@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Bot,
   CheckCircle2,
   Clock,
-  FastForward,
   Mic,
-  Send,
   Sparkles,
   Swords,
   Volume2,
@@ -60,32 +58,6 @@ export function BattleRoomPage() {
       navigate(`/battle/result/${room.code}`)
     }
   }, [room?.status, room?.code, navigate])
-
-  const handleQuickSubmit = useCallback(async () => {
-    if (!room || submitting || room.player.hasSubmitted) return
-    setSubmitting(true)
-    try {
-      // Create mock audio blob for rapid demonstration/testing
-      const mockBlob = new Blob(['mock audio data'], { type: 'audio/webm' })
-      await submitBattleAttempt(room.code, mockBlob)
-    } catch (err) {
-      console.error('Failed to submit quick demo audio', err)
-      setSubmitting(false)
-    }
-  }, [room, submitting])
-
-  // Quick submit / Skip recording shortcut (Shift + S)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.shiftKey && (e.key === 'S' || e.key === 's')) {
-        e.preventDefault()
-        void handleQuickSubmit()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleQuickSubmit])
 
   const handleSubmitAudio = async (audioBlob: Blob) => {
     if (!room || submitting) return
@@ -149,20 +121,6 @@ export function BattleRoomPage() {
               <Swords className="h-3.5 w-3.5 text-[#4E9488]" />
               <span className="uppercase font-mono text-[11px]">{room.status}</span>
             </span>
-
-            {/* Quick Demo Skip Button */}
-            {room.status === 'RECORDING' && !room.player.hasSubmitted && (
-              <button
-                type="button"
-                onClick={handleQuickSubmit}
-                disabled={submitting}
-                className="flex items-center gap-1.5 rounded-full bg-[#f7f9fa] hover:bg-[#edf0f2] border border-[#dddddd] px-3.5 py-1 text-xs font-semibold text-[#171B2A] transition-all active:scale-95"
-                title="Shortcut: Shift + S (Rapid recording testing)"
-              >
-                <FastForward className="h-3 w-3 text-[#4E9488]" />
-                <span>Skip Record <span className="font-mono text-[10px] text-[#8895AD]">[Shift+S]</span></span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -185,7 +143,7 @@ export function BattleRoomPage() {
         {/* 2. RECORDING STATE */}
         {room.status === 'RECORDING' && (
           <div className="flex flex-col gap-6">
-            {/* Contenders Status Banner: Dynamic cards for 2 to 5 participants (FR-BAT-07) */}
+            {/* Contenders Status Banner: Dynamic cards for 2 to 5 participants */}
             {(() => {
               const maxPlayers = room.maxPlayers || 2
               const participants = room.participants && room.participants.length > 0
@@ -301,24 +259,11 @@ export function BattleRoomPage() {
                       </p>
                     </div>
                   ) : (
-                    <>
-                      <AudioRecorder
-                        maxDurationSec={clip.durationSec + 5}
-                        onSubmit={handleSubmitAudio}
-                        submitting={submitting}
-                      />
-
-                      {/* Alternate Quick Submit */}
-                      <button
-                        type="button"
-                        onClick={handleQuickSubmit}
-                        disabled={submitting}
-                        className="btn-secondary w-full text-xs font-semibold h-[40px] rounded-lg"
-                      >
-                        <Send className="h-3.5 w-3.5 text-[#4E9488]" />
-                        <span>Quick Submit for Demo <span className="font-mono text-[10px] text-[#8895AD]">[Shift+S]</span></span>
-                      </button>
-                    </>
+                    <AudioRecorder
+                      maxDurationSec={clip.durationSec + 5}
+                      onSubmit={handleSubmitAudio}
+                      submitting={submitting}
+                    />
                   )}
                 </div>
               </div>

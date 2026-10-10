@@ -187,7 +187,6 @@ export function ShopPage() {
               <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#222222]">
                 Cosmetics &amp; Outfits
               </h1>
-              <span className="new-tag">P0 SHOP</span>
             </div>
             <p className="text-xs text-[#6a6a6a] mt-1">
               Customize your avatar, ring glow, and championship title with earned coins.

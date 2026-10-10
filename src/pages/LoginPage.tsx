@@ -8,8 +8,6 @@ import {
   LogIn,
   Mail,
   ShieldAlert,
-  ShieldCheck,
-  Sparkles,
   User,
   UserPlus,
 } from 'lucide-react'
@@ -20,7 +18,7 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) => {
-  const { signIn, signUp, loginDemo, user } = useAuth()
+  const { signIn, signUp, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -92,41 +90,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) 
     }
   }
 
-  // Quick 1-click Demo Logins (Sets authenticated learner session)
-  const handleQuickDemo = async () => {
-    setSubmitting(true)
-    setErrorMsg(null)
-    try {
-      await loginDemo()
-      setSuccessMsg('Logged in as Demo Player!')
-      setTimeout(() => {
-        handleRedirect()
-      }, 400)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleQuickAdmin = async () => {
-    setEmail('admin@sonorauris.com')
-    setPassword('admin123')
-    setSubmitting(true)
-    setErrorMsg(null)
-    try {
-      const res = await signIn('admin@sonorauris.com', 'admin123')
-      if (res.success) {
-        setSuccessMsg('Signed in as Administrator!')
-        setTimeout(() => {
-          navigate('/admin', { replace: true })
-        }, 500)
-      } else {
-        setErrorMsg(res.message)
-      }
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-[#F7F9FA] flex flex-col justify-between text-[#171B2A] font-sans pb-10">
 
@@ -147,7 +110,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) 
                     <span className="text-[#171B2A]">Sonor</span>
                     <span className="text-[#10B981]">auris</span>
                   </span>
-                  <span className="new-tag">MVP</span>
                 </div>
                 <p className="text-[11px] text-[#5B6780] font-normal mt-0.5">
                   English Shadowing Arena
@@ -303,44 +265,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) 
               )}
             </button>
           </form>
-
-          {/* Quick Demo Access (1-Click) */}
-          <div className="mt-6 pt-5 border-t border-[#f0f2f5]">
-            <div className="flex items-center justify-between mb-3 text-xs text-[#5B6780]">
-              <span className="font-semibold text-[#171B2A]">1-Click Quick Access</span>
-              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">
-                Testing
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={handleQuickDemo}
-                className="py-2.5 px-3 rounded-xl border border-[#E2E6EA] hover:border-[#171B2A] bg-[#F7F9FA] hover:bg-slate-100 text-xs font-semibold text-[#171B2A] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                title="Instant Demo Player access"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-[#4E9488]" />
-                <span>Demo Player</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleQuickAdmin}
-                className="py-2.5 px-3 rounded-xl border border-purple-200 hover:border-purple-600 bg-purple-50/60 hover:bg-purple-100/60 text-xs font-semibold text-purple-900 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                title="Login with admin credentials"
-              >
-                <ShieldCheck className="h-3.5 w-3.5 text-purple-700" />
-                <span>Admin Login</span>
-              </button>
-            </div>
-          </div>
         </div>
       </main>
 
       {/* Footer copyright */}
       <footer className="text-center text-xs text-[#5B6780]">
-        © 2026 Sonorauris — English Shadowing Platform MVP
+        © 2026 Sonorauris — English Shadowing Platform
       </footer>
     </div>
   )

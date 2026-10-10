@@ -94,9 +94,6 @@ export function Header() {
                 <span className="text-[#171B2A]">Sonor</span>
                 <span className="text-[#10B981]">auris</span>
               </span>
-              <span className="new-tag">
-                MVP
-              </span>
             </div>
             <p className="hidden text-[11px] text-[#5B6780] sm:block">
               English Shadowing Arena
