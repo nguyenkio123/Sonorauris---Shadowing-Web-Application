@@ -1,9 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import {
-  continueAsGuest,
   getCurrentAuthUser,
   isSupabaseConfigured,
-  loginAsDemoPlayer,
   signInWithEmail,
   signOutUser,
   signUpWithEmail,
@@ -18,8 +16,6 @@ interface AuthContextType {
   signIn: (email: string, pass: string) => Promise<{ success: boolean; message: string }>
   signUp: (email: string, pass: string, name: string) => Promise<{ success: boolean; message: string }>
   signOut: () => Promise<void>
-  setGuest: () => void
-  loginDemo: () => Promise<void>
   refreshUser: () => Promise<void>
 }
 
@@ -42,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refreshUser()
 
-    // Listen to Supabase auth state change if active
     let authListener: { unsubscribe: () => void } | null = null
     if (supabase) {
       const { data } = supabase.auth.onAuthStateChange(() => {
@@ -104,23 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const setGuest = () => {
-    const guest = continueAsGuest()
-    setUser(guest)
-    window.dispatchEvent(new Event('storage'))
-  }
-
-  const loginDemo = async () => {
-    setLoading(true)
-    try {
-      const demo = loginAsDemoPlayer()
-      setUser(demo)
-      window.dispatchEvent(new Event('storage'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <AuthContext.Provider
       value={{
@@ -130,8 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut,
-        setGuest,
-        loginDemo,
         refreshUser,
       }}
     >

@@ -42,10 +42,6 @@ import {
 export * from './admin'
 export * from './supabaseSync'
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let code = ''
@@ -55,21 +51,21 @@ function generateRoomCode(): string {
   return code
 }
 
-/**
- * SRS Baseline API: GET /api/me
- * Retrieves user profile with dynamically derived XP, Coins, and Streak.
- */
-export async function getMe(): Promise<UserProfile> {
-  await delay(80)
-  return getUserProfile()
-}
+export const getMe = async (): Promise<UserProfile> => getUserProfile()
+export const getAttempt = async (id: string): Promise<Attempt | null> => getAttemptById(id)
+export const getUserAttempts = async (): Promise<Attempt[]> => getAttempts()
+export const resetDemo = async (): Promise<void> => resetAllStorage()
+export const getShopCatalog = async () => [...SHOP_ITEMS]
+export const getInventory = async () => getUserInventory()
+export const purchaseItem = async (itemId: string) => buyShopItem(itemId)
+export const equipItem = async (type: CosmeticType, itemId: string) => equipShopItem(type, itemId)
+export const attemptStreakRestore = async () => restoreStreak()
+export const checkStreakRestoreEligibility = async () => canRestoreStreak()
+export const setDisplayName = async (name: string) => updateDisplayName(name)
+export const getDailyQuests = async (): Promise<DailyQuest[]> => getDailyQuestsState()
+export const claimQuest = async (questId: string) => claimDailyQuest(questId)
 
-/**
- * SRS Baseline API: GET /api/clips
- * Retrieves curated list of shadowing clips (Supabase Cloud with Sandbox fallback).
- */
 export async function getClips(): Promise<Clip[]> {
-  await delay(60)
   const remote = await fetchRemoteClips()
   if (remote && remote.length > 0) {
     saveStoredClips(remote)
@@ -78,31 +74,17 @@ export async function getClips(): Promise<Clip[]> {
   return getStoredClips()
 }
 
-/**
- * SRS Baseline API: GET /api/clips/:id
- * Retrieves details and reference transcript for a specific clip.
- */
 export async function getClip(id: string): Promise<Clip | null> {
-  await delay(40)
   const clips = await getClips()
-  const clip = clips.find((c) => c.id === id)
-  return clip || null
+  return clips.find((c) => c.id === id) || null
 }
 
 const attemptAudioCache = new Map<string, string>()
 
-/**
- * Retrieves the in-session recorded audio URL for a given attempt ID if available.
- */
 export function getAttemptAudioUrl(attemptId: string): string | null {
   return attemptAudioCache.get(attemptId) || null
 }
 
-/**
- * SRS Baseline API: POST /api/attempts
- * Submits an audio recording for solo pronunciation assessment.
- * Calculates scores, generates word-level miscues, and rewards XP/Coins via ledger.
- */
 export async function submitAttempt(
   clipId: string,
   audioBlob?: Blob
@@ -111,7 +93,6 @@ export async function submitAttempt(
   const refText = clip ? clip.referenceText : 'English shadowing practice sample text.'
   const user = await getMe()
 
-  // Assess pronunciation through Azure Speech adapter (or deterministic fallback)
   const result = audioBlob
     ? await assessPronunciation(audioBlob, refText)
     : generateAssessmentResult(refText)
@@ -143,10 +124,7 @@ export async function submitAttempt(
     },
   ]
 
-  // Atomically record rewards into ledger with strict idempotency
   addRewardTransactions(rewardItems)
-
-  // Async sync to Supabase Cloud if available
   void recordRemoteRewardTransactions(rewardItems)
 
   const attempt: Attempt = {
@@ -165,29 +143,7 @@ export async function submitAttempt(
   return attempt
 }
 
-/**
- * SRS Baseline API: GET /api/attempts/:id
- * Retrieves a past attempt result.
- */
-export async function getAttempt(id: string): Promise<Attempt | null> {
-  await delay(80)
-  return getAttemptById(id)
-}
-
-/**
- * Retrieves all past attempts for performance stats.
- */
-export async function getUserAttempts(): Promise<Attempt[]> {
-  await delay(40)
-  return getAttempts()
-}
-
-/**
- * SRS Baseline API: POST /api/battles/rooms (FR-BAT-01, FR-BAT-07)
- * Creates a new battle room (2 to 5 players) with a 5-character room code.
- */
 export async function createRoom(clipId: string, maxPlayers: number = 2): Promise<BattleRoom> {
-  await delay(150)
   const user = await getMe()
   const code = generateRoomCode()
   const now = Date.now()
@@ -221,18 +177,11 @@ export async function createRoom(clipId: string, maxPlayers: number = 2): Promis
   return room
 }
 
-/**
- * SRS Baseline API: POST /api/battles/rooms/:code/join (FR-BAT-02, FR-BAT-07)
- * Joins an existing battle room using its 5-character code.
- * Supports up to maxPlayers (2 to 5).
- */
 export async function joinRoom(code: string): Promise<BattleRoom> {
-  await delay(120)
   const normalizedCode = code.trim().toUpperCase()
   let existing = getRoomByCode(normalizedCode)
 
   if (!existing) {
-    // Discover room state across computers/browsers via Supabase Realtime Broadcast or DB
     existing = await requestRemoteRoomState(normalizedCode, 3000)
   }
 
@@ -243,7 +192,6 @@ export async function joinRoom(code: string): Promise<BattleRoom> {
   const user = await getMe()
   const maxPlayers = existing.maxPlayers || 2
 
-  // Support separate players even if both are default guests without collision
   let participantUserId = user.id
   let participantDisplayName = user.displayName
 
@@ -286,9 +234,6 @@ export async function joinRoom(code: string): Promise<BattleRoom> {
   return syncRoomState(existing)
 }
 
-/**
- * Manually summons bot sparring partner into the room immediately.
- */
 export async function addBotToRoom(code: string): Promise<BattleRoom> {
   const normalizedCode = code.trim().toUpperCase()
   const room = getRoomByCode(normalizedCode)
@@ -304,12 +249,7 @@ export async function addBotToRoom(code: string): Promise<BattleRoom> {
   return updated
 }
 
-/**
- * SRS Baseline API: POST /api/battles/rooms/:code/ready
- * Updates the user's ready status and broadcasts change.
- */
 export async function setReady(code: string, ready = true): Promise<BattleRoom> {
-  await delay(80)
   const normalizedCode = code.trim().toUpperCase()
   const room = getRoomByCode(normalizedCode)
   if (!room) {
@@ -342,10 +282,6 @@ export async function setReady(code: string, ready = true): Promise<BattleRoom> 
   return updated
 }
 
-/**
- * SRS Baseline API: GET /api/battles/rooms/:code
- * Retrieves current room snapshot. Automatically synchronizes status based on Date.now().
- */
 export async function getRoom(code: string): Promise<BattleRoom | null> {
   const normalizedCode = code.trim().toUpperCase()
   let room = getRoomByCode(normalizedCode)
@@ -360,15 +296,10 @@ export async function getRoom(code: string): Promise<BattleRoom | null> {
   return syncRoomState(room)
 }
 
-/**
- * SRS Baseline API: POST /api/battles/rooms/:code/submit
- * Submits the player's battle recording for independent assessment.
- */
 export async function submitBattleAttempt(
   code: string,
   audioBlob?: Blob
 ): Promise<BattleRoom> {
-  await delay(100)
   const normalizedCode = code.trim().toUpperCase()
   const room = getRoomByCode(normalizedCode)
   if (!room) {
@@ -379,7 +310,6 @@ export async function submitBattleAttempt(
   const refText = clip ? clip.referenceText : 'English shadowing practice sample text.'
   const user = await getMe()
 
-  // Evaluate via Azure Speech adapter if audioBlob is provided
   const assessment = audioBlob
     ? await assessPronunciation(audioBlob, refText)
     : undefined
@@ -413,93 +343,3 @@ export async function submitBattleAttempt(
   void saveRoomToSupabase(updated)
   return updated
 }
-
-/**
- * Reset all demo data to pristine state.
- * Re-seeds initial balance of 120 XP and 45 Coins via SEED ledger entries.
- */
-export async function resetDemo(): Promise<void> {
-  await delay(100)
-  resetAllStorage()
-}
-
-/**
- * SRS Baseline API: GET /api/shop/items (FR-SHOP-01)
- * Retrieves cosmetic catalog (Avatars, Frames, Titles).
- */
-export async function getShopCatalog() {
-  await delay(60)
-  return [...SHOP_ITEMS]
-}
-
-/**
- * SRS Baseline API: GET /api/shop/inventory
- * Retrieves user's owned and equipped items.
- */
-export async function getInventory() {
-  await delay(40)
-  return getUserInventory()
-}
-
-/**
- * SRS Baseline API: POST /api/shop/purchase (FR-SHOP-01)
- * Purchases cosmetic item using Coins via atomic ledger transaction.
- */
-export async function purchaseItem(itemId: string) {
-  await delay(120)
-  return buyShopItem(itemId)
-}
-
-/**
- * SRS Baseline API: POST /api/shop/equip (FR-SHOP-01)
- * Equips an owned cosmetic item.
- */
-export async function equipItem(type: CosmeticType, itemId: string) {
-  await delay(60)
-  return equipShopItem(type, itemId)
-}
-
-/**
- * SRS Baseline API: POST /api/streak/restore (FR-PROG-04)
- * Restores broken streak by paying 30 coins (max once per 7 days).
- */
-export async function attemptStreakRestore() {
-  await delay(100)
-  return restoreStreak()
-}
-
-/**
- * Check if streak restore is available.
- */
-export async function checkStreakRestoreEligibility() {
-  return canRestoreStreak()
-}
-
-/**
- * SRS Baseline API: POST /api/me/profile (FR-AUTH-02)
- * Updates user display name.
- */
-export async function setDisplayName(name: string) {
-  await delay(60)
-  return updateDisplayName(name)
-}
-
-/**
- * SRS Baseline API: GET /api/quests (FR-QUEST-01)
- * Retrieves today's 3 daily quests and their real-time progress.
- */
-export async function getDailyQuests(): Promise<DailyQuest[]> {
-  await delay(60)
-  return getDailyQuestsState()
-}
-
-/**
- * SRS Baseline API: POST /api/quests/:id/claim (FR-QUEST-01)
- * Claims rewards for a completed daily quest via atomic ledger transaction.
- */
-export async function claimQuest(questId: string): Promise<{ success: boolean; message: string }> {
-  await delay(80)
-  return claimDailyQuest(questId)
-}
-
-

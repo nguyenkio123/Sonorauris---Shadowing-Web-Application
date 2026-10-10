@@ -80,7 +80,7 @@ export const SEED_TRANSACTIONS: RewardTransaction[] = [
   },
 ]
 
-function readJson<T>(key: string, defaultValue: T): T {
+export function readJson<T>(key: string, defaultValue: T): T {
   if (typeof window === 'undefined') return defaultValue
   try {
     const raw = localStorage.getItem(key)
@@ -91,7 +91,7 @@ function readJson<T>(key: string, defaultValue: T): T {
   }
 }
 
-function writeJson<T>(key: string, value: T): void {
+export function writeJson<T>(key: string, value: T): void {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(key, JSON.stringify(value))

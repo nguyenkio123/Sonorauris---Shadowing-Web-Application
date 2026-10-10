@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { AuthUser, UserRole } from '../types/auth'
-import { getUserBase, saveUserBase } from './storage'
+import { getUserBase, readJson, saveUserBase, writeJson } from './storage'
 
 const STORAGE_KEYS = {
   AUTH_USER: 'shadowing_auth_user',
@@ -34,25 +34,6 @@ export const DEFAULT_ADMIN_ACCOUNT: StoredLocalAccount = {
   lastStreakRestoreDate: null,
 }
 
-function readJson<T>(key: string, defaultValue: T): T {
-  if (typeof window === 'undefined') return defaultValue
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as T) : defaultValue
-  } catch {
-    return defaultValue
-  }
-}
-
-function writeJson<T>(key: string, value: T): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // ignore
-  }
-}
-
 export function getLocalAccounts(): StoredLocalAccount[] {
   const accounts = readJson<StoredLocalAccount[]>(STORAGE_KEYS.LOCAL_ACCOUNTS, [])
   if (!accounts.some((a) => a.email === DEFAULT_ADMIN_ACCOUNT.email)) {
@@ -70,11 +51,49 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(supabase)
 }
 
-/**
- * Returns current authenticated user (Supabase or Local Session)
- */
+function persistSession(authUser: AuthUser, rawPassword?: string): AuthUser {
+  if (rawPassword) {
+    const localAccounts = getLocalAccounts()
+    const existingIdx = localAccounts.findIndex((a) => a.email === authUser.email)
+    const cachedAcc: StoredLocalAccount = {
+      id: authUser.id,
+      email: authUser.email,
+      passwordHash: btoa(rawPassword),
+      displayName: authUser.displayName,
+      avatarUrl: authUser.avatarUrl,
+      role: authUser.role,
+      createdAt: authUser.createdAt || new Date().toISOString(),
+    }
+    if (existingIdx >= 0) localAccounts[existingIdx] = cachedAcc
+    else localAccounts.push(cachedAcc)
+    saveLocalAccounts(localAccounts)
+  }
+
+  writeJson(STORAGE_KEYS.AUTH_USER, authUser)
+  const base = getUserBase()
+  saveUserBase({
+    ...base,
+    id: authUser.id,
+    displayName: authUser.displayName,
+    avatarUrl: authUser.avatarUrl,
+    role: authUser.role,
+  })
+  return authUser
+}
+
+function accountToAuthUser(acc: StoredLocalAccount): AuthUser {
+  return {
+    id: acc.id,
+    email: acc.email,
+    displayName: acc.displayName,
+    avatarUrl: acc.avatarUrl,
+    role: acc.role || 'user',
+    isGuest: false,
+    createdAt: acc.createdAt,
+  }
+}
+
 export async function getCurrentAuthUser(): Promise<AuthUser | null> {
-  // 1. Try Supabase Session if configured
   if (supabase) {
     try {
       const { data: { session }, error } = await supabase.auth.getSession()
@@ -83,16 +102,13 @@ export async function getCurrentAuthUser(): Promise<AuthUser | null> {
         const meta = u.user_metadata || {}
         let role: UserRole = meta.role === 'admin' ? 'admin' : 'user'
 
-        // Check if role has been updated directly in public.users
         try {
           const { data: dbUser } = await supabase
             .from('users')
             .select('role, display_name, avatar_url')
             .eq('id', u.id)
             .maybeSingle()
-          if (dbUser?.role) {
-            role = dbUser.role as UserRole
-          }
+          if (dbUser?.role) role = dbUser.role as UserRole
         } catch {
           // ignore
         }
@@ -112,16 +128,11 @@ export async function getCurrentAuthUser(): Promise<AuthUser | null> {
     }
   }
 
-  // 2. Check Local Authenticated User
   const localAuth = readJson<AuthUser | null>(STORAGE_KEYS.AUTH_USER, null)
   if (localAuth) {
-    return {
-      ...localAuth,
-      role: localAuth.role || 'user',
-    }
+    return { ...localAuth, role: localAuth.role || 'user' }
   }
 
-  // 3. Fallback to Guest
   return getGuestUser()
 }
 
@@ -137,9 +148,6 @@ export function getGuestUser(): AuthUser {
   }
 }
 
-/**
- * Signs up a new account (Supabase Auth or Local Account Engine)
- */
 export async function signUpWithEmail(
   email: string,
   password: string,
@@ -156,43 +164,35 @@ export async function signUpWithEmail(
     throw new Error('Password must be at least 6 characters long.')
   }
 
-  // 1. Supabase Mode
+  const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(trimmedName)}`
+
   if (supabase) {
     const { data, error } = await supabase.auth.signUp({
       email: trimmedEmail,
       password,
-      options: {
-        data: {
-          display_name: trimmedName,
-          avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(trimmedName)}`,
-          role,
-        },
-      },
+      options: { data: { display_name: trimmedName, avatar_url: avatarUrl, role } },
     })
 
-    if (error) {
-      throw new Error(error.message)
-    }
+    if (error) throw new Error(error.message)
 
     if (data.user) {
       const authUser: AuthUser = {
         id: data.user.id,
         email: data.user.email || trimmedEmail,
         displayName: trimmedName,
-        avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(trimmedName)}`,
+        avatarUrl,
         role,
         isGuest: false,
         createdAt: data.user.created_at,
       }
 
-      // Explicitly upsert profile into public.users
       try {
         await supabase.from('users').upsert(
           {
             id: data.user.id,
-            email: data.user.email || trimmedEmail,
+            email: authUser.email,
             display_name: trimmedName,
-            avatar_url: authUser.avatarUrl,
+            avatar_url: avatarUrl,
             role,
           },
           { onConflict: 'id' }
@@ -201,36 +201,7 @@ export async function signUpWithEmail(
         console.warn('[Auth] Optional public.users sync error:', dbErr)
       }
 
-      // Also cache in localAccounts so fallback and offline testing always succeed
-      const localAccounts = getLocalAccounts()
-      const existingIdx = localAccounts.findIndex((a) => a.email === trimmedEmail)
-      const cachedAcc: StoredLocalAccount = {
-        id: data.user.id,
-        email: trimmedEmail,
-        passwordHash: btoa(password),
-        displayName: trimmedName,
-        avatarUrl: authUser.avatarUrl,
-        role,
-        createdAt: data.user.created_at || new Date().toISOString(),
-      }
-      if (existingIdx >= 0) {
-        localAccounts[existingIdx] = cachedAcc
-      } else {
-        localAccounts.push(cachedAcc)
-      }
-      saveLocalAccounts(localAccounts)
-
-      // Sync with user base
-      const base = getUserBase()
-      saveUserBase({
-        ...base,
-        id: authUser.id,
-        displayName: authUser.displayName,
-        avatarUrl: authUser.avatarUrl,
-        role,
-      })
-
-      writeJson(STORAGE_KEYS.AUTH_USER, authUser)
+      persistSession(authUser, password)
       return {
         user: authUser,
         message: data.session
@@ -240,69 +211,34 @@ export async function signUpWithEmail(
     }
   }
 
-  // 2. Local Engine Mode (Sandbox / Offline)
-  const localAccounts = getLocalAccounts()
-  const existing = localAccounts.find((a) => a.email === trimmedEmail)
-  if (existing) {
+  if (getLocalAccounts().some((a) => a.email === trimmedEmail)) {
     throw new Error('An account with this email already exists.')
   }
 
-  const newId = `user-local-${Date.now()}`
-  const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(trimmedName)}`
-  const newAccount: StoredLocalAccount = {
-    id: newId,
-    email: trimmedEmail,
-    passwordHash: btoa(password),
-    displayName: trimmedName,
-    avatarUrl,
-    role,
-    createdAt: new Date().toISOString(),
-  }
+  const authUser = persistSession(
+    {
+      id: `user-local-${Date.now()}`,
+      email: trimmedEmail,
+      displayName: trimmedName,
+      avatarUrl,
+      role,
+      isGuest: false,
+      createdAt: new Date().toISOString(),
+    },
+    password
+  )
 
-  localAccounts.push(newAccount)
-  saveLocalAccounts(localAccounts)
-
-  const authUser: AuthUser = {
-    id: newId,
-    email: trimmedEmail,
-    displayName: trimmedName,
-    avatarUrl,
-    role,
-    isGuest: false,
-    createdAt: newAccount.createdAt,
-  }
-
-  writeJson(STORAGE_KEYS.AUTH_USER, authUser)
-
-  // Sync to user base
-  const base = getUserBase()
-  saveUserBase({
-    ...base,
-    id: newId,
-    displayName: trimmedName,
-    avatarUrl,
-    role,
-  })
-
-  return {
-    user: authUser,
-    message: 'Account created successfully (Sandbox Profile)!',
-  }
+  return { user: authUser, message: 'Account created successfully (Sandbox Profile)!' }
 }
 
-/**
- * Signs in with email and password
- */
 export async function signInWithEmail(
   email: string,
   password: string
 ): Promise<{ user: AuthUser; message: string }> {
   const trimmedEmail = email.trim().toLowerCase()
-
   if (!trimmedEmail) throw new Error('Please enter your email address.')
   if (!password) throw new Error('Please enter your password.')
 
-  // 1. Supabase Mode
   if (supabase) {
     let supabaseError: { message: string; status?: number } | null = null
     try {
@@ -317,130 +253,54 @@ export async function signInWithEmail(
         const meta = data.user.user_metadata || {}
         let role: UserRole = meta.role === 'admin' ? 'admin' : 'user'
 
-        // Check if role has been updated directly in public.users
         try {
           const { data: dbUser } = await supabase
             .from('users')
             .select('role')
             .eq('id', data.user.id)
             .maybeSingle()
-          if (dbUser?.role) {
-            role = dbUser.role as UserRole
-          }
+          if (dbUser?.role) role = dbUser.role as UserRole
         } catch {
           // ignore
         }
 
-        const authUser: AuthUser = {
-          id: data.user.id,
-          email: data.user.email || trimmedEmail,
-          displayName: meta.display_name || meta.name || trimmedEmail.split('@')[0],
-          avatarUrl: meta.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.user.id}`,
-          role,
-          isGuest: false,
-          createdAt: data.user.created_at,
-        }
-
-        // Cache in localAccounts so future offline logins work
-        const localAccounts = getLocalAccounts()
-        const existingIdx = localAccounts.findIndex((a) => a.email === trimmedEmail)
-        const cachedAcc: StoredLocalAccount = {
-          id: data.user.id,
-          email: trimmedEmail,
-          passwordHash: btoa(password),
-          displayName: authUser.displayName,
-          avatarUrl: authUser.avatarUrl,
-          role,
-          createdAt: data.user.created_at || new Date().toISOString(),
-        }
-        if (existingIdx >= 0) {
-          localAccounts[existingIdx] = cachedAcc
-        } else {
-          localAccounts.push(cachedAcc)
-        }
-        saveLocalAccounts(localAccounts)
-
-        writeJson(STORAGE_KEYS.AUTH_USER, authUser)
-
-        const base = getUserBase()
-        saveUserBase({
-          ...base,
-          id: authUser.id,
-          displayName: authUser.displayName,
-          avatarUrl: authUser.avatarUrl,
-          role,
-        })
-
+        const authUser = persistSession(
+          {
+            id: data.user.id,
+            email: data.user.email || trimmedEmail,
+            displayName: meta.display_name || meta.name || trimmedEmail.split('@')[0],
+            avatarUrl: meta.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.user.id}`,
+            role,
+            isGuest: false,
+            createdAt: data.user.created_at,
+          },
+          password
+        )
         return { user: authUser, message: 'Signed in successfully!' }
       }
     } catch (err) {
-      if (err instanceof Error) {
-        supabaseError = { message: err.message }
-      }
+      if (err instanceof Error) supabaseError = { message: err.message }
     }
 
-    // Handle Supabase error specifically
     if (supabaseError) {
       const msgLower = supabaseError.message.toLowerCase()
+      const found = getLocalAccounts().find((a) => a.email === trimmedEmail && a.passwordHash === btoa(password))
 
-      // Case A: Email confirmation required by Supabase
-      if (msgLower.includes('not confirmed') || msgLower.includes('email not confirmed')) {
-        // If local copy exists with matching password, allow fallback with notification
-        const localAccounts = getLocalAccounts()
-        const found = localAccounts.find((a) => a.email === trimmedEmail)
-        if (found && found.passwordHash === btoa(password)) {
-          const authUser: AuthUser = {
-            id: found.id,
-            email: found.email,
-            displayName: found.displayName,
-            avatarUrl: found.avatarUrl,
-            role: found.role || 'user',
-            isGuest: false,
-            createdAt: found.createdAt,
-          }
-          writeJson(STORAGE_KEYS.AUTH_USER, authUser)
-          const base = getUserBase()
-          saveUserBase({
-            ...base,
-            id: found.id,
-            displayName: found.displayName,
-            avatarUrl: found.avatarUrl,
-            role: found.role || 'user',
-          })
-          return {
-            user: authUser,
-            message: 'Đăng nhập thành công! (Lưu ý: Email trên Supabase chưa xác thực, phiên hiện tại dùng bộ nhớ cục bộ)',
-          }
+      if (found) {
+        const authUser = persistSession(accountToAuthUser(found))
+        return {
+          user: authUser,
+          message:
+            msgLower.includes('not confirmed') || msgLower.includes('email not confirmed')
+              ? 'Đăng nhập thành công! (Lưu ý: Email trên Supabase chưa xác thực, phiên hiện tại dùng bộ nhớ cục bộ)'
+              : 'Signed in successfully!',
         }
+      }
 
+      if (msgLower.includes('not confirmed') || msgLower.includes('email not confirmed')) {
         throw new Error(
           `Tài khoản "${trimmedEmail}" chưa được xác thực email trên Supabase (Email not confirmed). Vui lòng kiểm tra hộp thư (hoặc thư rác) để bấm link kích hoạt, hoặc vào Supabase Dashboard > Authentication > Providers > Email để tắt tính năng "Confirm email".`
         )
-      }
-
-      // Case B: Invalid credentials - check if local account matches
-      const localAccounts = getLocalAccounts()
-      const found = localAccounts.find((a) => a.email === trimmedEmail)
-      if (found && found.passwordHash === btoa(password)) {
-        const authUser: AuthUser = {
-          id: found.id,
-          email: found.email,
-          displayName: found.displayName,
-          avatarUrl: found.avatarUrl,
-          role: found.role || 'user',
-          isGuest: false,
-          createdAt: found.createdAt,
-        }
-        writeJson(STORAGE_KEYS.AUTH_USER, authUser)
-        const base = getUserBase()
-        saveUserBase({
-          ...base,
-          id: found.id,
-          displayName: found.displayName,
-          avatarUrl: found.avatarUrl,
-          role: found.role || 'user',
-        })
-        return { user: authUser, message: 'Signed in successfully!' }
       }
 
       throw new Error(
@@ -451,41 +311,12 @@ export async function signInWithEmail(
     }
   }
 
-  // 2. Local Engine Mode
-  const localAccounts = getLocalAccounts()
-  const found = localAccounts.find((a) => a.email === trimmedEmail)
+  const found = getLocalAccounts().find((a) => a.email === trimmedEmail && a.passwordHash === btoa(password))
+  if (!found) throw new Error('Invalid email or password.')
 
-  if (!found || found.passwordHash !== btoa(password)) {
-    throw new Error('Invalid email or password.')
-  }
-
-  const authUser: AuthUser = {
-    id: found.id,
-    email: found.email,
-    displayName: found.displayName,
-    avatarUrl: found.avatarUrl,
-    role: found.role || 'user',
-    isGuest: false,
-    createdAt: found.createdAt,
-  }
-
-  writeJson(STORAGE_KEYS.AUTH_USER, authUser)
-
-  const base = getUserBase()
-  saveUserBase({
-    ...base,
-    id: found.id,
-    displayName: found.displayName,
-    avatarUrl: found.avatarUrl,
-    role: found.role || 'user',
-  })
-
-  return { user: authUser, message: 'Signed in successfully!' }
+  return { user: persistSession(accountToAuthUser(found)), message: 'Signed in successfully!' }
 }
 
-/**
- * Signs out current user and switches back to Guest
- */
 export async function signOutUser(): Promise<void> {
   if (supabase) {
     try {
@@ -499,7 +330,6 @@ export async function signOutUser(): Promise<void> {
     localStorage.removeItem(STORAGE_KEYS.AUTH_USER)
   }
 
-  // Re-seed or revert to Demo Player
   const base = getUserBase()
   saveUserBase({
     ...base,
@@ -510,71 +340,12 @@ export async function signOutUser(): Promise<void> {
   })
 }
 
-/**
- * Explicitly sets Guest mode
- */
-export function continueAsGuest(): AuthUser {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(STORAGE_KEYS.AUTH_USER)
-  }
-  const guest = getGuestUser()
-  const base = getUserBase()
-  saveUserBase({
-    ...base,
-    id: 'user-demo-player',
-    displayName: 'Demo Player',
-    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoPlayer',
-    role: 'user',
-  })
-  return guest
-}
-
-/**
- * Logs in as Demo Player (Authenticated Learner with isGuest: false)
- */
-export function loginAsDemoPlayer(): AuthUser {
-  const base = getUserBase()
-  const demoAuthUser: AuthUser = {
-    id: 'user-demo-player',
-    email: 'demo@sonorauris.com',
-    displayName: base.displayName || 'Demo Player',
-    avatarUrl: base.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoPlayer',
-    role: (base as { role?: UserRole }).role || 'user',
-    isGuest: false,
-    createdAt: '2026-09-01T00:00:00.000Z',
-  }
-  writeJson(STORAGE_KEYS.AUTH_USER, demoAuthUser)
-  saveUserBase({
-    ...base,
-    id: demoAuthUser.id,
-    displayName: demoAuthUser.displayName,
-    avatarUrl: demoAuthUser.avatarUrl,
-    role: demoAuthUser.role,
-  })
-  return demoAuthUser
-}
-
-/**
- * Toggles the role of the currently logged-in user or active session (useful for Demo/Sandbox testing)
- */
 export async function toggleCurrentRole(): Promise<UserRole> {
   const current = await getCurrentAuthUser()
   const newRole: UserRole = current?.role === 'admin' ? 'user' : 'admin'
 
   if (current) {
-    const updated: AuthUser = {
-      ...current,
-      role: newRole,
-    }
-    writeJson(STORAGE_KEYS.AUTH_USER, updated)
-
-    const base = getUserBase()
-    saveUserBase({
-      ...base,
-      role: newRole,
-    })
-
-    // Also update in localAccounts if present
+    persistSession({ ...current, role: newRole })
     const accounts = getLocalAccounts()
     const idx = accounts.findIndex((a) => a.id === current.id)
     if (idx >= 0) {
