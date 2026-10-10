@@ -22,7 +22,9 @@ import {
 import { getClips, getMe } from '../api'
 import type { Clip, Difficulty, Topic } from '../types/clip'
 import type { UserProfile } from '../types/user'
-1
+
+const FAVORITES_KEY = 'shadowing_favorites'
+
 const TOPICS: { name: 'All' | Topic; label: string; icon: typeof Compass }[] = [
   { name: 'All', label: 'All Topics', icon: Compass },
   { name: 'Daily Life', label: 'Daily Life', icon: MessageSquare },
@@ -39,9 +41,17 @@ export function HomeCatalogPage() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [selectedTopic, setSelectedTopic] = useState<string>('All')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All')
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false)
   const [sortBy, setSortBy] = useState<'level' | 'alphabetical' | 'duration'>('level')
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [favorites, setFavorites] = useState<Record<string, boolean>>({})
+  const [favorites, setFavorites] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(FAVORITES_KEY)
+      return raw ? (JSON.parse(raw) as Record<string, boolean>) : {}
+    } catch {
+      return {}
+    }
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -72,10 +82,18 @@ export function HomeCatalogPage() {
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setFavorites((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }))
+    setFavorites((prev) => {
+      const next = {
+        ...prev,
+        [id]: !prev[id],
+      }
+      try {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(next))
+      } catch {
+        // ignore storage errors
+      }
+      return next
+    })
   }
 
   const DIFFICULTY_RANK: Record<string, number> = {
@@ -89,13 +107,14 @@ export function HomeCatalogPage() {
       const matchTopic = selectedTopic === 'All' || clip.topic === selectedTopic
       const matchDiff =
         selectedDifficulty === 'All' || clip.difficulty === selectedDifficulty
+      const matchFav = !showFavoritesOnly || Boolean(favorites[clip.id])
       const matchQuery =
         searchQuery.trim() === '' ||
         clip.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         clip.referenceText.toLowerCase().includes(searchQuery.toLowerCase()) ||
         clip.channelName.toLowerCase().includes(searchQuery.toLowerCase())
 
-      return matchTopic && matchDiff && matchQuery
+      return matchTopic && matchDiff && matchFav && matchQuery
     })
     .sort((a, b) => {
       if (sortBy === 'level') {
@@ -248,7 +267,7 @@ export function HomeCatalogPage() {
                   key={d}
                   type="button"
                   onClick={() => setSelectedDifficulty(d)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer ${
                     selectedDifficulty === d
                       ? 'bg-[#171B2A] text-white shadow-xs'
                       : 'bg-[#f7f9fa] text-[#5B6780] hover:bg-[#edf0f2] hover:text-[#171B2A]'
@@ -257,6 +276,19 @@ export function HomeCatalogPage() {
                   {d}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => setShowFavoritesOnly((prev) => !prev)}
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer ${
+                  showFavoritesOnly
+                    ? 'bg-[#4E9488] text-white shadow-xs'
+                    : 'bg-[#f7f9fa] text-[#5B6780] hover:bg-[#edf0f2] hover:text-[#171B2A]'
+                }`}
+                title="Show only saved favorite clips"
+              >
+                <Heart className={`h-3 w-3 ${showFavoritesOnly ? 'fill-white text-white' : ''}`} />
+                <span>Saved</span>
+              </button>
             </div>
           </div>
         </div>
@@ -342,6 +374,7 @@ export function HomeCatalogPage() {
               onClick={() => {
                 setSelectedTopic('All')
                 setSelectedDifficulty('All')
+                setShowFavoritesOnly(false)
                 setSearchQuery('')
               }}
               className="btn-pill-rausch mt-4 text-xs"

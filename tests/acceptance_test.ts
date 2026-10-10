@@ -494,6 +494,10 @@ const activeUserInAdmin = adminUsersList.find(u => u.id === 'user-demo-player');
 assert(activeUserInAdmin !== undefined, 'Active user found in admin list');
 assert(activeUserInAdmin!.streak === postRestoreBase.streak, 'Streak in admin table matches user UI streak exactly', `Admin got ${activeUserInAdmin?.streak}, user base was ${postRestoreBase.streak}`);
 
+// 4. Multi-player Room Capacity Preservation on Creation / Rematch
+const squadRoom = await createRoom('clip-1', 4);
+assert(squadRoom.maxPlayers === 4, 'Multi-player room preserves maxPlayers=4 capacity on creation/rematch', `Got ${squadRoom.maxPlayers}`);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SUMMARY
 // ─────────────────────────────────────────────────────────────────────────────

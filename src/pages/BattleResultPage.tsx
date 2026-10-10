@@ -26,7 +26,7 @@ export function BattleResultPage() {
     if (!room || rematching) return
     setRematching(true)
     try {
-      const newRoom = await createRoom(room.clipId)
+      const newRoom = await createRoom(room.clipId, room.maxPlayers)
       navigate(`/battle/lobby?room=${newRoom.code}`)
     } catch (err) {
       console.error('Failed to create rematch room:', err)

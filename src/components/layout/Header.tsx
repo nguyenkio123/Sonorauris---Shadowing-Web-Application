@@ -7,7 +7,6 @@ import type { DailyQuest } from '../../types/quest'
 import { DailyQuestsModal } from './DailyQuestsModal'
 import { ProfileSettingsModal } from './ProfileSettingsModal'
 import { useAuth } from '../../context/AuthContext'
-import { AuthModal } from '../auth/AuthModal'
 
 export function Header() {
   const { user: authUser } = useAuth()
@@ -15,7 +14,6 @@ export function Header() {
   const [quests, setQuests] = useState<DailyQuest[]>([])
   const [isQuestsOpen, setIsQuestsOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [isAuthOpen, setIsAuthOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -268,15 +266,6 @@ export function Header() {
         onOpenAuth={() => {
           setIsProfileOpen(false)
           navigate('/login')
-        }}
-      />
-
-      {/* Authentication Modal (Sign In / Register) */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => {
-          setIsAuthOpen(false)
-          void reloadData()
         }}
       />
     </header>

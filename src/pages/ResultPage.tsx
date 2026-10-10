@@ -12,7 +12,7 @@ import {
   HelpCircle,
   Volume2,
 } from 'lucide-react'
-import { getAttempt, getClip, getMe } from '../api'
+import { getAttempt, getAttemptAudioUrl, getClip, getMe } from '../api'
 import type { Attempt, MiscueWord } from '../types/attempt'
 import type { Clip } from '../types/clip'
 import type { UserProfile } from '../types/user'
@@ -26,6 +26,7 @@ export function ResultPage() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const audioUrl = attemptId ? getAttemptAudioUrl(attemptId) : null
 
   useEffect(() => {
     let isMounted = true
@@ -386,6 +387,16 @@ export function ResultPage() {
               </span>
             </div>
           </div>
+
+          {audioUrl && (
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-[#f7f9fa] border border-[#e2e6ea] px-4 py-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#171B2A]">
+                <Volume2 className="h-4 w-4 text-[#4E9488]" />
+                <span>Your Recorded Shadowing Audio</span>
+              </div>
+              <audio controls src={audioUrl} className="h-9 w-full sm:w-72" />
+            </div>
+          )}
 
           {/* Interactive Words Canvas */}
           <div className="rounded-xl bg-[#f7f9fa] border border-[#ebebeb] p-6 leading-loose text-base sm:text-lg flex flex-wrap gap-2.5 items-center">

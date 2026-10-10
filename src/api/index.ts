@@ -89,6 +89,15 @@ export async function getClip(id: string): Promise<Clip | null> {
   return clip || null
 }
 
+const attemptAudioCache = new Map<string, string>()
+
+/**
+ * Retrieves the in-session recorded audio URL for a given attempt ID if available.
+ */
+export function getAttemptAudioUrl(attemptId: string): string | null {
+  return attemptAudioCache.get(attemptId) || null
+}
+
 /**
  * SRS Baseline API: POST /api/attempts
  * Submits an audio recording for solo pronunciation assessment.
@@ -108,6 +117,14 @@ export async function submitAttempt(
     : generateAssessmentResult(refText)
 
   const attemptId = `attempt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+
+  if (audioBlob && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+    try {
+      attemptAudioCache.set(attemptId, URL.createObjectURL(audioBlob))
+    } catch {
+      // ignore in non-browser environments
+    }
+  }
 
   const rewardItems = [
     {
