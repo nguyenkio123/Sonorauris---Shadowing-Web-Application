@@ -49,3 +49,6 @@ vite.config.ts.timestamp-*
 .env.local
 .env.*.local
 !.env.example
+
+# CodeGraph local index
+.codegraph/
