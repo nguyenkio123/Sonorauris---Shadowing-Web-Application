@@ -52,3 +52,9 @@ vite.config.ts.timestamp-*
 
 # CodeGraph local index
 .codegraph/
+
+# Python faster-whisper server environment
+.venv/
+__pycache__/
+*.pyc
+

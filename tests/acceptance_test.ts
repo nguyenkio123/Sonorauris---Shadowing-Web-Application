@@ -163,6 +163,16 @@ assert(alignedMiscues[1].type === 'mispronunciation', 'Near spoken match ("Engle
 assert(alignedMiscues[2].type === 'omission', 'Skipped spoken word ("shadowing") is marked omission');
 assert(alignedMiscues[3].type === undefined, 'Exact spoken match ("today") is marked clean');
 
+// Zero-random determinism check
+const detRun1 = generateAssessmentResult('The quick brown fox jumps over the lazy dog');
+const detRun2 = generateAssessmentResult('The quick brown fox jumps over the lazy dog');
+assert(
+  detRun1.battleScore === detRun2.battleScore &&
+    detRun1.accuracy === detRun2.accuracy &&
+    detRun1.fluency === detRun2.fluency,
+  'Assessment engine is 100% deterministic (0% Math.random)'
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SUITE 3: IMMUTABLE REWARD LEDGER & ANTI-CHEAT (FR-PROG-01, FR-PROG-02)
 // ─────────────────────────────────────────────────────────────────────────────

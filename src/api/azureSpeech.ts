@@ -257,117 +257,169 @@ function evaluateAcousticSignal(
   }
 }
 
+const WHISPER_API_URL = import.meta.env.VITE_WHISPER_API_URL || 'http://localhost:8000'
+
+/**
+ * Tier 2: Calls the local Python faster-whisper server (base.en, int8)
+ * with 16kHz mono WAV audio and referenceText.
+ */
+async function assessViaFasterWhisper(
+  wavOrRawBlob: Blob,
+  referenceText: string
+): Promise<AssessmentResult | null> {
+  if (typeof window === 'undefined' || !wavOrRawBlob || wavOrRawBlob.size < 256) {
+    return null
+  }
+
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), 8000)
+
+  try {
+    const formData = new FormData()
+    const fileName = wavOrRawBlob.type.includes('wav') ? 'recording.wav' : 'recording.webm'
+    formData.append('audio', wavOrRawBlob, fileName)
+    formData.append('referenceText', referenceText)
+
+    const response = await fetch(`${WHISPER_API_URL.replace(/\/$/, '')}/api/assess`, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = (await response.json()) as AssessmentResult & { recognizedText?: string }
+    if (typeof data.battleScore === 'number' && Array.isArray(data.words)) {
+      return {
+        accuracy: data.accuracy,
+        fluency: data.fluency,
+        completeness: data.completeness,
+        prosody: data.prosody,
+        battleScore: data.battleScore,
+        words: data.words,
+      }
+    }
+    return null
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 /**
  * SRS Section 8.1 & NFR-10:
- * Microsoft Azure Speech Pronunciation Assessment API Adapter + WebAudio Acoustic Engine.
- *
- * Evaluates audio speech against standard reference text on 4 criteria:
- * - Accuracy (35%)
- * - Fluency (25%)
- * - Completeness (20%)
- * - Prosody (20%)
+ * 3-Tier Pronunciation Assessment Pipeline:
+ * - Tier 1: Microsoft Azure Speech Pronunciation Assessment API (Cloud Primary)
+ * - Tier 2: Python faster-whisper Server (`base.en` int8, Pure Acoustic + Word Probabilities)
+ * - Tier 3: Browser WebAudio DSP + Web Speech (0% Random Emergency Fallback)
  */
 export async function assessPronunciation(
   audioBlob: Blob,
   referenceText: string,
   targetScore?: number
 ): Promise<AssessmentResult> {
+  if (targetScore !== undefined) {
+    return generateAssessmentResult(referenceText, targetScore)
+  }
+
   const recognizedText = (audioBlob as AnnotatedAudioBlob)?.recognizedText
   const decodedBuffer = await decodeAudioBlob(audioBlob)
+  const payloadBlob = decodedBuffer ? encodeWav16kMono(decodedBuffer) : audioBlob
 
-  if (!isAzureSpeechConfigured()) {
-    if (decodedBuffer) {
-      return evaluateAcousticSignal(decodedBuffer, referenceText, recognizedText, targetScore)
-    }
-    return generateAssessmentResult(referenceText, targetScore)
-  }
-
-  try {
-    const assessmentParams = {
-      ReferenceText: referenceText,
-      GradingSystem: 'HundredMark',
-      Granularity: 'Word',
-      Dimension: 'Comprehensive',
-      EnableMiscue: true,
-    }
-
-    // Base64-encode JSON parameters for Azure custom header
-    const jsonString = JSON.stringify(assessmentParams)
-    const base64Params = btoa(unescape(encodeURIComponent(jsonString)))
-
-    // Convert WebM recording to 16kHz 16-bit mono PCM WAV for Azure Speech REST API v1 compatibility
-    const payloadBlob = decodedBuffer ? encodeWav16kMono(decodedBuffer) : audioBlob
-    const contentType = decodedBuffer
-      ? 'audio/wav; codecs=audio/pcm; samplerate=16000'
-      : audioBlob.type || 'audio/webm; codecs=opus'
-
-    const endpoint = `https://${AZURE_REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed`
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Ocp-Apim-Subscription-Key': AZURE_KEY!,
-        'Pronunciation-Assessment': base64Params,
-        'Content-Type': contentType,
-        Accept: 'application/json',
-      },
-      body: payloadBlob,
-    })
-
-    if (!response.ok) {
-      throw new Error(`Azure Speech API error ${response.status}: ${response.statusText}`)
-    }
-
-    const data = (await response.json()) as AzureSpeechResponse
-
-    if (data.RecognitionStatus !== 'Success' || !data.NBest || data.NBest.length === 0) {
-      throw new Error(`Speech recognition returned status: ${data.RecognitionStatus}`)
-    }
-
-    const nbest = data.NBest[0]
-    const pa = nbest.PronunciationAssessment
-
-    const accuracy = Math.round(pa.AccuracyScore ?? 0)
-    const fluency = Math.round(pa.FluencyScore ?? 0)
-    const completeness = Math.round(pa.CompletenessScore ?? 0)
-    const prosody = Math.round(pa.ProsodyScore ?? pa.PronScore ?? 0)
-
-    const battleScore = calculateBattleScore(accuracy, fluency, completeness, prosody)
-
-    // Map word-level miscues
-    const words: MiscueWord[] = (nbest.Words || []).map((w) => {
-      const errorType = w.PronunciationAssessment?.ErrorType
-
-      let type: MiscueWord['type'] | undefined = undefined
-      if (errorType === 'Mispronunciation') type = 'mispronunciation'
-      else if (errorType === 'Omission') type = 'omission'
-      else if (errorType === 'Insertion') type = 'insertion'
-
-      let phoneticHint: string | undefined = undefined
-      if (w.Phonemes && w.Phonemes.length > 0) {
-        phoneticHint = `/${w.Phonemes.map((p) => p.Phoneme).join('')}/`
+  // ── TIER 1: Microsoft Azure Speech Pronunciation Assessment API ──
+  if (isAzureSpeechConfigured()) {
+    try {
+      const assessmentParams = {
+        ReferenceText: referenceText,
+        GradingSystem: 'HundredMark',
+        Granularity: 'Word',
+        Dimension: 'Comprehensive',
+        EnableMiscue: true,
       }
+
+      const jsonString = JSON.stringify(assessmentParams)
+      const base64Params = btoa(unescape(encodeURIComponent(jsonString)))
+      const contentType = decodedBuffer
+        ? 'audio/wav; codecs=audio/pcm; samplerate=16000'
+        : audioBlob.type || 'audio/webm; codecs=opus'
+
+      const endpoint = `https://${AZURE_REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed`
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Ocp-Apim-Subscription-Key': AZURE_KEY!,
+          'Pronunciation-Assessment': base64Params,
+          'Content-Type': contentType,
+          Accept: 'application/json',
+        },
+        body: payloadBlob,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Azure Speech API error ${response.status}: ${response.statusText}`)
+      }
+
+      const data = (await response.json()) as AzureSpeechResponse
+
+      if (data.RecognitionStatus !== 'Success' || !data.NBest || data.NBest.length === 0) {
+        throw new Error(`Speech recognition returned status: ${data.RecognitionStatus}`)
+      }
+
+      const nbest = data.NBest[0]
+      const pa = nbest.PronunciationAssessment
+
+      const accuracy = Math.round(pa.AccuracyScore ?? 0)
+      const fluency = Math.round(pa.FluencyScore ?? 0)
+      const completeness = Math.round(pa.CompletenessScore ?? 0)
+      const prosody = Math.round(pa.ProsodyScore ?? pa.PronScore ?? 0)
+      const battleScore = calculateBattleScore(accuracy, fluency, completeness, prosody)
+
+      const words: MiscueWord[] = (nbest.Words || []).map((w) => {
+        const errorType = w.PronunciationAssessment?.ErrorType
+        let type: MiscueWord['type'] | undefined = undefined
+        if (errorType === 'Mispronunciation') type = 'mispronunciation'
+        else if (errorType === 'Omission') type = 'omission'
+        else if (errorType === 'Insertion') type = 'insertion'
+
+        let phoneticHint: string | undefined = undefined
+        if (w.Phonemes && w.Phonemes.length > 0) {
+          phoneticHint = `/${w.Phonemes.map((p) => p.Phoneme).join('')}/`
+        }
+
+        return {
+          word: w.Word,
+          type,
+          phoneticHint,
+        }
+      })
 
       return {
-        word: w.Word,
-        type,
-        phoneticHint,
+        accuracy,
+        fluency,
+        completeness,
+        prosody,
+        battleScore,
+        words,
       }
-    })
-
-    return {
-      accuracy,
-      fluency,
-      completeness,
-      prosody,
-      battleScore,
-      words,
+    } catch (err) {
+      console.warn('[AzureSpeech] Tier-1 Azure failed, cascading to Tier-2 faster-whisper:', err)
     }
-  } catch (err) {
-    console.warn('[AzureSpeech] Assessment request failed, falling back to local acoustic engine:', err)
-    if (decodedBuffer) {
-      return evaluateAcousticSignal(decodedBuffer, referenceText, recognizedText, targetScore)
-    }
-    return generateAssessmentResult(referenceText, targetScore)
   }
+
+  // ── TIER 2: Python faster-whisper Server (base.en, int8) ──
+  const whisperResult = await assessViaFasterWhisper(payloadBlob, referenceText)
+  if (whisperResult) {
+    return whisperResult
+  }
+
+  // ── TIER 3: Browser WebAudio DSP + Web Speech (0% Random Emergency Fallback) ──
+  if (decodedBuffer) {
+    return evaluateAcousticSignal(decodedBuffer, referenceText, recognizedText, targetScore)
+  }
+
+  return generateAssessmentResult(referenceText, targetScore)
 }

@@ -9,8 +9,13 @@ import type { AssessmentResult, MiscueWord } from '../types/attempt'
 import type { BattleParticipant, BattleRoom } from '../types/battle'
 import { addRewardTransactions, saveRoom } from './storage'
 
-function randomBetween(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min
+function deterministicHash(text: string): number {
+  let hash = 2166136261
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return Math.abs(hash)
 }
 
 function toPhoneticHint(word: string): string {
@@ -181,16 +186,31 @@ export function generateMockMiscues(
 }
 
 /**
- * Generates an AssessmentResult with Accuracy, Fluency, Completeness, Prosody.
+ * Generates a deterministic AssessmentResult from transcript linguistic complexity
+ * (0% Math.random) when used in headless tests, demo quick-submit, or bot sparring.
  */
 export function generateAssessmentResult(
   referenceText: string,
   targetScore?: number
 ): AssessmentResult {
-  let accuracy = randomBetween(SCORE_RANGE.min, SCORE_RANGE.max)
-  let fluency = randomBetween(SCORE_RANGE.min, SCORE_RANGE.max)
-  let completeness = randomBetween(SCORE_RANGE.min, SCORE_RANGE.max)
-  let prosody = randomBetween(SCORE_RANGE.min, SCORE_RANGE.max)
+  const tokens = referenceText
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, '')
+    .split(/\s+/)
+    .filter(Boolean)
+  const avgDiff =
+    tokens.length > 0
+      ? tokens.reduce((sum, w) => sum + getWordDifficultyScore(w), 0) / tokens.length
+      : 5
+  const h = deterministicHash(referenceText)
+  const baseScore = Math.min(
+    SCORE_RANGE.max,
+    Math.max(SCORE_RANGE.min, Math.round(92 - avgDiff * 1.4 + (h % 5)))
+  )
+
+  let accuracy = Math.min(98, Math.max(70, baseScore + ((h >> 2) % 5) - 2))
+  let fluency = Math.min(98, Math.max(70, baseScore + ((h >> 4) % 5) - 2))
+  let completeness = Math.min(99, Math.max(75, baseScore + 2))
+  let prosody = Math.min(98, Math.max(70, baseScore + ((h >> 6) % 5) - 2))
 
   if (targetScore !== undefined) {
     if (targetScore <= 10) {
@@ -200,9 +220,9 @@ export function generateAssessmentResult(
       prosody = Math.max(0, targetScore)
     } else {
       accuracy = Math.min(99, Math.max(30, targetScore))
-      fluency = Math.min(98, Math.max(30, targetScore + randomBetween(-2, 2)))
-      completeness = Math.min(98, Math.max(30, targetScore + randomBetween(-3, 1)))
-      prosody = Math.min(98, Math.max(30, targetScore + randomBetween(-2, 2)))
+      fluency = Math.min(98, Math.max(30, targetScore + ((h % 3) - 1)))
+      completeness = Math.min(98, Math.max(30, targetScore + (((h >> 2) % 3) - 1)))
+      prosody = Math.min(98, Math.max(30, targetScore + (((h >> 4) % 3) - 1)))
     }
   }
 
@@ -224,21 +244,25 @@ const BOT_ROSTER = [
     userId: 'bot-shadow-ai',
     displayName: 'ShadowBot AI',
     avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot',
+    skillRating: 86,
   },
   {
     userId: 'bot-echo-ai',
     displayName: 'EchoBot Neo',
     avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=EchoBot',
+    skillRating: 81,
   },
   {
     userId: 'bot-cadence-ai',
     displayName: 'CadenceBot Max',
     avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=CadenceBot',
+    skillRating: 77,
   },
   {
     userId: 'bot-prosody-ai',
     displayName: 'ProsodyBot Iris',
     avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=ProsodyBot',
+    skillRating: 89,
   },
 ]
 
@@ -386,20 +410,22 @@ export function syncRoomState(room: BattleRoom): BattleRoom {
       updated.player.assessment = playerAssessment
 
       // Assess all participants
-      updated.participants!.forEach((p) => {
+      updated.participants!.forEach((p, idx) => {
         if (p.userId === updated.player.userId) {
           p.assessment = playerAssessment
         } else if (!p.assessment) {
           if (p.isBot) {
+            const botProfile = BOT_ROSTER.find((b) => b.userId === p.userId)
+            const baseSkill = botProfile ? botProfile.skillRating : 82
             let targetBotScore: number
             if (forcedOutcome === 'WIN') {
-              targetBotScore = Math.max(50, playerAssessment!.battleScore - randomBetween(6, 14))
+              targetBotScore = Math.max(50, playerAssessment!.battleScore - (7 + idx * 2))
             } else if (forcedOutcome === 'LOSE') {
-              targetBotScore = Math.min(98, playerAssessment!.battleScore + randomBetween(6, 14))
+              targetBotScore = Math.min(98, playerAssessment!.battleScore + (7 + idx * 2))
             } else if (forcedOutcome === 'DRAW') {
               targetBotScore = playerAssessment!.battleScore
             } else {
-              targetBotScore = randomBetween(72, 92)
+              targetBotScore = baseSkill
             }
             p.assessment = generateAssessmentResult(refText, targetBotScore)
           } else {
