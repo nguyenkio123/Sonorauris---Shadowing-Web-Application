@@ -20,20 +20,36 @@ export function AudioRecorder({
   const [elapsedSec, setElapsedSec] = useState(0)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [showMicTip, setShowMicTip] = useState(true)
+  const [audioLevels, setAudioLevels] = useState<number[]>([22, 22, 22, 22, 22])
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const streamRef = useRef<MediaStream | null>(null)
   const timerRef = useRef<number | null>(null)
+  const meterTimerRef = useRef<number | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
   const recordedBlobRef = useRef<Blob | null>(null)
   const recognitionRef = useRef<{ stop: () => void } | null>(null)
   const recognizedTextRef = useRef<string>('')
+
+  const stopMeter = useCallback(() => {
+    if (meterTimerRef.current) {
+      clearInterval(meterTimerRef.current)
+      meterTimerRef.current = null
+    }
+    if (audioContextRef.current) {
+      void audioContextRef.current.close().catch(() => {})
+      audioContextRef.current = null
+    }
+    setAudioLevels([22, 22, 22, 22, 22])
+  }, [])
 
   const handleStop = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
+    stopMeter()
 
     if (recognitionRef.current) {
       try {
@@ -50,12 +66,13 @@ export function AudioRecorder({
     ) {
       mediaRecorderRef.current.stop()
     }
-  }, [])
+  }, [stopMeter])
 
   // Clean up object URLs and active stream tracks on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
+      stopMeter()
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop()
@@ -68,7 +85,7 @@ export function AudioRecorder({
         streamRef.current.getTracks().forEach((t) => t.stop())
       }
     }
-  }, [audioUrl])
+  }, [audioUrl, stopMeter])
 
   // Stop recording automatically when maxDuration is reached
   useEffect(() => {
@@ -77,7 +94,7 @@ export function AudioRecorder({
     }
   }, [elapsedSec, maxDurationSec, state, handleStop])
 
-  const handleStart = async () => {
+  const handleStart = useCallback(async () => {
     if (disabled || submitting) return
 
     try {
@@ -91,6 +108,35 @@ export function AudioRecorder({
       })
       streamRef.current = stream
       recognizedTextRef.current = ''
+
+      // Connect real-time Web Audio AnalyserNode so level bars respond to actual voice input
+      try {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+        if (AudioCtx) {
+          const ctx = new AudioCtx()
+          audioContextRef.current = ctx
+          const source = ctx.createMediaStreamSource(stream)
+          const analyser = ctx.createAnalyser()
+          analyser.fftSize = 32
+          analyser.smoothingTimeConstant = 0.65
+          source.connect(analyser)
+          const dataArray = new Uint8Array(analyser.frequencyBinCount)
+
+          meterTimerRef.current = window.setInterval(() => {
+            analyser.getByteFrequencyData(dataArray)
+            const bins = [1, 2, 3, 5, 7]
+            const nextLevels = bins.map((idx) => {
+              const val = dataArray[idx] || 0
+              return Math.min(100, Math.max(20, Math.round((val / 220) * 100)))
+            })
+            setAudioLevels(nextLevels)
+          }, 80)
+        }
+      } catch {
+        // Non-blocking if AudioContext is restricted
+      }
 
       // Start parallel Web Speech Recognition (en-US) if supported by browser
       try {
@@ -165,9 +211,10 @@ export function AudioRecorder({
       }, 1000)
     } catch (err: unknown) {
       console.warn('[AudioRecorder] Mic permission error:', err)
+      stopMeter()
       setState('denied')
     }
-  }
+  }, [audioUrl, disabled, submitting, stopMeter])
 
   const handleRecordAgain = () => {
     if (audioUrl) {
@@ -180,10 +227,35 @@ export function AudioRecorder({
     setState('idle')
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!recordedBlobRef.current || submitting) return
     onSubmit(recordedBlobRef.current)
-  }
+  }, [onSubmit, submitting])
+
+  // Keyboard shortcuts: 'r' to toggle record/stop, 'Enter' to submit recorded clip
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const target = e.target as HTMLElement | null
+      const tag = target?.tagName?.toLowerCase()
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable) {
+        return
+      }
+      if (e.key.toLowerCase() === 'r') {
+        e.preventDefault()
+        if (state === 'idle' || state === 'recorded') {
+          void handleStart()
+        } else if (state === 'recording') {
+          handleStop()
+        }
+      } else if (e.key === 'Enter' && state === 'recorded' && tag !== 'button') {
+        e.preventDefault()
+        handleSubmit()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [state, handleStart, handleStop, handleSubmit])
 
   return (
     <div className="rounded-[14px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
@@ -200,6 +272,7 @@ export function AudioRecorder({
           <button
             type="button"
             onClick={() => setShowMicTip(false)}
+            aria-label="Dismiss audio quality tip"
             className="text-[#8895AD] hover:text-[#171B2A] font-semibold px-1"
             title="Dismiss tip"
           >
@@ -241,7 +314,7 @@ export function AudioRecorder({
             onClick={handleStart}
             disabled={disabled || submitting}
             className="group relative flex h-20 w-20 items-center justify-center rounded-full bg-[#4E9488] hover:bg-[#3D7A70] text-white shadow-md transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50"
-            title="Click to start recording"
+            title="Click to start recording (Shortcut: R)"
           >
             <span className="absolute inset-0 rounded-full bg-[#4E9488]/20 group-hover:scale-110 transition-transform duration-200" />
             <Mic className="h-8 w-8 text-white relative z-10" />
@@ -250,7 +323,7 @@ export function AudioRecorder({
             Click to Start Recording
           </p>
           <p className="text-xs text-[#5B6780] mt-1">
-            Max duration: <span className="font-mono font-medium text-[#171B2A]">{maxDurationSec}s</span>
+            Max duration: <span className="font-mono font-medium text-[#171B2A]">{maxDurationSec}s</span> · Press <kbd className="rounded border border-[#dddddd] bg-[#f7f9fa] px-1.5 py-0.5 font-mono text-[11px] text-[#171B2A]">R</kbd> to record
           </p>
         </div>
       )}
@@ -265,7 +338,7 @@ export function AudioRecorder({
               type="button"
               onClick={handleStop}
               className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#171B2A] hover:bg-black text-white shadow-lg transition-all active:scale-95"
-              title="Click to stop recording"
+              title="Click to stop recording (Shortcut: R)"
             >
               <Square className="h-7 w-7 fill-white" />
             </button>
@@ -279,17 +352,26 @@ export function AudioRecorder({
             </span>
           </div>
 
-          {/* Animated audio level bars — Turquoise & Navy */}
-          <div className="mt-3.5 flex items-center gap-1.5 h-6">
-            <span className="w-1.5 bg-[#4E9488] rounded-full h-3 animate-bounce" />
-            <span className="w-1.5 bg-[#171B2A] rounded-full h-5 animate-bounce [animation-delay:0.15s]" />
-            <span className="w-1.5 bg-[#4E9488] rounded-full h-2 animate-bounce [animation-delay:0.3s]" />
-            <span className="w-1.5 bg-[#171B2A] rounded-full h-6 animate-bounce [animation-delay:0.45s]" />
-            <span className="w-1.5 bg-[#4E9488] rounded-full h-4 animate-bounce [animation-delay:0.2s]" />
+          {/* Live Web Audio AnalyserNode level bars — Turquoise & Navy */}
+          <div
+            aria-label="Live microphone input level"
+            className="mt-3.5 flex items-end justify-center gap-1.5 h-7"
+          >
+            {audioLevels.map((lvl, idx) => (
+              <span
+                key={idx}
+                style={{ height: `${lvl}%` }}
+                className={`w-1.5 rounded-full transition-all duration-75 ${
+                  idx % 2 === 0 ? 'bg-[#4E9488]' : 'bg-[#171B2A]'
+                }`}
+              />
+            ))}
           </div>
 
           <p className="mt-3 text-xs text-[#5B6780]">
-            Speaking now... Click black square to finish.
+            {Math.max(...audioLevels) <= 22 && elapsedSec >= 2
+              ? 'No voice detected yet — check if your mic is muted.'
+              : 'Speaking now... Click square or press R to finish.'}
           </p>
         </div>
       )}

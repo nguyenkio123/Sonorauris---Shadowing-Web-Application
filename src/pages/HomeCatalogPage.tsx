@@ -10,7 +10,7 @@ import {
   Clock,
   Search,
   Heart,
-  Star,
+  Trophy,
   SlidersHorizontal,
   Compass,
   Briefcase,
@@ -19,7 +19,7 @@ import {
   FlaskConical,
   X,
 } from 'lucide-react'
-import { getClips, getMe } from '../api'
+import { getClips, getMe, getUserAttempts } from '../api'
 import type { Clip, Difficulty, Topic } from '../types/clip'
 import type { UserProfile } from '../types/user'
 
@@ -39,6 +39,7 @@ const DIFFICULTIES: ('All' | Difficulty)[] = ['All', 'Beginner', 'Intermediate',
 export function HomeCatalogPage() {
   const [clips, setClips] = useState<Clip[]>([])
   const [user, setUser] = useState<UserProfile | null>(null)
+  const [bestScores, setBestScores] = useState<Record<string, number>>({})
   const [selectedTopic, setSelectedTopic] = useState<string>('All')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All')
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false)
@@ -57,9 +58,22 @@ export function HomeCatalogPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [clipsData, userData] = await Promise.all([getClips(), getMe()])
+        const [clipsData, userData, attemptsData] = await Promise.all([
+          getClips(),
+          getMe(),
+          getUserAttempts().catch(() => []),
+        ])
         setClips(clipsData)
         setUser(userData)
+        const scoresMap: Record<string, number> = {}
+        for (const att of attemptsData) {
+          const score = att.result?.battleScore ?? -1
+          const prev = scoresMap[att.clipId] ?? -1
+          if (score > prev) {
+            scoresMap[att.clipId] = score
+          }
+        }
+        setBestScores(scoresMap)
       } catch (err) {
         console.error('Failed to load catalog data:', err)
       } finally {
@@ -210,6 +224,7 @@ export function HomeCatalogPage() {
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
                 className="p-1 text-[#5B6780] hover:text-[#171B2A] hover:bg-[#f7f7f7] rounded-full transition-colors cursor-pointer"
                 title="Clear search"
               >
@@ -221,10 +236,14 @@ export function HomeCatalogPage() {
             <button
               type="button"
               className="search-orb"
+              aria-label="Search practice clips"
               title="Search clips"
               onClick={() => {
-                const input = document.getElementById('search-input')
-                input?.focus()
+                if (searchQuery.trim()) {
+                  document.getElementById('clips-grid')?.scrollIntoView({ behavior: 'smooth' })
+                } else {
+                  document.getElementById('search-input')?.focus()
+                }
               }}
             >
               <Search className="h-5 w-5 text-white" />
@@ -233,10 +252,10 @@ export function HomeCatalogPage() {
         </div>
       </section>
 
-      {/* CATEGORY STRIP — Horizontal Product Tabs with clean Airbnb icons */}
+      {/* CATEGORY STRIP — Horizontal Product Tabs & Mobile-Accessible Difficulty Filter */}
       <section className="sticky top-[80px] z-30 bg-white border-b border-[#ebebeb] shadow-xs">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 py-3 overflow-x-auto scrollbar-none">
-          <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto py-1">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-3">
+          <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto py-1 scrollbar-none">
             {TOPICS.map((t) => {
               const Icon = t.icon
               const isSelected = selectedTopic === t.name
@@ -258,16 +277,16 @@ export function HomeCatalogPage() {
             })}
           </div>
 
-          {/* Quick Filter Pill for Difficulty */}
-          <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-[#ebebeb] shrink-0">
-            <SlidersHorizontal className="h-4 w-4 text-[#5B6780]" />
+          {/* Quick Filter Pill for Difficulty & Saved (Visible on Mobile & Desktop) */}
+          <div className="flex items-center gap-2 pt-2 sm:pt-0 sm:pl-4 border-t sm:border-t-0 sm:border-l border-[#ebebeb] overflow-x-auto scrollbar-none shrink-0">
+            <SlidersHorizontal className="h-4 w-4 text-[#5B6780] shrink-0" />
             <div className="flex items-center gap-1.5">
               {DIFFICULTIES.map((d) => (
                 <button
                   key={d}
                   type="button"
                   onClick={() => setSelectedDifficulty(d)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer ${
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
                     selectedDifficulty === d
                       ? 'bg-[#171B2A] text-white shadow-xs'
                       : 'bg-[#f7f9fa] text-[#5B6780] hover:bg-[#edf0f2] hover:text-[#171B2A]'
@@ -279,12 +298,12 @@ export function HomeCatalogPage() {
               <button
                 type="button"
                 onClick={() => setShowFavoritesOnly((prev) => !prev)}
-                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
                   showFavoritesOnly
                     ? 'bg-[#4E9488] text-white shadow-xs'
                     : 'bg-[#f7f9fa] text-[#5B6780] hover:bg-[#edf0f2] hover:text-[#171B2A]'
                 }`}
-                title="Show only saved favorite clips"
+                title="Show only saved clips"
               >
                 <Heart className={`h-3 w-3 ${showFavoritesOnly ? 'fill-white text-white' : ''}`} />
                 <span>Saved</span>
@@ -294,8 +313,8 @@ export function HomeCatalogPage() {
         </div>
       </section>
 
-      {/* PROPERTY CARDS GRID (DESIGN.md property-card) */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
+      {/* CLIPS CATALOG GRID */}
+      <div id="clips-grid" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-2">
             <h2 className="text-[20px] font-semibold text-[#171B2A]">
@@ -384,16 +403,18 @@ export function HomeCatalogPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredClips.map((clip, index) => {
+            {filteredClips.map((clip) => {
               const isFav = !!favorites[clip.id]
-              const isGuestFavorite = index === 0 || clip.difficulty === 'Beginner'
+              const wordCount = clip.referenceText.trim().split(/\s+/).filter(Boolean).length
+              const wpm = Math.round((wordCount / Math.max(1, clip.durationSec)) * 60)
+              const bestScore = bestScores[clip.id]
 
               return (
                 <div
                   key={clip.id}
                   className="airbnb-card group flex flex-col justify-between overflow-hidden border border-[#ebebeb] bg-white hover:border-[#171B2A]/30"
                 >
-                  {/* Photo-First aspect-ratio thumbnail with rounded-md corner clipping */}
+                  {/* Thumbnail with Authentic Cadence / Best Score Badge */}
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#f0f3f5]">
                     <img
                       src={clip.thumbnailUrl}
@@ -401,21 +422,27 @@ export function HomeCatalogPage() {
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
 
-                    {/* Guest Favorite Badge Top-Left */}
-                    {isGuestFavorite && (
-                      <div className="absolute top-3 left-3">
-                        <span className="guest-favorite-badge">
-                          <span>Guest favorite</span>
+                    {/* Top-Left Badge: Real Best Score if practiced, otherwise Speech Rate (WPM) */}
+                    <div className="absolute top-3 left-3">
+                      {bestScore !== undefined ? (
+                        <span className="guest-favorite-badge text-[#4E9488]">
+                          <Trophy className="h-3 w-3 text-[#4E9488]" />
+                          <span>Best: {bestScore}%</span>
                         </span>
-                      </div>
-                    )}
+                      ) : (
+                        <span className="guest-favorite-badge">
+                          <span>{wpm} WPM</span>
+                        </span>
+                      )}
+                    </div>
 
-                    {/* Heart Save Button Top-Right (icon-button-circle) */}
+                    {/* Heart Save Button Top-Right (40x40px touch target) */}
                     <button
                       type="button"
                       onClick={(e) => toggleFavorite(clip.id, e)}
-                      className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-transform"
-                      title={isFav ? 'Remove from wishlist' : 'Save clip to wishlist'}
+                      aria-label={isFav ? 'Remove from saved clips' : 'Save clip'}
+                      className="absolute top-3 right-3 h-10 w-10 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-transform"
+                      title={isFav ? 'Remove from saved clips' : 'Save clip for practice'}
                     >
                       <Heart
                         className={`h-4 w-4 transition-colors ${
@@ -435,19 +462,17 @@ export function HomeCatalogPage() {
                     </div>
                   </div>
 
-                  {/* Meta Details Block (DESIGN.md 4-5 lines of meta beneath photo) */}
+                  {/* Meta Details Block */}
                   <div className="p-4 flex-1 flex flex-col justify-between">
                     <div>
-                      {/* Line 1: Title and Star Rating */}
+                      {/* Line 1: Title and Authentic Word Count / Tempo */}
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h3 className="text-[15px] font-semibold text-[#171B2A] line-clamp-1 group-hover:text-[#4E9488] transition-colors">
                           {clip.title}
                         </h3>
-                        {/* Deliberate brand choice: star & rating in ink #171B2A */}
-                        <div className="flex items-center gap-1 shrink-0 text-xs font-semibold text-[#171B2A]">
-                          <Star className="h-3.5 w-3.5 fill-[#171B2A] text-[#171B2A]" />
-                          <span>4.88</span>
-                        </div>
+                        <span className="shrink-0 font-mono text-[11px] font-semibold text-[#4E9488] bg-[#f7f9fa] border border-[#e2e6ea] rounded-md px-1.5 py-0.5">
+                          {wordCount}w · {wpm} WPM
+                        </span>
                       </div>
 
                       {/* Line 2: Speaker / Source Channel */}

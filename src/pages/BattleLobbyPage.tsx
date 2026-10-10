@@ -332,10 +332,10 @@ export function BattleLobbyPage() {
                     type="button"
                     onClick={handleAddBot}
                     className="btn-secondary text-xs font-semibold h-[40px] px-3.5 rounded-lg flex items-center gap-1.5 border-[#4E9488]/40 hover:border-[#4E9488]"
-                    title="Ghép Bot AI sparring ngay lập tức"
+                    title="Add an AI sparring bot immediately"
                   >
                     <Bot className="h-4 w-4 text-[#4E9488]" />
-                    <span>Thêm Bot AI</span>
+                    <span>Add AI Bot</span>
                   </button>
                 </div>
               </div>

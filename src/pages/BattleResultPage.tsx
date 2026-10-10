@@ -81,7 +81,7 @@ export function BattleResultPage() {
           title: 'CHAMPION • 1ST PLACE!',
           subtitle: `You conquered the ${participants.length}-player arena with a stunning Battle Score of ${playerScore}!`,
           badgeClass: 'bg-amber-50 border-amber-300 text-amber-800',
-          icon: <Trophy className="h-10 w-10 text-amber-500 animate-bounce" />,
+          icon: <Trophy className="h-10 w-10 text-amber-500" />,
         }
       }
       if (myRank === 2) {
@@ -114,7 +114,7 @@ export function BattleResultPage() {
           title: 'VICTORY!',
           subtitle: 'You delivered superior pronunciation accuracy & natural flow!',
           badgeClass: 'bg-emerald-50 border-emerald-300 text-emerald-800',
-          icon: <Trophy className="h-10 w-10 text-amber-500 animate-bounce" />,
+          icon: <Trophy className="h-10 w-10 text-amber-500" />,
         }
       case 'LOSE':
         return {

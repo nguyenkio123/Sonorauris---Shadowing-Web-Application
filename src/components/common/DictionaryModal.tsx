@@ -127,7 +127,7 @@ export function DictionaryModal({ word, onClose }: DictionaryModalProps) {
 
             {/* Example sentence if available */}
             {entry.example && (
-              <div className="mt-4 p-3 rounded-xl bg-[#f7f9fa] border-l-3 border-[#4E9488] text-xs text-[#283044] italic leading-relaxed">
+              <div className="mt-4 p-3 rounded-xl bg-[#f7f9fa] border border-[#e2e6ea] text-xs text-[#283044] italic leading-relaxed">
                 "{entry.example}"
               </div>
             )}

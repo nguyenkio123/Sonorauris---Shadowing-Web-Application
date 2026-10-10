@@ -23,6 +23,7 @@ export function BattleRoomPage() {
   const { room, loading: roomLoading, error: roomError } = useRoom(roomCode)
   const [clip, setClip] = useState<Clip | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [countdownNum, setCountdownNum] = useState<number>(3)
 
   // Load clip metadata
@@ -62,10 +63,12 @@ export function BattleRoomPage() {
   const handleSubmitAudio = async (audioBlob: Blob) => {
     if (!room || submitting) return
     setSubmitting(true)
+    setSubmitError(null)
     try {
       await submitBattleAttempt(room.code, audioBlob)
     } catch (err) {
       console.error('Failed to submit battle recording', err)
+      setSubmitError('Could not submit your battle recording. Check your connection and click Submit again.')
       setSubmitting(false)
     }
   }
@@ -81,10 +84,10 @@ export function BattleRoomPage() {
 
   if (roomError || !room) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#222222] p-6 text-center font-sans">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#171B2A] p-6 text-center font-sans">
         <div className="rounded-[14px] border border-[#dddddd] bg-[#f7f7f7] p-8 max-w-md airbnb-shadow">
           <h2 className="text-xl font-bold text-[#c13515] mb-2">{roomError || 'Room not found'}</h2>
-          <p className="text-xs text-[#6a6a6a] mb-6">Could not establish synchronized battle state.</p>
+          <p className="text-xs text-[#5B6780] mb-6">Could not establish synchronized battle state.</p>
           <Link
             to="/battle/lobby"
             className="btn-primary text-xs font-semibold px-4 py-2.5 rounded-lg"
@@ -98,20 +101,28 @@ export function BattleRoomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#222222] font-sans py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white text-[#171B2A] font-sans py-6 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         {/* Top Arena Navigation Bar */}
         <div className="flex items-center justify-between border-b border-[#ebebeb] pb-4 mb-6">
           <div className="flex items-center gap-3">
             <Link
               to="/battle/lobby"
-              className="text-xs font-medium text-[#6a6a6a] hover:text-[#222222] hover:underline transition-colors flex items-center gap-1.5"
+              onClick={(e) => {
+                if (
+                  (room.status === 'COUNTDOWN' || room.status === 'RECORDING') &&
+                  !window.confirm('Leave this active battle match?')
+                ) {
+                  e.preventDefault()
+                }
+              }}
+              className="text-xs font-medium text-[#5B6780] hover:text-[#171B2A] hover:underline transition-colors flex items-center gap-1.5"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Leave Arena</span>
             </Link>
             <span className="text-[#dddddd]">•</span>
-            <span className="font-mono text-xs font-bold text-[#222222] bg-[#f7f7f7] px-3 py-1 rounded-full border border-[#dddddd]">
+            <span className="font-mono text-xs font-bold text-[#171B2A] bg-[#f7f7f7] px-3 py-1 rounded-full border border-[#dddddd]">
               ROOM: {room.code}
             </span>
           </div>
@@ -126,7 +137,10 @@ export function BattleRoomPage() {
 
         {/* 1. COUNTDOWN STATE OVERLAY (3-2-1) */}
         {room.status === 'COUNTDOWN' && (
-          <div className="my-16 flex flex-col items-center justify-center text-center">
+          <div
+            aria-live="polite"
+            className="my-16 flex flex-col items-center justify-center text-center"
+          >
             {/* Countdown Orb */}
             <div className="relative mb-6 flex h-40 w-40 items-center justify-center rounded-full bg-[#4E9488] text-white shadow-xl shadow-[#4E9488]/25 animate-pulse">
               <span className="font-mono text-7xl font-bold tracking-tighter">
@@ -134,7 +148,7 @@ export function BattleRoomPage() {
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-[#171B2A] mb-1.5">Get Ready Contenders!</h2>
-            <p className="text-xs sm:text-sm text-[#6a6a6a] max-w-sm leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#5B6780] max-w-sm leading-relaxed">
               Listen carefully to the authentic clip as it begins playing, then record your shadowing reproduction.
             </p>
           </div>
@@ -172,7 +186,7 @@ export function BattleRoomPage() {
                             className="h-10 w-10 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover shrink-0"
                           />
                           <div className="min-w-0">
-                            <div className="text-xs font-bold text-[#222222] flex items-center gap-1.5 flex-wrap">
+                            <div className="text-xs font-bold text-[#171B2A] flex items-center gap-1.5 flex-wrap">
                               <span className="truncate">{p.displayName}</span>
                               {isMe && (
                                 <span className="text-[10px] bg-[#4E9488]/10 text-[#4E9488] px-1.5 py-0.5 rounded-full font-mono font-bold">
@@ -181,7 +195,7 @@ export function BattleRoomPage() {
                               )}
                               {p.isBot && <Bot className="h-3 w-3 text-amber-500" />}
                             </div>
-                            <span className="text-[11px] text-[#6a6a6a]">
+                            <span className="text-[11px] text-[#5B6780]">
                               {idx === 0 ? 'Host' : `Contender #${idx}`}
                             </span>
                           </div>
@@ -198,7 +212,7 @@ export function BattleRoomPage() {
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 px-2.5 py-1 font-bold">
-                              <Volume2 className="h-3 w-3 animate-bounce" /> Speaking...
+                              <Volume2 className="h-3 w-3 animate-pulse" /> Speaking...
                             </span>
                           )}
                         </div>
@@ -228,15 +242,15 @@ export function BattleRoomPage() {
                   {/* Target Transcript Card */}
                   <div className="rounded-[14px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
                     <div className="flex items-center justify-between mb-2.5 border-b border-[#ebebeb] pb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-[#222222]">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#171B2A]">
                         Battle Transcript
                       </span>
-                      <span className="text-[11px] font-mono text-[#222222] bg-[#f7f7f7] border border-[#dddddd] px-2.5 py-0.5 rounded-full font-semibold">
+                      <span className="text-[11px] font-mono text-[#171B2A] bg-[#f7f7f7] border border-[#dddddd] px-2.5 py-0.5 rounded-full font-semibold">
                         Standard Benchmark
                       </span>
                     </div>
 
-                    <blockquote className="text-base sm:text-lg font-normal text-[#222222] leading-relaxed bg-[#f7f7f7] p-4 rounded-xl border border-[#ebebeb]">
+                    <blockquote className="text-base sm:text-lg font-normal text-[#171B2A] leading-relaxed bg-[#f7f7f7] p-4 rounded-xl border border-[#ebebeb]">
                       "{clip.referenceText}"
                     </blockquote>
                   </div>
@@ -244,15 +258,23 @@ export function BattleRoomPage() {
 
                 {/* Right: Audio Recorder & Submission Pod */}
                 <div className="lg:col-span-5 flex flex-col gap-4">
+                  {submitError && (
+                    <div
+                      role="alert"
+                      className="rounded-xl border border-[#c13515]/30 bg-[#fff5f5] p-3.5 text-xs text-[#c13515]"
+                    >
+                      {submitError}
+                    </div>
+                  )}
                   {room.player.hasSubmitted ? (
                     <div className="rounded-[14px] border border-[#10b981]/40 bg-emerald-50/40 p-8 text-center flex flex-col items-center justify-center airbnb-shadow">
                       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 mb-3 animate-pulse">
                         <CheckCircle2 className="h-7 w-7" />
                       </div>
-                      <h3 className="text-base font-bold text-[#222222] mb-1">
+                      <h3 className="text-base font-bold text-[#171B2A] mb-1">
                         Recording Submitted!
                       </h3>
-                      <p className="text-xs text-[#6a6a6a] max-w-xs">
+                      <p className="text-xs text-[#5B6780] max-w-xs">
                         {room.opponent?.hasSubmitted
                           ? 'Both contenders submitted. Evaluating pronunciation...'
                           : 'Waiting for opponent to finish their recording...'}

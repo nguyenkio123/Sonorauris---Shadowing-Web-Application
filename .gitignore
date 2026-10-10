@@ -60,4 +60,5 @@ __pycache__/
 
 # Local dev scripts, test runners, and internal docs (untracked on remote)
 .local/
+.impeccable/
 
