@@ -143,6 +143,26 @@ assert(calculateBattleScore(85, 90, 80, 75) === 83, 'Weighted formula rounds cor
 const miscues = generateMockMiscues('The quick brown fox jumps over the lazy dog');
 assert(Array.isArray(miscues) && miscues.length === 9, 'Miscues generation maps all words');
 
+// Silence / Zero completeness check
+const silentMiscues = generateMockMiscues('Speak clearly with rhythm', 0, 0);
+assert(silentMiscues.every(w => w.type === 'omission'), 'Silent recording marks all reference words as omission');
+
+// High accuracy & completeness clean pass check
+const cleanMiscues = generateMockMiscues('Speak clearly with rhythm', 95, 96);
+assert(cleanMiscues.every(w => w.type === undefined), 'High accuracy (>=92) & completeness (>=92) produces 0 false miscues');
+
+// Spoken transcript lexical alignment check
+const alignedMiscues = generateMockMiscues(
+  'Practice English shadowing today',
+  85,
+  80,
+  'Practice Englesh today'
+);
+assert(alignedMiscues[0].type === undefined, 'Exact spoken match ("Practice") is marked clean');
+assert(alignedMiscues[1].type === 'mispronunciation', 'Near spoken match ("Englesh" vs "English") is marked mispronunciation');
+assert(alignedMiscues[2].type === 'omission', 'Skipped spoken word ("shadowing") is marked omission');
+assert(alignedMiscues[3].type === undefined, 'Exact spoken match ("today") is marked clean');
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SUITE 3: IMMUTABLE REWARD LEDGER & ANTI-CHEAT (FR-PROG-01, FR-PROG-02)
 // ─────────────────────────────────────────────────────────────────────────────

@@ -26,11 +26,22 @@ export function AudioRecorder({
   const streamRef = useRef<MediaStream | null>(null)
   const timerRef = useRef<number | null>(null)
   const recordedBlobRef = useRef<Blob | null>(null)
+  const recognitionRef = useRef<{ stop: () => void } | null>(null)
+  const recognizedTextRef = useRef<string>('')
 
   const handleStop = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
+    }
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch {
+        // ignore
+      }
+      recognitionRef.current = null
     }
 
     if (
@@ -45,6 +56,13 @@ export function AudioRecorder({
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch {
+          // ignore
+        }
+      }
       if (audioUrl) URL.revokeObjectURL(audioUrl)
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop())
@@ -72,6 +90,41 @@ export function AudioRecorder({
         },
       })
       streamRef.current = stream
+      recognizedTextRef.current = ''
+
+      // Start parallel Web Speech Recognition (en-US) if supported by browser
+      try {
+        const SpeechRec =
+          (window as unknown as { SpeechRecognition?: new () => unknown }).SpeechRecognition ||
+          (window as unknown as { webkitSpeechRecognition?: new () => unknown }).webkitSpeechRecognition
+        if (SpeechRec) {
+          const recognition = new SpeechRec() as {
+            lang: string
+            continuous: boolean
+            interimResults: boolean
+            onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null
+            start: () => void
+            stop: () => void
+          }
+          recognition.lang = 'en-US'
+          recognition.continuous = true
+          recognition.interimResults = true
+          recognition.onresult = (event) => {
+            const parts: string[] = []
+            for (let i = 0; i < event.results.length; i++) {
+              const item = event.results[i]
+              if (item && item[0]?.transcript) {
+                parts.push(item[0].transcript)
+              }
+            }
+            recognizedTextRef.current = parts.join(' ').trim()
+          }
+          recognition.start()
+          recognitionRef.current = recognition
+        }
+      } catch {
+        // Non-blocking if browser speech recognition is unavailable
+      }
 
       const recorder = new MediaRecorder(stream)
       mediaRecorderRef.current = recorder
@@ -86,7 +139,10 @@ export function AudioRecorder({
       recorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, {
           type: recorder.mimeType || 'audio/webm',
-        })
+        }) as Blob & { recognizedText?: string }
+        if (recognizedTextRef.current) {
+          audioBlob.recognizedText = recognizedTextRef.current
+        }
         recordedBlobRef.current = audioBlob
         if (audioUrl) URL.revokeObjectURL(audioUrl)
         const url = URL.createObjectURL(audioBlob)
@@ -119,6 +175,7 @@ export function AudioRecorder({
       setAudioUrl(null)
     }
     recordedBlobRef.current = null
+    recognizedTextRef.current = ''
     setElapsedSec(0)
     setState('idle')
   }

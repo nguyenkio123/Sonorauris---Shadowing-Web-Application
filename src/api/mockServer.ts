@@ -13,11 +13,81 @@ function randomBetween(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
+function toPhoneticHint(word: string): string {
+  const lower = word.toLowerCase().replace(/[^a-z]/g, '')
+  if (!lower) return '/.../'
+  const phoneticMap: Record<string, string> = {
+    through: '/θruː/',
+    thought: '/θɔːt/',
+    schedule: '/ˈskedʒ.uːl/',
+    comfortable: '/ˈkʌm.fə.tə.bəl/',
+    squirrel: '/ˈskwɪr.əl/',
+    world: '/wɜːrld/',
+    literally: '/ˈlɪt.ər.əl.i/',
+    focus: '/ˈfoʊ.kəs/',
+    rhythm: '/ˈrɪð.əm/',
+    shadowing: '/ˈʃæd.oʊ.ɪŋ/',
+    pronunciation: '/prəˌnʌn.siˈeɪ.ʃən/',
+    opportunity: '/ˌɑː.pɚˈtuː.nə.t̬i/',
+    technology: '/tekˈnɑː.lə.dʒi/',
+    communication: '/kəˌmjuː.nəˈkeɪ.ʃən/',
+    environment: '/ɪnˈvaɪ.rən.mənt/',
+  }
+  if (phoneticMap[lower]) return phoneticMap[lower]
+
+  const ipa = lower
+    .replace(/tion$/g, 'ʃən')
+    .replace(/sion$/g, 'ʒən')
+    .replace(/th/g, 'θ')
+    .replace(/sh/g, 'ʃ')
+    .replace(/ch/g, 'tʃ')
+    .replace(/ph/g, 'f')
+    .replace(/igh/g, 'aɪ')
+    .replace(/oo/g, 'uː')
+    .replace(/ee|ea/g, 'iː')
+    .replace(/ou|ow/g, 'aʊ')
+    .replace(/er$/g, 'ər')
+    .replace(/ing$/g, 'ɪŋ')
+
+  return `/ˈ${ipa}/`
+}
+
+function editDistance(a: string, b: string): number {
+  const m = a.length
+  const n = b.length
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0))
+  for (let i = 0; i <= m; i++) dp[i][0] = i
+  for (let j = 0; j <= n; j++) dp[0][j] = j
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] =
+        a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+    }
+  }
+  return dp[m][n]
+}
+
+function getWordDifficultyScore(word: string): number {
+  const clean = word.toLowerCase().replace(/[^a-z]/g, '')
+  let score = clean.length
+  if (/(th|sh|ch|str|spl|thr|ough|tion|sion|rld|rl)/.test(clean)) score += 4
+  if (clean.length >= 7) score += 3
+  return score
+}
+
 /**
- * Generates realistic mock miscues from the reference text.
- * Selects 1-2 words to be mispronunciations, omissions, or insertions.
+ * Generates word-level miscues from the reference text using either:
+ * 1) Real recognized transcript alignment (when Web Speech transcript is available), or
+ * 2) Phonetic complexity & score-proportionate analysis (instead of hardcoded indices).
  */
-export function generateMockMiscues(referenceText: string): MiscueWord[] {
+export function generateMockMiscues(
+  referenceText: string,
+  accuracy: number = 84,
+  completeness: number = 85,
+  recognizedText?: string
+): MiscueWord[] {
   const cleanTokens = referenceText
     .replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, '')
     .split(/\s+/)
@@ -25,24 +95,85 @@ export function generateMockMiscues(referenceText: string): MiscueWord[] {
 
   if (cleanTokens.length === 0) return []
 
+  // 1. Silent / near-zero completeness: all words omitted
+  if (completeness <= 15) {
+    return cleanTokens.map((w) => ({ word: w, type: 'omission' }))
+  }
+
+  // 2. If live speech recognition transcript is available, align spoken words against reference
+  if (recognizedText && recognizedText.trim().length > 0) {
+    const spokenTokens = recognizedText
+      .toLowerCase()
+      .replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, '')
+      .split(/\s+/)
+      .filter(Boolean)
+
+    const usedSpoken = new Set<number>()
+    return cleanTokens.map((refWord) => {
+      const refLower = refWord.toLowerCase()
+      // Exact match in nearby window
+      const exactIdx = spokenTokens.findIndex(
+        (sw, idx) => !usedSpoken.has(idx) && sw === refLower
+      )
+      if (exactIdx !== -1) {
+        usedSpoken.add(exactIdx)
+        return { word: refWord }
+      }
+
+      // Fuzzy match (mispronunciation)
+      const fuzzyIdx = spokenTokens.findIndex((sw, idx) => {
+        if (usedSpoken.has(idx)) return false
+        const dist = editDistance(refLower, sw)
+        const maxDist = refLower.length >= 6 ? 2 : 1
+        return dist <= maxDist
+      })
+      if (fuzzyIdx !== -1) {
+        usedSpoken.add(fuzzyIdx)
+        return {
+          word: refWord,
+          type: 'mispronunciation',
+          phoneticHint: toPhoneticHint(refWord),
+        }
+      }
+
+      return {
+        word: refWord,
+        type: 'omission',
+      }
+    })
+  }
+
   const words: MiscueWord[] = cleanTokens.map((w) => ({ word: w }))
 
-  // Pick 1-2 indices for miscues
-  const targetIdx1 = Math.min(2, words.length - 1)
-  const targetIdx2 = words.length > 5 ? Math.min(5, words.length - 1) : -1
+  // 3. High accuracy & completeness -> clean pass with no miscues
+  if (accuracy >= 92 && completeness >= 92) {
+    return words
+  }
 
-  if (targetIdx1 >= 0 && words[targetIdx1]) {
-    words[targetIdx1] = {
-      word: words[targetIdx1].word,
+  // 4. Rank words by phonetic difficulty rather than fixed index 2 and 5
+  const rankedIndices = cleanTokens
+    .map((w, idx) => ({ idx, diff: getWordDifficultyScore(w) }))
+    .sort((a, b) => b.diff - a.diff || a.idx - b.idx)
+
+  const seedOffset = (accuracy + completeness) % Math.max(1, Math.min(3, rankedIndices.length))
+  const mispronounceTarget = rankedIndices[seedOffset]?.idx ?? 0
+
+  if (accuracy < 92 && words[mispronounceTarget]) {
+    words[mispronounceTarget] = {
+      word: words[mispronounceTarget].word,
       type: 'mispronunciation',
-      phoneticHint: `/ˈ${words[targetIdx1].word.toLowerCase()}/`,
+      phoneticHint: toPhoneticHint(words[mispronounceTarget].word),
     }
   }
 
-  if (targetIdx2 >= 0 && words[targetIdx2]) {
-    words[targetIdx2] = {
-      word: words[targetIdx2].word,
-      type: 'omission',
+  if (completeness < 88 && rankedIndices.length > 1) {
+    const omitCandidate =
+      rankedIndices.find((item) => item.idx !== mispronounceTarget)?.idx ?? -1
+    if (omitCandidate >= 0 && words[omitCandidate]) {
+      words[omitCandidate] = {
+        word: words[omitCandidate].word,
+        type: 'omission',
+      }
     }
   }
 
@@ -62,14 +193,21 @@ export function generateAssessmentResult(
   let prosody = randomBetween(SCORE_RANGE.min, SCORE_RANGE.max)
 
   if (targetScore !== undefined) {
-    accuracy = Math.min(99, Math.max(50, targetScore))
-    fluency = Math.min(98, Math.max(50, targetScore + randomBetween(-2, 2)))
-    completeness = Math.min(98, Math.max(50, targetScore + randomBetween(-3, 1)))
-    prosody = Math.min(98, Math.max(50, targetScore + randomBetween(-2, 2)))
+    if (targetScore <= 10) {
+      accuracy = Math.max(0, targetScore)
+      fluency = Math.max(0, targetScore)
+      completeness = Math.max(0, targetScore)
+      prosody = Math.max(0, targetScore)
+    } else {
+      accuracy = Math.min(99, Math.max(30, targetScore))
+      fluency = Math.min(98, Math.max(30, targetScore + randomBetween(-2, 2)))
+      completeness = Math.min(98, Math.max(30, targetScore + randomBetween(-3, 1)))
+      prosody = Math.min(98, Math.max(30, targetScore + randomBetween(-2, 2)))
+    }
   }
 
   const battleScore = calculateBattleScore(accuracy, fluency, completeness, prosody)
-  const words = generateMockMiscues(referenceText)
+  const words = generateMockMiscues(referenceText, accuracy, completeness)
 
   return {
     accuracy,
