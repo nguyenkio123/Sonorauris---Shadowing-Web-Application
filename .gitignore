@@ -58,3 +58,6 @@ vite.config.ts.timestamp-*
 __pycache__/
 *.pyc
 
+# Local dev scripts, test runners, and internal docs (untracked on remote)
+.local/
+
