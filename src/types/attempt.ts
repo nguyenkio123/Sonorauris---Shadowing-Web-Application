@@ -1,9 +1,18 @@
 export type MiscueType = 'omission' | 'insertion' | 'mispronunciation'
+export type SpeechAssessmentEngine =
+  | 'azure'
+  | 'azure-speech'
+  | 'faster-whisper'
+  | 'browser-dsp'
+  | 'webaudio-dsp'
 
 export interface MiscueWord {
   word: string
   type?: MiscueType
   phoneticHint?: string
+  confidence?: number
+  startSec?: number
+  endSec?: number
 }
 
 export interface AssessmentResult {
@@ -13,6 +22,9 @@ export interface AssessmentResult {
   prosody: number
   battleScore: number
   words: MiscueWord[]
+  engine?: SpeechAssessmentEngine
+  recognizedText?: string
+  spokenWpm?: number
 }
 
 export interface Attempt {

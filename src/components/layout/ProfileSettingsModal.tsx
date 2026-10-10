@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import {
   Check,
   Coins,
+  Cpu,
   Crown,
   Edit2,
   Flame,
@@ -9,6 +10,7 @@ import {
   LogOut,
   Mail,
   Mic,
+  RefreshCw,
   RotateCcw,
   Sparkles,
   Trophy,
@@ -20,6 +22,13 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getMe, getUserAttempts, resetDemo, setDisplayName } from '../../api'
+import {
+  checkFasterWhisperHealth,
+  getSpeechEngineMode,
+  setSpeechEngineMode,
+  type SpeechEngineMode,
+  type WhisperHealthStatus,
+} from '../../api/azureSpeech'
 import type { UserProfile } from '../../types/user'
 import type { Attempt } from '../../types/attempt'
 import { AvatarWithFrame } from '../common/AvatarWithFrame'
@@ -53,10 +62,25 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   const [isTestingMic, setIsTestingMic] = useState(false)
   const [micVolume, setMicVolume] = useState(0)
   const [micStatus, setMicStatus] = useState<'IDLE' | 'LISTENING' | 'SUCCESS' | 'ERROR'>('IDLE')
+  const [engineMode, setEngineModeState] = useState<SpeechEngineMode>(() => getSpeechEngineMode())
+  const [whisperHealth, setWhisperHealth] = useState<WhisperHealthStatus | null>(null)
+  const [pingingWhisper, setPingingWhisper] = useState(false)
   const audioContextRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const animFrameRef = useRef<number | null>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
+
+  const runWhisperPing = async () => {
+    setPingingWhisper(true)
+    const status = await checkFasterWhisperHealth()
+    setWhisperHealth(status)
+    setPingingWhisper(false)
+  }
+
+  const handleEngineChange = (mode: SpeechEngineMode) => {
+    setSpeechEngineMode(mode)
+    setEngineModeState(mode)
+  }
 
   const stopMicTest = () => {
     if (animFrameRef.current) {
@@ -89,6 +113,8 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       void loadProfile()
+      void runWhisperPing()
+      setEngineModeState(getSpeechEngineMode())
       setIsEditingName(false)
       setFeedbackMsg(null)
       setMicStatus('IDLE')
@@ -536,6 +562,72 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
         {/* TAB 3: AUDIO & DEVICE SETTINGS */}
         {activeTab === 'AUDIO' && (
           <div className="flex flex-col gap-5">
+            {/* Speech AI Engine & Tier-2 Faster-Whisper Server */}
+            <div className="p-4 rounded-2xl border border-[#ebebeb] bg-[#fcfcfc]">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-[#4E9488]" />
+                  <h4 className="text-xs font-bold text-[#171B2A] uppercase tracking-wider">
+                    Speech AI Assessment Engine
+                  </h4>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
+                      whisperHealth?.online
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
+                    {whisperHealth?.online
+                      ? `Faster-Whisper Online · ${whisperHealth.latencyMs}ms`
+                      : 'Faster-Whisper :8000 Offline'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void runWhisperPing()}
+                    disabled={pingingWhisper}
+                    title="Ping http://localhost:8000/health"
+                    aria-label="Ping local faster-whisper server"
+                    className="p-1 text-[#5B6780] hover:text-[#171B2A] transition-colors cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${pingingWhisper ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#5B6780] leading-relaxed mb-3">
+                Choose your preferred pronunciation assessment tier. Start the local Python microservice with{' '}
+                <code className="font-mono text-[11px] bg-[#f0f3f5] px-1.5 py-0.5 text-[#171B2A]">
+                  uvicorn server.whisper_server:app --port 8000
+                </code>{' '}
+                for zero-cost offline Needleman-Wunsch phonetic alignment.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {(
+                  [
+                    { id: 'auto', label: 'Auto Cascade (Tier 1 → 2 → 3)' },
+                    { id: 'faster-whisper', label: 'Force Tier 2: Faster-Whisper' },
+                    { id: 'azure', label: 'Force Tier 1: Azure Cloud' },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => handleEngineChange(opt.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                      engineMode === opt.id
+                        ? 'bg-[#171B2A] text-white'
+                        : 'bg-[#f0f3f5] text-[#5B6780] hover:text-[#171B2A]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Microphone Diagnostics */}
             <div className="p-4 rounded-2xl border border-[#ebebeb] bg-[#fcfcfc]">
               <div className="flex items-center justify-between mb-3">

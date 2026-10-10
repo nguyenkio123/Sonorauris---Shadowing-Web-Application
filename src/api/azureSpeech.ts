@@ -165,6 +165,9 @@ function evaluateAcousticSignal(
       prosody: 0,
       battleScore: 0,
       words: generateMockMiscues(referenceText, 0, 0),
+      engine: 'browser-dsp',
+      recognizedText: '',
+      spokenWpm: 0,
     }
   }
 
@@ -246,6 +249,8 @@ function evaluateAcousticSignal(
     ? miscueWords
     : generateMockMiscues(referenceText, accuracy, completeness)
   const battleScore = calculateBattleScore(accuracy, fluency, completeness, prosody)
+  const spokenCount = finalWords.filter((w) => w.type !== 'omission').length
+  const spokenWpm = Math.round((spokenCount / Math.max(0.5, voicedDurationSec)) * 60)
 
   return {
     accuracy,
@@ -254,10 +259,70 @@ function evaluateAcousticSignal(
     prosody,
     battleScore,
     words: finalWords,
+    engine: 'browser-dsp',
+    recognizedText: recognizedText?.trim() || undefined,
+    spokenWpm,
   }
 }
 
 const WHISPER_API_URL = import.meta.env.VITE_WHISPER_API_URL || 'http://localhost:8000'
+const ENGINE_MODE_STORAGE_KEY = 'shadowing_speech_engine_mode'
+
+export type SpeechEngineMode = 'auto' | 'faster-whisper' | 'azure'
+
+export interface WhisperHealthStatus {
+  online: boolean
+  model?: string
+  computeType?: string
+  latencyMs?: number
+}
+
+export function getSpeechEngineMode(): SpeechEngineMode {
+  if (typeof window === 'undefined') return 'auto'
+  const raw = window.localStorage.getItem(ENGINE_MODE_STORAGE_KEY)
+  if (raw === 'faster-whisper' || raw === 'azure' || raw === 'auto') {
+    return raw
+  }
+  return 'auto'
+}
+
+export function setSpeechEngineMode(mode: SpeechEngineMode): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(ENGINE_MODE_STORAGE_KEY, mode)
+}
+
+/**
+ * Pings the local Python faster-whisper server (/health) to verify readiness and measure latency.
+ */
+export async function checkFasterWhisperHealth(): Promise<WhisperHealthStatus> {
+  if (typeof window === 'undefined') return { online: false }
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), 2500)
+  const t0 = performance.now()
+  try {
+    const res = await fetch(`${WHISPER_API_URL.replace(/\/$/, '')}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    })
+    if (!res.ok) return { online: false }
+    const data = (await res.json()) as {
+      status?: string
+      model?: string
+      compute_type?: string
+    }
+    const latencyMs = Math.max(1, Math.round(performance.now() - t0))
+    return {
+      online: data.status === 'ok',
+      model: data.model || 'base.en',
+      computeType: data.compute_type || 'int8',
+      latencyMs,
+    }
+  } catch {
+    return { online: false }
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
 
 /**
  * Tier 2: Calls the local Python faster-whisper server (base.en, int8)
@@ -290,7 +355,7 @@ async function assessViaFasterWhisper(
       return null
     }
 
-    const data = (await response.json()) as AssessmentResult & { recognizedText?: string }
+    const data = (await response.json()) as AssessmentResult
     if (typeof data.battleScore === 'number' && Array.isArray(data.words)) {
       return {
         accuracy: data.accuracy,
@@ -299,6 +364,9 @@ async function assessViaFasterWhisper(
         prosody: data.prosody,
         battleScore: data.battleScore,
         words: data.words,
+        engine: 'faster-whisper',
+        recognizedText: data.recognizedText,
+        spokenWpm: data.spokenWpm,
       }
     }
     return null
@@ -325,12 +393,21 @@ export async function assessPronunciation(
     return generateAssessmentResult(referenceText, targetScore)
   }
 
+  const engineMode = getSpeechEngineMode()
   const recognizedText = (audioBlob as AnnotatedAudioBlob)?.recognizedText
   const decodedBuffer = await decodeAudioBlob(audioBlob)
   const payloadBlob = decodedBuffer ? encodeWav16kMono(decodedBuffer) : audioBlob
 
+  // If user explicitly forced Tier 2 (faster-whisper), try it first before Azure
+  if (engineMode === 'faster-whisper') {
+    const forcedWhisper = await assessViaFasterWhisper(payloadBlob, referenceText)
+    if (forcedWhisper) {
+      return forcedWhisper
+    }
+  }
+
   // ── TIER 1: Microsoft Azure Speech Pronunciation Assessment API ──
-  if (isAzureSpeechConfigured()) {
+  if (engineMode !== 'faster-whisper' && isAzureSpeechConfigured()) {
     try {
       const assessmentParams = {
         ReferenceText: referenceText,
@@ -390,12 +467,22 @@ export async function assessPronunciation(
           phoneticHint = `/${w.Phonemes.map((p) => p.Phoneme).join('')}/`
         }
 
+        const confidence =
+          typeof w.PronunciationAssessment?.AccuracyScore === 'number'
+            ? Math.round(w.PronunciationAssessment.AccuracyScore)
+            : undefined
+
         return {
           word: w.Word,
           type,
           phoneticHint,
+          confidence,
         }
       })
+
+      const spokenWordsCount = words.filter((w) => w.type !== 'omission').length
+      const durSec = decodedBuffer ? Math.max(0.5, decodedBuffer.duration) : Math.max(1, spokenWordsCount / 2.2)
+      const spokenWpm = Math.round((spokenWordsCount / durSec) * 60)
 
       return {
         accuracy,
@@ -404,6 +491,9 @@ export async function assessPronunciation(
         prosody,
         battleScore,
         words,
+        engine: 'azure',
+        recognizedText: nbest.Display || data.DisplayText || recognizedText,
+        spokenWpm,
       }
     } catch (err) {
       console.warn('[AzureSpeech] Tier-1 Azure failed, cascading to Tier-2 faster-whisper:', err)
@@ -411,9 +501,11 @@ export async function assessPronunciation(
   }
 
   // ── TIER 2: Python faster-whisper Server (base.en, int8) ──
-  const whisperResult = await assessViaFasterWhisper(payloadBlob, referenceText)
-  if (whisperResult) {
-    return whisperResult
+  if (engineMode !== 'faster-whisper') {
+    const whisperResult = await assessViaFasterWhisper(payloadBlob, referenceText)
+    if (whisperResult) {
+      return whisperResult
+    }
   }
 
   // ── TIER 3: Browser WebAudio DSP + Web Speech (0% Random Emergency Fallback) ──
@@ -423,3 +515,4 @@ export async function assessPronunciation(
 
   return generateAssessmentResult(referenceText, targetScore)
 }
+

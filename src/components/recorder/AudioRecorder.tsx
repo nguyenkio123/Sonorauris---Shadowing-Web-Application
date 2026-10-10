@@ -1,5 +1,12 @@
-import { Mic, Square, RotateCcw, Send, AlertCircle, Info, Volume2 } from 'lucide-react'
+import { Mic, Square, RotateCcw, Send, AlertCircle, Info, Volume2, Cpu, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  checkFasterWhisperHealth,
+  getSpeechEngineMode,
+  setSpeechEngineMode,
+  type SpeechEngineMode,
+  type WhisperHealthStatus,
+} from '../../api/azureSpeech'
 
 interface AudioRecorderProps {
   maxDurationSec: number
@@ -21,6 +28,25 @@ export function AudioRecorder({
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [showMicTip, setShowMicTip] = useState(true)
   const [audioLevels, setAudioLevels] = useState<number[]>([22, 22, 22, 22, 22])
+  const [engineMode, setEngineModeState] = useState<SpeechEngineMode>(() => getSpeechEngineMode())
+  const [whisperHealth, setWhisperHealth] = useState<WhisperHealthStatus | null>(null)
+  const [checkingWhisper, setCheckingWhisper] = useState(false)
+
+  const refreshWhisperHealth = useCallback(async () => {
+    setCheckingWhisper(true)
+    const status = await checkFasterWhisperHealth()
+    setWhisperHealth(status)
+    setCheckingWhisper(false)
+  }, [])
+
+  useEffect(() => {
+    void refreshWhisperHealth()
+  }, [refreshWhisperHealth])
+
+  const handleEngineModeChange = (mode: SpeechEngineMode) => {
+    setSpeechEngineMode(mode)
+    setEngineModeState(mode)
+  }
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -259,9 +285,63 @@ export function AudioRecorder({
 
   return (
     <div className="rounded-[14px] border border-[#dddddd] bg-white p-5 airbnb-shadow">
+      {/* Speech AI Engine Status & Mode Selector Strip */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2.5 border-b border-[#ebebeb] pb-3 text-xs">
+        <div className="flex items-center gap-2">
+          <Cpu className="h-3.5 w-3.5 text-[#4E9488] shrink-0" />
+          <span className="font-semibold text-[#171B2A]">Speech AI:</span>
+          {whisperHealth?.online ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>
+                Faster-Whisper ({whisperHealth.model || 'base.en'}) · {whisperHealth.latencyMs}ms
+              </span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f9fa] px-2.5 py-0.5 text-[11px] font-medium text-[#5B6780]">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              <span>Faster-Whisper :8000 Offline · Auto Fallback</span>
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => void refreshWhisperHealth()}
+            disabled={checkingWhisper}
+            title="Ping local faster-whisper server (:8000/health)"
+            aria-label="Ping local faster-whisper server"
+            className="p-1 text-[#5B6780] hover:text-[#171B2A] transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3 w-3 ${checkingWhisper ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-full bg-[#f7f9fa] p-0.5 text-[11px] font-semibold">
+          {(
+            [
+              { id: 'auto', label: 'Auto Cascade' },
+              { id: 'faster-whisper', label: 'Faster-Whisper' },
+              { id: 'azure', label: 'Azure Cloud' },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => handleEngineModeChange(opt.id)}
+              className={`rounded-full px-2.5 py-1 transition-colors ${
+                engineMode === opt.id
+                  ? 'bg-[#171B2A] text-white'
+                  : 'text-[#5B6780] hover:text-[#171B2A]'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Microphone Advice Tip before first recording */}
       {showMicTip && state === 'idle' && (
-        <div className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-[#dddddd] bg-[#f7f9fa] p-3.5 text-xs text-[#283044]">
+        <div className="mb-4 flex items-start justify-between gap-3 bg-[#f7f9fa] p-3.5 text-xs text-[#283044]">
           <div className="flex items-start gap-2.5">
             <Info className="h-4 w-4 shrink-0 text-[#4E9488] mt-0.5" />
             <div>

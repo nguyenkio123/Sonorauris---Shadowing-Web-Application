@@ -123,6 +123,13 @@ export function ResultPage() {
   const { result } = attempt
   const score = result.battleScore
 
+  const engineLabel =
+    result.engine === 'faster-whisper'
+      ? 'Tier 2 · Faster-Whisper (base.en int8)'
+      : result.engine === 'azure'
+      ? 'Tier 1 · Azure Speech AI'
+      : 'Tier 3 · Browser WebAudio DSP'
+
   const getTier = (s: number) => {
     if (s >= 90) return { label: 'Outstanding Cadence!', desc: 'Flawless speech rhythm & crisp phonetic execution.' }
     if (s >= 80) return { label: 'Great Flow!', desc: 'Natural delivery with strong pronunciation cadence.' }
@@ -133,13 +140,20 @@ export function ResultPage() {
   const tier = getTier(score)
 
   const renderMiscueWord = (item: MiscueWord, index: number) => {
+    const confSuffix = typeof item.confidence === 'number' ? ` · ${item.confidence}%` : ''
     if (!item.type) {
       return (
         <span
           key={index}
+          title={typeof item.confidence === 'number' ? `Confidence: ${item.confidence}%` : undefined}
           className="inline-block rounded-md px-1.5 py-0.5 text-[#222222] hover:bg-[#ebebeb] transition-colors"
         >
           {item.word}
+          {typeof item.confidence === 'number' && (
+            <sup className="ml-0.5 font-mono text-[10px] text-[#4E9488] font-semibold">
+              {item.confidence}%
+            </sup>
+          )}
         </span>
       )
     }
@@ -148,12 +162,12 @@ export function ResultPage() {
       return (
         <span
           key={index}
-          className="inline-flex flex-col items-center rounded-lg bg-amber-50 border border-amber-300 px-2 py-0.5 text-amber-900 font-semibold"
-          title={`Mispronunciation: ${item.phoneticHint || 'Check pronunciation'}`}
+          className="inline-flex flex-col items-center rounded-lg bg-amber-50 px-2 py-0.5 text-amber-900 font-semibold"
+          title={`Mispronunciation: ${item.phoneticHint || 'Check pronunciation'}${confSuffix}`}
         >
           <span>{item.word}</span>
           <span className="text-[10px] font-mono text-amber-700 font-normal">
-            [Mispronounced] {item.phoneticHint ? `• ${item.phoneticHint}` : ''}
+            [Mispronounced{confSuffix}] {item.phoneticHint ? `• ${item.phoneticHint}` : ''}
           </span>
         </span>
       )
@@ -163,7 +177,7 @@ export function ResultPage() {
       return (
         <span
           key={index}
-          className="inline-flex flex-col items-center rounded-lg bg-rose-50 border border-rose-300 px-2 py-0.5 text-rose-900 font-semibold"
+          className="inline-flex flex-col items-center rounded-lg bg-rose-50 px-2 py-0.5 text-rose-900 font-semibold"
           title="Word was omitted or skipped in your speech"
         >
           <span className="line-through opacity-70">{item.word}</span>
@@ -176,11 +190,13 @@ export function ResultPage() {
       return (
         <span
           key={index}
-          className="inline-flex flex-col items-center rounded-lg bg-blue-50 border border-blue-300 px-2 py-0.5 text-blue-900 font-semibold"
-          title="Extra word detected in speech"
+          className="inline-flex flex-col items-center rounded-lg bg-blue-50 px-2 py-0.5 text-blue-900 font-semibold"
+          title={`Extra word detected in speech${confSuffix}`}
         >
           <span>{item.word}</span>
-          <span className="text-[10px] font-mono text-blue-700 font-normal">[Extra Word]</span>
+          <span className="text-[10px] font-mono text-blue-700 font-normal">
+            [Extra Word{confSuffix}]
+          </span>
         </span>
       )
     }
@@ -237,10 +253,17 @@ export function ResultPage() {
               </svg>
             </div>
 
-            {/* Guest Favorite / Assessment Badge */}
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f9fa] border border-[#dddddd] px-4 py-1 text-xs font-semibold text-[#171B2A] mb-3">
-              <CheckCircle2 className="h-4 w-4 text-[#4E9488]" />
-              <span>Assessment Completed · Verified In Ledger</span>
+            {/* Guest Favorite / Assessment Badge + Engine Tier & WPM */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f9fa] px-4 py-1 text-xs font-semibold text-[#171B2A]">
+                <CheckCircle2 className="h-4 w-4 text-[#4E9488]" />
+                <span>{engineLabel}</span>
+              </div>
+              {typeof result.spokenWpm === 'number' && result.spokenWpm > 0 && (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f0f3f5] px-3.5 py-1 text-xs font-mono font-semibold text-[#171B2A]">
+                  <span>Pace: {result.spokenWpm} WPM</span>
+                </div>
+              )}
             </div>
 
             <h1 className="text-[26px] sm:text-[30px] font-bold text-[#171B2A] mb-1.5">
@@ -251,7 +274,7 @@ export function ResultPage() {
             </p>
 
             {/* Guaranteed Ledger Rewards Box */}
-            <div className="flex items-center gap-4 rounded-full bg-[#f7f9fa] border border-[#dddddd] px-6 py-2.5">
+            <div className="flex items-center gap-4 rounded-full bg-[#f7f9fa] px-6 py-2.5">
               <span className="text-xs font-semibold text-[#171B2A]">
                 Rewards Credited:
               </span>
@@ -389,7 +412,7 @@ export function ResultPage() {
           </div>
 
           {audioUrl && (
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-[#f7f9fa] border border-[#e2e6ea] px-4 py-3">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#f7f9fa] px-4 py-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#171B2A]">
                 <Volume2 className="h-4 w-4 text-[#4E9488]" />
                 <span>Your Recorded Shadowing Audio</span>
@@ -398,8 +421,19 @@ export function ResultPage() {
             </div>
           )}
 
+          {result.recognizedText && (
+            <div className="mb-4 bg-[#f7f9fa] px-4 py-3">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#5B6780] mb-1">
+                What AI Heard ({engineLabel})
+              </div>
+              <p className="text-sm font-medium text-[#171B2A] italic">
+                &ldquo;{result.recognizedText}&rdquo;
+              </p>
+            </div>
+          )}
+
           {/* Interactive Words Canvas */}
-          <div className="rounded-xl bg-[#f7f9fa] border border-[#ebebeb] p-6 leading-loose text-base sm:text-lg flex flex-wrap gap-2.5 items-center">
+          <div className="bg-[#f7f9fa] p-6 leading-loose text-base sm:text-lg flex flex-wrap gap-2.5 items-center">
             {result.words.map((item, idx) => renderMiscueWord(item, idx))}
           </div>
 
