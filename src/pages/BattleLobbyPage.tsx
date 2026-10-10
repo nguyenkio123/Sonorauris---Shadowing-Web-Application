@@ -11,6 +11,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { addBotToRoom, createRoom, getClips, joinRoom, setReady } from '../api'
+import { AvatarWithFrame, resolveParticipantFrameId } from '../components/common/AvatarWithFrame'
 import { useRoom } from '../hooks/useRoom'
 import type { Clip } from '../types/clip'
 
@@ -403,10 +404,11 @@ export function BattleLobbyPage() {
                             }`}
                           >
                             <div className="flex items-center gap-3.5">
-                              <img
-                                src={participant.avatarUrl}
+                              <AvatarWithFrame
+                                avatarUrl={participant.avatarUrl}
                                 alt={participant.displayName}
-                                className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f9fa] object-cover shrink-0"
+                                frameId={resolveParticipantFrameId(participant.userId, participant.isBot, idx)}
+                                size="md"
                               />
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">

@@ -11,6 +11,7 @@ import {
   Volume2,
 } from 'lucide-react'
 import { getClip, submitBattleAttempt } from '../api'
+import { AvatarWithFrame, resolveParticipantFrameId } from '../components/common/AvatarWithFrame'
 import { AudioRecorder } from '../components/recorder/AudioRecorder'
 import { YouTubePlayer } from '../components/player/YouTubePlayer'
 import { useRoom } from '../hooks/useRoom'
@@ -180,10 +181,11 @@ export function BattleRoomPage() {
                         className="rounded-[14px] bg-white border border-[#dddddd] p-4 airbnb-shadow flex items-center justify-between h-full min-h-[72px]"
                       >
                         <div className="flex items-center gap-3">
-                          <img
-                            src={p.avatarUrl}
+                          <AvatarWithFrame
+                            avatarUrl={p.avatarUrl}
                             alt={p.displayName}
-                            className="h-10 w-10 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover shrink-0"
+                            frameId={resolveParticipantFrameId(p.userId, p.isBot, idx)}
+                            size="md"
                           />
                           <div className="min-w-0">
                             <div className="text-xs font-bold text-[#171B2A] flex items-center gap-1.5 flex-wrap">

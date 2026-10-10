@@ -13,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { createRoom } from '../api'
+import { AvatarWithFrame, resolveParticipantFrameId } from '../components/common/AvatarWithFrame'
 import { useRoom } from '../hooks/useRoom'
 
 export function BattleResultPage() {
@@ -242,18 +243,20 @@ export function BattleResultPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                       <div className="flex items-center gap-3.5">
                         <div className="relative shrink-0">
-                          <img
-                            src={p.avatarUrl}
+                          <AvatarWithFrame
+                            avatarUrl={p.avatarUrl}
                             alt={p.displayName}
-                            className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f7f7] object-cover"
+                            frameId={resolveParticipantFrameId(p.userId, p.isBot, idx)}
+                            size="md"
+                            showCrest={false}
                           />
-                          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#222222] text-white text-[11px] font-bold flex items-center justify-center font-mono">
+                          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#171B2A] text-white text-[11px] font-bold flex items-center justify-center font-mono">
                             {rank}
                           </span>
                         </div>
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-base font-bold text-[#222222]">
+                            <span className="text-base font-bold text-[#171B2A]">
                               {p.displayName}
                             </span>
                             {isMe && (
@@ -379,10 +382,11 @@ export function BattleResultPage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <img
-                      src={player.avatarUrl}
+                    <AvatarWithFrame
+                      avatarUrl={player.avatarUrl}
                       alt={player.displayName}
-                      className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f9fa] object-cover"
+                      frameId={resolveParticipantFrameId(player.userId, player.isBot, 0)}
+                      size="md"
                     />
                     <div>
                       <div className="text-sm font-bold text-[#171B2A] flex items-center gap-1.5">
@@ -479,10 +483,11 @@ export function BattleResultPage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <img
-                      src={opponent?.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot'}
+                    <AvatarWithFrame
+                      avatarUrl={opponent?.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot'}
                       alt={opponent?.displayName || 'Opponent'}
-                      className="h-12 w-12 rounded-full border border-[#dddddd] bg-[#f7f9fa] object-cover"
+                      frameId={resolveParticipantFrameId(opponent?.userId, opponent?.isBot ?? true, 1)}
+                      size="md"
                     />
                     <div>
                       <div className="text-sm font-bold text-[#171B2A] flex items-center gap-1.5">

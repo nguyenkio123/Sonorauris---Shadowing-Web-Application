@@ -21,6 +21,7 @@ import {
   getShopCatalog,
   purchaseItem,
 } from '../api'
+import { AvatarWithFrame, TitleEmblem } from '../components/common/AvatarWithFrame'
 import type { CosmeticType, ShopItem, UserInventory } from '../types/shop'
 import type { UserProfile } from '../types/user'
 
@@ -151,10 +152,10 @@ export function ShopPage() {
       ? previewItem.assetValue
       : equippedAvatarItem?.assetValue || user?.avatarUrl || ''
 
-  const previewFrameClass =
+  const previewFrameId =
     previewItem?.type === 'FRAME'
-      ? previewItem.assetValue
-      : equippedFrameItem?.assetValue || 'border border-[#ebebeb]'
+      ? previewItem.id
+      : equippedFrameItem?.id || user?.equippedFrameId || 'frame-none'
 
   const previewTitleText =
     previewItem?.type === 'TITLE'
@@ -252,17 +253,14 @@ export function ShopPage() {
                 )}
               </div>
 
-              {/* Avatar Showcase */}
+              {/* Avatar Showcase with Bespoke SVG Frame */}
               <div className="relative inline-block mx-auto mb-4">
-                <div
-                  className={`h-24 w-24 rounded-full p-1 bg-white transition-all duration-300 ${previewFrameClass}`}
-                >
-                  <img
-                    src={previewAvatarUrl}
-                    alt="Preview Avatar"
-                    className="h-full w-full rounded-full object-cover bg-[#f2f2f2]"
-                  />
-                </div>
+                <AvatarWithFrame
+                  avatarUrl={previewAvatarUrl}
+                  alt="Preview Avatar"
+                  frameId={previewFrameId}
+                  size="xl"
+                />
               </div>
 
               {/* Display Name & Title */}
@@ -407,25 +405,23 @@ export function ShopPage() {
                     </div>
 
                     {/* Visual Asset Presentation */}
-                    <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center gap-3.5 mb-3">
                       {item.type === 'AVATAR' ? (
-                        <img
-                          src={item.assetValue}
+                        <AvatarWithFrame
+                          avatarUrl={item.assetValue}
                           alt={item.name}
-                          className="h-14 w-14 rounded-full bg-[#f7f7f7] border border-[#ebebeb] p-1 object-cover"
+                          frameId={equippedFrameItem?.id || 'frame-none'}
+                          size="lg"
                         />
                       ) : item.type === 'FRAME' ? (
-                        <div
-                          className={`h-14 w-14 rounded-full p-1 bg-white flex items-center justify-center ${item.assetValue}`}
-                        >
-                          <div className="h-full w-full rounded-full bg-[#f2f2f2] flex items-center justify-center text-[10px] font-bold text-[#6a6a6a]">
-                            FRAME
-                          </div>
-                        </div>
+                        <AvatarWithFrame
+                          avatarUrl={previewAvatarUrl}
+                          alt={item.name}
+                          frameId={item.id}
+                          size="lg"
+                        />
                       ) : (
-                        <div className="h-14 w-14 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-                          <Crown className="h-6 w-6" />
-                        </div>
+                        <TitleEmblem titleId={item.id} size="lg" />
                       )}
 
                       <div className="flex-1 min-w-0">

@@ -6,6 +6,7 @@ import type { UserProfile } from '../../types/user'
 import type { DailyQuest } from '../../types/quest'
 import { DailyQuestsModal } from './DailyQuestsModal'
 import { ProfileSettingsModal } from './ProfileSettingsModal'
+import { AvatarWithFrame } from '../common/AvatarWithFrame'
 import { useAuth } from '../../context/AuthContext'
 
 export function Header() {
@@ -234,10 +235,11 @@ export function Header() {
                 className="flex items-center gap-2 rounded-full border border-[#dddddd] p-1 pr-3 hover:shadow-xs hover:border-[#171B2A] transition-all cursor-pointer group"
                 title={`Account & Settings (${user.displayName})`}
               >
-                <img
-                  src={user.avatarUrl}
+                <AvatarWithFrame
+                  avatarUrl={user.avatarUrl}
                   alt={user.displayName}
-                  className="h-7 w-7 rounded-full bg-[#f2f2f2] object-cover ring-1 ring-[#ebebeb]"
+                  frameId={user.equippedFrameId}
+                  size="xs"
                 />
                 <span className="hidden sm:inline text-xs font-medium text-[#171B2A] max-w-[95px] truncate">
                   {user.displayName}

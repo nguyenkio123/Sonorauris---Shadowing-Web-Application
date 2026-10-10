@@ -22,6 +22,7 @@ import { Link } from 'react-router-dom'
 import { getMe, getUserAttempts, resetDemo, setDisplayName } from '../../api'
 import type { UserProfile } from '../../types/user'
 import type { Attempt } from '../../types/attempt'
+import { AvatarWithFrame } from '../common/AvatarWithFrame'
 import { useAuth } from '../../context/AuthContext'
 
 interface ProfileSettingsModalProps {
@@ -276,14 +277,12 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             <div className="p-4 rounded-2xl border border-[#ebebeb] bg-[#fcfcfc] flex items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="relative">
-                  <img
-                    src={user.avatarUrl}
+                  <AvatarWithFrame
+                    avatarUrl={user.avatarUrl}
                     alt={user.displayName}
-                    className="h-14 w-14 rounded-full bg-white object-cover ring-2 ring-[#4E9488]/30 shadow-xs"
+                    frameId={user.equippedFrameId}
+                    size="lg"
                   />
-                  <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                  </span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">

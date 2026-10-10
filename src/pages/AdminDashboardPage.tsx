@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
-  Award,
   Check,
   Coins,
   Edit2,
@@ -43,6 +42,7 @@ import {
 import { toggleCurrentRole } from '../api/auth'
 import { getUserInventory } from '../api/storage'
 import { SHOP_ITEMS } from '../data/shopItems'
+import { AvatarWithFrame, TitleEmblem } from '../components/common/AvatarWithFrame'
 import type { AdminClipInput, AdminDashboardStats, AdminUserSummary } from '../types/admin'
 import type { Clip, Difficulty, Topic } from '../types/clip'
 import type { UserRole } from '../types/auth'
@@ -1526,22 +1526,23 @@ export const AdminDashboardPage: React.FC = () => {
                         className="p-3 rounded-2xl border border-[#E2E6EA] bg-[#F7F9FA] flex items-center justify-between gap-3"
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-white border border-[#E2E6EA] flex items-center justify-center overflow-hidden">
-                            {item.type === 'AVATAR' ? (
-                              <img
-                                src={item.assetValue}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : item.type === 'FRAME' ? (
-                              <div
-                                className="w-5 h-5 rounded-full"
-                                style={{ backgroundColor: item.previewColor || '#4E9488' }}
-                              />
-                            ) : (
-                              <Award className="w-5 h-5 text-amber-500" />
-                            )}
-                          </div>
+                          {item.type === 'AVATAR' ? (
+                            <AvatarWithFrame
+                              avatarUrl={item.assetValue}
+                              alt={item.name}
+                              frameId="frame-none"
+                              size="sm"
+                            />
+                          ) : item.type === 'FRAME' ? (
+                            <AvatarWithFrame
+                              avatarUrl={grantModalUser?.avatarUrl || ''}
+                              alt={item.name}
+                              frameId={item.id}
+                              size="sm"
+                            />
+                          ) : (
+                            <TitleEmblem titleId={item.id} size="sm" />
+                          )}
                           <div>
                             <div className="font-bold text-xs text-[#171B2A] flex items-center gap-1.5">
                               <span>{item.name}</span>
