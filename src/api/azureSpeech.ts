@@ -265,7 +265,7 @@ function evaluateAcousticSignal(
   }
 }
 
-const WHISPER_API_URL = import.meta.env.VITE_WHISPER_API_URL || 'http://localhost:8000'
+const WHISPER_API_URL = import.meta.env.VITE_WHISPER_API_URL || 'http://127.0.0.1:8000'
 const ENGINE_MODE_STORAGE_KEY = 'shadowing_speech_engine_mode'
 
 export type SpeechEngineMode = 'auto' | 'faster-whisper' | 'azure'
