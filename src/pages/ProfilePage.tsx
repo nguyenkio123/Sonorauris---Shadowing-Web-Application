@@ -247,7 +247,7 @@ export function ProfilePage() {
       : 0
 
   return (
-    <div className="min-h-screen bg-[#f7f9fa] text-[#171B2A] font-sans py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-[#171B2A] font-sans py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
         {/* Top Breadcrumb */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
