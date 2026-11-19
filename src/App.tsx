@@ -4,6 +4,8 @@ import { Header } from './components/layout/Header'
 import { Footer } from './components/layout/Footer'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { EntrancePreloader } from './components/common/EntrancePreloader'
+import { ScrollProgressBar } from './components/common/ScrollProgressBar'
+import { CustomCursor } from './components/common/CustomCursor'
 import { AppRoutes } from './routes/AppRoutes'
 import { AuthProvider } from './context/AuthContext'
 
@@ -20,6 +22,8 @@ function AppLayout() {
       }`}
     >
       <EntrancePreloader onRevealStart={handleRevealStart} />
+      <ScrollProgressBar />
+      <CustomCursor />
       {!isAuthPage && <Header />}
       <main className="flex-1">
         <AppRoutes />
