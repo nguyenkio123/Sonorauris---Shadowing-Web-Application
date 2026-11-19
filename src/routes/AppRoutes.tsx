@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { BattleLobbyPage } from '../pages/BattleLobbyPage'
 import { BattleResultPage } from '../pages/BattleResultPage'
 import { BattleRoomPage } from '../pages/BattleRoomPage'
@@ -7,18 +7,24 @@ import { PracticePage } from '../pages/PracticePage'
 import { ResultPage } from '../pages/ResultPage'
 import { ShopPage } from '../pages/ShopPage'
 import { ProfilePage } from '../pages/ProfilePage'
+import { AboutPage } from '../pages/AboutPage'
 import { LoginPage } from '../pages/LoginPage'
 
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
 import { AdminRoute } from '../components/admin/AdminRoute'
 import { AdminDashboardPage } from '../pages/AdminDashboardPage'
+import { PageTransition } from '../components/common/PageTransition'
 
 export function AppRoutes() {
+  const location = useLocation()
+
   return (
-    <Routes>
-      {/* Public Authentication Routes */}
+    <PageTransition locationKey={location.pathname}>
+      <Routes location={location}>
+      {/* Public Authentication & Documentation Routes */}
       <Route path="/login" element={<LoginPage initialMode="signin" />} />
       <Route path="/register" element={<LoginPage initialMode="signup" />} />
+      <Route path="/about" element={<AboutPage />} />
 
       {/* Protected Application Routes (Login Required) */}
       <Route
@@ -94,6 +100,7 @@ export function AppRoutes() {
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </PageTransition>
   )
 }

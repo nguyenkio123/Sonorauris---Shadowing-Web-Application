@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Globe, Sparkles } from '../icons'
 
 export function Footer() {
@@ -13,24 +14,24 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5 text-sm text-[#6a6a6a]">
               <li>
-                <a href="#about-shadowing" className="hover:text-[#222222] transition-colors">
+                <Link to="/about#about-shadowing" className="hover:text-[#222222] transition-colors">
                   What is Spoken Shadowing?
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#rhythm-cadence" className="hover:text-[#222222] transition-colors">
+                <Link to="/about#rhythm-cadence" className="hover:text-[#222222] transition-colors">
                   Speech Rhythm &amp; Intonation
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#four-dimensions" className="hover:text-[#222222] transition-colors">
+                <Link to="/about#four-dimensions" className="hover:text-[#222222] transition-colors">
                   4 Core Assessment Dimensions
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#accent-reduction" className="hover:text-[#222222] transition-colors">
+                <Link to="/about#accent-reduction" className="hover:text-[#222222] transition-colors">
                   Natural English Cadence
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -42,24 +43,24 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5 text-sm text-[#6a6a6a]">
               <li>
-                <a href="/battle/lobby" className="hover:text-[#222222] transition-colors">
+                <Link to="/battle/lobby" className="hover:text-[#222222] transition-colors">
                   1v1 Real-Time Matchmaking
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/battle/lobby" className="hover:text-[#222222] transition-colors">
+                <Link to="/battle/lobby" className="hover:text-[#222222] transition-colors">
                   ShadowBot AI Opponents
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#ledger" className="hover:text-[#222222] transition-colors">
+                <Link to="/about#ledger" className="hover:text-[#222222] transition-colors">
                   Idempotent Coins &amp; XP Ledger
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#room-codes" className="hover:text-[#222222] transition-colors">
+                <Link to="/about#room-codes" className="hover:text-[#222222] transition-colors">
                   Room Code Invitation Guide
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -80,9 +81,9 @@ export function Footer() {
                 Sub-second audio alignment assessing Accuracy, Fluency, Completeness, and Prosody against authentic reference audio.
               </li>
               <li className="pt-2">
-                <a href="#microphone-guide" className="hover:text-[#222222] transition-colors">
+                <Link to="/about#microphone-guide" className="hover:text-[#222222] transition-colors">
                   Microphone Calibration Guide
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

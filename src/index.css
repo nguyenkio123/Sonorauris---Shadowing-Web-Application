@@ -340,9 +340,73 @@
   will-change: transform;
 }
 
+/* Entrance Preloader Wavy Serif Letters & Editorial Stagger Reveal */
+@keyframes preloader-letter-wave {
+  0%,
+  100% {
+    transform: translate3d(0, -5px, 0) rotate(-3deg);
+  }
+  50% {
+    transform: translate3d(0, 6px, 0) rotate(3deg);
+  }
+}
+
+.preloader-letter-wave {
+  animation: preloader-letter-wave 1.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes editorial-reveal-up {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes editorial-char-reveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 55%, 0) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+.app-entrance-pending .entrance-tier {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+}
+
+.app-entrance-pending .entrance-char {
+  opacity: 0;
+  transform: translate3d(0, 55%, 0);
+}
+
+.app-entrance-ready .entrance-tier {
+  opacity: 0;
+  animation: editorial-reveal-up 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--entrance-delay, 0ms);
+}
+
+.app-entrance-ready .entrance-char {
+  display: inline-block;
+  opacity: 0;
+  animation: editorial-char-reveal 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--char-delay, 0ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .procedural-band-up,
   .procedural-band-down {
     animation-duration: 45s !important;
+  }
+  .preloader-letter-wave {
+    animation: none !important;
   }
 }

@@ -141,7 +141,10 @@ export function HomeCatalogPage() {
 
       {/* HERO EDITORIAL SECTION — Elevated Spotlight Card + 3D Fly-Through */}
       <section className="relative z-10 pt-5 pb-2 px-3 sm:px-6 lg:px-8">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-white/75 backdrop-blur-md border border-white/70 shadow-[0_24px_60px_-15px_rgba(23,27,42,0.14)] p-6 sm:p-8 lg:p-10">
+        <div
+          className="entrance-tier relative mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-white/75 backdrop-blur-md border border-white/70 shadow-[0_24px_60px_-15px_rgba(23,27,42,0.14)] p-6 sm:p-8 lg:p-10"
+          style={{ '--entrance-delay': '100ms' } as React.CSSProperties}
+        >
           {/* Subtle Ambient Radial Spotlights */}
           <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[#4E9488]/15 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 right-10 h-72 w-72 rounded-full bg-emerald-400/12 blur-3xl" />
@@ -151,20 +154,43 @@ export function HomeCatalogPage() {
               <div>
                 <h1 className="text-[32px] sm:text-[44px] font-bold text-[#171B2A] leading-[1.12] tracking-tight">
                   <span
-                    className="italic font-normal text-[42px] sm:text-[56px] leading-none bg-gradient-to-r from-[#2B6B61] via-[#4E9488] to-[#10B981] bg-clip-text text-transparent pr-1.5"
+                    className="italic font-normal text-[42px] sm:text-[56px] leading-none pr-2 inline-flex flex-wrap"
                     style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
+                    aria-label="Inspiration"
                   >
-                    Inspiration
+                    {'Inspiration'.split('').map((ch, idx) => (
+                      <span
+                        key={idx}
+                        className="entrance-char bg-gradient-to-r from-[#2B6B61] via-[#4E9488] to-[#10B981] bg-clip-text text-transparent"
+                        style={{ '--char-delay': `${140 + idx * 28}ms` } as React.CSSProperties}
+                      >
+                        {ch}
+                      </span>
+                    ))}
                   </span>
-                  for spoken English rhythm
+                  {['for', 'spoken', 'English', 'rhythm'].map((word, idx) => (
+                    <span
+                      key={word}
+                      className="entrance-char mr-[0.28em]"
+                      style={{ '--char-delay': `${360 + idx * 60}ms` } as React.CSSProperties}
+                    >
+                      {word}
+                    </span>
+                  ))}
                 </h1>
-                <p className="text-[15px] sm:text-[16px] text-[#4A5568] mt-3 max-w-xl font-normal leading-relaxed">
+                <p
+                  className="entrance-tier text-[15px] sm:text-[16px] text-[#4A5568] mt-3 max-w-xl font-normal leading-relaxed"
+                  style={{ '--entrance-delay': '280ms' } as React.CSSProperties}
+                >
                   Imitate native speaker intonation, pauses, and cadence with short authentic video clips. Challenge other learners in 1v1 synchronized duels.
                 </p>
               </div>
 
               {/* Aesthetic Scroll-to-Clips Action Button */}
-              <div className="pt-1">
+              <div
+                className="entrance-tier pt-1"
+                style={{ '--entrance-delay': '360ms' } as React.CSSProperties}
+              >
                 <button
                   type="button"
                   onMouseEnter={() => exploreArrowRef.current?.startAnimation()}
@@ -192,7 +218,10 @@ export function HomeCatalogPage() {
               </div>
 
               {/* Search Clips Pill directly under Explore Practice Clips */}
-              <div className="pt-2 max-w-xl">
+              <div
+                className="entrance-tier pt-2 max-w-xl"
+                style={{ '--entrance-delay': '430ms' } as React.CSSProperties}
+              >
                 <div className="search-bar-pill flex items-center justify-between p-1.5 pl-4 sm:pl-5 gap-2 sm:gap-3">
                   <div className="flex-1 min-w-0 pr-2">
                     <label htmlFor="search-input" className="block text-[12px] font-semibold text-[#171B2A] leading-none mb-1">
@@ -247,7 +276,10 @@ export function HomeCatalogPage() {
             </div>
 
             {/* 3D Fly-Through Showcase Video (1440x1152 / 5:4) */}
-            <div className="lg:col-span-5">
+            <div
+              className="entrance-tier lg:col-span-5"
+              style={{ '--entrance-delay': '220ms' } as React.CSSProperties}
+            >
               <div className="relative aspect-[5/4] w-full overflow-hidden rounded-2xl border border-[#4E9488]/25 bg-[#f9fbfb] shadow-[0_18px_40px_-12px_rgba(23,27,42,0.22)] ring-1 ring-black/5">
                 <video
                   ref={heroVideoRef}
@@ -279,7 +311,10 @@ export function HomeCatalogPage() {
       </section>
 
       {/* CATEGORY STRIP — Horizontal Product Tabs & Mobile-Accessible Difficulty Filter */}
-      <section className="sticky top-[118px] md:top-[92px] z-30 mt-6 w-full px-3 sm:px-6 lg:px-8">
+      <section
+        className="entrance-tier sticky top-[118px] md:top-[92px] z-30 mt-6 w-full px-3 sm:px-6 lg:px-8"
+        style={{ '--entrance-delay': '490ms' } as React.CSSProperties}
+      >
         <div className="mx-auto max-w-7xl rounded-2xl bg-white/78 backdrop-blur-md border border-white/70 airbnb-shadow px-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-2.5">
           <div className="w-full min-w-0 flex items-center gap-6 sm:gap-8 overflow-x-auto py-1 scrollbar-none">
             {TOPICS.map((t) => {
@@ -429,7 +464,7 @@ export function HomeCatalogPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredClips.map((clip) => {
+            {filteredClips.map((clip, idx) => {
               const isFav = !!favorites[clip.id]
               const wordCount = clip.referenceText.trim().split(/\s+/).filter(Boolean).length
               const wpm = Math.round((wordCount / Math.max(1, clip.durationSec)) * 60)
@@ -438,7 +473,8 @@ export function HomeCatalogPage() {
               return (
                 <div
                   key={clip.id}
-                  className="airbnb-card group flex flex-col justify-between overflow-hidden border border-white/70 bg-white/78 backdrop-blur-md hover:border-[#171B2A]/30"
+                  className="entrance-tier airbnb-card group flex flex-col justify-between overflow-hidden border border-white/70 bg-white/78 backdrop-blur-md hover:border-[#171B2A]/30"
+                  style={{ '--entrance-delay': `${550 + Math.min(idx, 8) * 55}ms` } as React.CSSProperties}
                 >
                   {/* Thumbnail with Authentic Cadence / Best Score Badge */}
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#f0f3f5]">

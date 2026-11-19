@@ -95,7 +95,10 @@ export function Header() {
   const hasClaimable = quests.some((q) => q.completed && !q.claimed)
 
   return (
-    <header className="sticky top-0 z-40 w-full px-3 sm:px-6 lg:px-8 pt-2.5 sm:pt-3 pointer-events-none">
+    <header
+      className="entrance-tier sticky top-0 z-40 w-full px-3 sm:px-6 lg:px-8 pt-2.5 sm:pt-3 pointer-events-none"
+      style={{ '--entrance-delay': '40ms' } as React.CSSProperties}
+    >
       <div className="pointer-events-auto mx-auto max-w-7xl rounded-2xl bg-white/78 backdrop-blur-md border border-white/70 airbnb-shadow overflow-hidden">
       <div className="flex h-[60px] md:h-[72px] items-center justify-between px-3 sm:px-6 gap-2">
         {/* Brand / Logo with Sonorauris Emblem from logo.jpe */}

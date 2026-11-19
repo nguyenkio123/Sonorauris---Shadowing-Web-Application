@@ -1,3 +1,4 @@
+import asyncio
 import io
 import os
 import re
@@ -14,6 +15,7 @@ from pydantic import BaseModel
 
 MODEL_NAME = os.environ.get("WHISPER_MODEL", "base.en")
 COMPUTE_TYPE = os.environ.get("WHISPER_COMPUTE_TYPE", "int8")
+BEAM_SIZE = int(os.environ.get("WHISPER_BEAM_SIZE", "2"))
 PORT = int(os.environ.get("WHISPER_PORT", "8000"))
 HOST = os.environ.get("WHISPER_HOST", "127.0.0.1")
 MAX_AUDIO_BYTES = 15 * 1024 * 1024  # 15 MB limit against memory exhaustion DoS
@@ -177,6 +179,41 @@ async def health():
     }
 
 
+def _transcribe_sync(tmp_path: str) -> list:
+    """Run CPU-bound faster-whisper transcription off the asyncio event loop."""
+    model = get_model()
+    # Pure acoustic transcription WITHOUT initial_prompt so mispronunciations are not auto-corrected
+    segments, _ = model.transcribe(
+        tmp_path,
+        language="en",
+        beam_size=BEAM_SIZE,
+        word_timestamps=True,
+        condition_on_previous_text=False,
+        vad_filter=True,
+        no_speech_threshold=0.5,
+    )
+
+    spoken_words = []
+    for seg in segments:
+        # Skip segments that Whisper suspects are non-speech noise/hallucinations
+        if getattr(seg, "no_speech_prob", 0.0) > 0.55:
+            continue
+        if seg.words:
+            for w in seg.words:
+                token_clean = re.sub(r"[.,/#!$%^&*;:{}=\-_`~()?\"']", "", w.word).strip()
+                if token_clean and float(w.probability) >= 0.20:
+                    spoken_words.append(
+                        {
+                            "word": token_clean,
+                            "lower": token_clean.lower(),
+                            "start": float(w.start),
+                            "end": float(w.end),
+                            "prob": float(w.probability),
+                        }
+                    )
+    return spoken_words
+
+
 @app.post("/api/assess", response_model=AssessmentResponse)
 async def assess_audio(
     audio: UploadFile = File(...),
@@ -214,7 +251,7 @@ async def assess_audio(
             spokenWpm=0,
         )
 
-    acoustic = extract_pcm_features(audio_bytes)
+    acoustic = await asyncio.to_thread(extract_pcm_features, audio_bytes)
 
     # Hard acoustic silence gate BEFORE running Whisper so Whisper never hallucinates on silent mic hiss
     if acoustic["voiced_sec"] < 0.30 or acoustic["peak_rms"] < 0.035:
@@ -235,36 +272,7 @@ async def assess_audio(
         tmp_path = tmp.name
 
     try:
-        model = get_model()
-        # Pure acoustic transcription WITHOUT initial_prompt so mispronunciations are not auto-corrected
-        segments, _ = model.transcribe(
-            tmp_path,
-            language="en",
-            beam_size=5,
-            word_timestamps=True,
-            condition_on_previous_text=False,
-            vad_filter=True,
-            no_speech_threshold=0.5,
-        )
-
-        spoken_words = []
-        for seg in segments:
-            # Skip segments that Whisper suspects are non-speech noise/hallucinations
-            if getattr(seg, "no_speech_prob", 0.0) > 0.55:
-                continue
-            if seg.words:
-                for w in seg.words:
-                    token_clean = re.sub(r"[.,/#!$%^&*;:{}=\-_`~()?\"']", "", w.word).strip()
-                    if token_clean and float(w.probability) >= 0.20:
-                        spoken_words.append(
-                            {
-                                "word": token_clean,
-                                "lower": token_clean.lower(),
-                                "start": float(w.start),
-                                "end": float(w.end),
-                                "prob": float(w.probability),
-                            }
-                        )
+        spoken_words = await asyncio.to_thread(_transcribe_sync, tmp_path)
     finally:
         try:
             os.remove(tmp_path)
