@@ -167,7 +167,7 @@ export function ShopPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#5B6780] text-sm">
+      <div className="min-h-screen flex flex-col items-center justify-center text-[#5B6780] text-sm">
         <span className="h-8 w-8 rounded-full border-2 border-[#4E9488]/20 border-t-[#4E9488] animate-spin mb-3" />
         Opening Cosmetics Shop...
       </div>
@@ -175,10 +175,10 @@ export function ShopPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#171B2A] font-sans pb-16">
+    <div className="min-h-screen text-[#171B2A] font-sans pb-16">
       {/* Top Breadcrumb & Status Header */}
-      <section className="border-b border-[#ebebeb] py-6 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <section className="pt-4 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-2xl bg-white/78 backdrop-blur-md border border-white/70 airbnb-shadow px-5 py-5 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <Link
               to="/"

@@ -37,7 +37,7 @@ export function BattleResultPage() {
 
   if (loading && !room) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center text-[#5B6780] text-xs font-sans">
+      <div className="min-h-screen flex items-center justify-center text-[#5B6780] text-xs font-sans">
         <span className="h-6 w-6 rounded-full border-2 border-[#4E9488]/30 border-t-[#4E9488] animate-spin mr-3" />
         Loading battle scoreboard...
       </div>
@@ -46,7 +46,7 @@ export function BattleResultPage() {
 
   if (error || !room) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#222222] p-6 text-center font-sans">
+      <div className="min-h-screen flex flex-col items-center justify-center text-[#222222] p-6 text-center font-sans">
         <div className="rounded-[14px] border border-[#dddddd] bg-[#f7f7f7] p-8 max-w-md airbnb-shadow">
           <h2 className="text-xl font-bold text-[#c13515] mb-2">{error || 'Battle room not found'}</h2>
           <p className="text-xs text-[#6a6a6a] mb-6">Could not retrieve match results.</p>
@@ -142,7 +142,7 @@ export function BattleResultPage() {
   const outcomeStyle = getOutcomeStyle()
 
   return (
-    <div className="min-h-screen bg-white text-[#222222] font-sans py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-[#222222] font-sans py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between mb-6">

@@ -146,7 +146,7 @@ export function BattleLobbyPage() {
   const currentClip = clips.find((c) => c.id === (room?.clipId || selectedClipId))
 
   return (
-    <div className="min-h-screen bg-white text-[#222222] font-sans py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-[#222222] font-sans py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         {/* Navigation Breadcrumb */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-8">

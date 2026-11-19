@@ -21,7 +21,6 @@ import {
   type AnimatedIconHandle,
 } from '../components/icons'
 import { getClips, getUserAttempts } from '../api'
-import { ProceduralGradientBg } from '../components/common/ProceduralGradientBg'
 import type { Clip, Difficulty, Topic } from '../types/clip'
 
 const FAVORITES_KEY = 'shadowing_favorites'
@@ -137,8 +136,6 @@ export function HomeCatalogPage() {
 
   return (
     <div className="relative min-h-screen text-[#171B2A] font-sans pb-16">
-      <ProceduralGradientBg variant="page" />
-
       {/* HERO EDITORIAL SECTION — Elevated Spotlight Card + 3D Fly-Through */}
       <section className="relative z-10 pt-5 pb-2 px-3 sm:px-6 lg:px-8">
         <div

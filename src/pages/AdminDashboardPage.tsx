@@ -508,7 +508,7 @@ export const AdminDashboardPage: React.FC = () => {
   })
 
   return (
-    <div className="min-h-screen bg-[#F7F9FA] pb-20">
+    <div className="min-h-screen pb-20">
       {/* Top Notification Toast */}
       {feedback && (
         <div
@@ -528,8 +528,9 @@ export const AdminDashboardPage: React.FC = () => {
       )}
 
       {/* Admin Portal Header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-[#E2E6EA] shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <header className="sticky top-2 z-30 w-full px-3 sm:px-6 lg:px-8 pt-3 pointer-events-none">
+        <div className="pointer-events-auto mx-auto max-w-7xl rounded-2xl bg-white/78 backdrop-blur-md border border-white/70 airbnb-shadow overflow-hidden">
+        <div className="px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               to="/"
@@ -636,6 +637,7 @@ export const AdminDashboardPage: React.FC = () => {
             <Sparkles className="w-4 h-4 text-[#4E9488]" />
             <span>Avatars, Frames & Titles ({shopItems.length})</span>
           </button>
+        </div>
         </div>
       </header>
 

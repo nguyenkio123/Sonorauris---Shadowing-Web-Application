@@ -95,6 +95,7 @@ export function Header() {
   const hasClaimable = quests.some((q) => q.completed && !q.claimed)
 
   return (
+    <>
     <header
       className="entrance-tier sticky top-0 z-40 w-full px-3 sm:px-6 lg:px-8 pt-2.5 sm:pt-3 pointer-events-none"
       style={{ '--entrance-delay': '40ms' } as React.CSSProperties}
@@ -347,13 +348,14 @@ export function Header() {
         )}
       </nav>
       </div>
-
-      {/* Daily Quests Modal */}
-      <DailyQuestsModal
-        isOpen={isQuestsOpen}
-        onClose={() => setIsQuestsOpen(false)}
-        onRewardClaimed={() => void reloadData()}
-      />
     </header>
+
+    {/* Daily Quests Modal (rendered outside <header> so fixed positioning is relative to viewport) */}
+    <DailyQuestsModal
+      isOpen={isQuestsOpen}
+      onClose={() => setIsQuestsOpen(false)}
+      onRewardClaimed={() => void reloadData()}
+    />
+    </>
   )
 }

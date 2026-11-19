@@ -78,7 +78,7 @@ export function BattleRoomPage() {
 
   if (roomLoading && !room) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center text-[#5B6780] text-xs font-sans">
+      <div className="min-h-screen flex items-center justify-center text-[#5B6780] text-xs font-sans">
         <span className="h-6 w-6 rounded-full border-2 border-[#4E9488]/30 border-t-[#4E9488] animate-spin mr-3" />
         Connecting to battle room...
       </div>
@@ -87,7 +87,7 @@ export function BattleRoomPage() {
 
   if (roomError || !room) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#171B2A] p-6 text-center font-sans">
+      <div className="min-h-screen flex flex-col items-center justify-center text-[#171B2A] p-6 text-center font-sans">
         <div className="rounded-[14px] border border-[#dddddd] bg-[#f7f7f7] p-8 max-w-md airbnb-shadow">
           <h2 className="text-xl font-bold text-[#c13515] mb-2">{roomError || 'Room not found'}</h2>
           <p className="text-xs text-[#5B6780] mb-6">Could not establish synchronized battle state.</p>
@@ -104,7 +104,7 @@ export function BattleRoomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#171B2A] font-sans py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-[#171B2A] font-sans py-6 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         {/* Top Arena Navigation Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#ebebeb] pb-4 mb-6">

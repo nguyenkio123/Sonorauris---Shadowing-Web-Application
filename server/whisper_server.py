@@ -3,12 +3,14 @@ import io
 import os
 import re
 import tempfile
+import urllib.error
+import urllib.request
 import wave
 from typing import List, Optional
 
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
 from pydantic import BaseModel
@@ -19,6 +21,8 @@ BEAM_SIZE = int(os.environ.get("WHISPER_BEAM_SIZE", "2"))
 PORT = int(os.environ.get("WHISPER_PORT", "8000"))
 HOST = os.environ.get("WHISPER_HOST", "127.0.0.1")
 MAX_AUDIO_BYTES = 15 * 1024 * 1024  # 15 MB limit against memory exhaustion DoS
+AZURE_SPEECH_KEY = os.environ.get("AZURE_SPEECH_KEY", "").strip()
+AZURE_SPEECH_REGION = os.environ.get("AZURE_SPEECH_REGION", "").strip()
 
 app = FastAPI(
     title="Sonorauris Faster-Whisper Assessment Engine",
@@ -176,7 +180,61 @@ async def health():
         "engine": "faster-whisper",
         "model": MODEL_NAME,
         "computeType": COMPUTE_TYPE,
+        "azureProxyConfigured": bool(AZURE_SPEECH_KEY and AZURE_SPEECH_REGION),
     }
+
+
+def _forward_azure_sync(
+    audio_bytes: bytes,
+    content_type: str,
+    pronunciation_header: str,
+) -> tuple[int, bytes]:
+    url = (
+        f"https://{AZURE_SPEECH_REGION}.stt.speech.microsoft.com"
+        "/speech/recognition/conversation/cognitiveservices/v1"
+        "?language=en-US&format=detailed"
+    )
+    req = urllib.request.Request(
+        url,
+        data=audio_bytes,
+        method="POST",
+        headers={
+            "Ocp-Apim-Subscription-Key": AZURE_SPEECH_KEY,
+            "Content-Type": content_type or "audio/wav; codecs=audio/pcm; samplerate=16000",
+            "Pronunciation-Assessment": pronunciation_header,
+            "Accept": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return resp.status, resp.read()
+    except urllib.error.HTTPError as err:
+        return err.code, err.read()
+
+
+@app.post("/api/azure-assess")
+async def azure_assess_proxy(request: Request):
+    if not AZURE_SPEECH_KEY or not AZURE_SPEECH_REGION:
+        raise HTTPException(
+            status_code=503,
+            detail="Azure Speech proxy is not configured (missing AZURE_SPEECH_KEY / AZURE_SPEECH_REGION).",
+        )
+
+    pronunciation_header = request.headers.get("pronunciation-assessment", "")
+    if not pronunciation_header:
+        raise HTTPException(status_code=400, detail="Missing Pronunciation-Assessment header.")
+
+    audio_bytes = await request.body()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Empty audio body.")
+    if len(audio_bytes) > MAX_AUDIO_BYTES:
+        raise HTTPException(status_code=413, detail="Audio payload exceeds 15MB limit.")
+
+    content_type = request.headers.get("content-type", "audio/wav; codecs=audio/pcm; samplerate=16000")
+    status_code, body = await asyncio.to_thread(
+        _forward_azure_sync, audio_bytes, content_type, pronunciation_header
+    )
+    return Response(content=body, status_code=status_code, media_type="application/json")
 
 
 def _transcribe_sync(tmp_path: str) -> list:

@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { EntrancePreloader } from './components/common/EntrancePreloader'
 import { ScrollProgressBar } from './components/common/ScrollProgressBar'
 import { CustomCursor } from './components/common/CustomCursor'
+import { ProceduralGradientBg } from './components/common/ProceduralGradientBg'
 import { AppRoutes } from './routes/AppRoutes'
 import { AuthProvider } from './context/AuthContext'
 
@@ -17,15 +18,16 @@ function AppLayout() {
 
   return (
     <div
-      className={`flex min-h-screen flex-col bg-white text-[#171B2A] font-sans selection:bg-[#4E9488]/20 selection:text-[#171B2A] ${
+      className={`relative flex min-h-screen flex-col text-[#171B2A] font-sans selection:bg-[#4E9488]/20 selection:text-[#171B2A] ${
         entranceReady ? 'app-entrance-ready' : 'app-entrance-pending'
       }`}
     >
+      <ProceduralGradientBg variant="page" />
       <EntrancePreloader onRevealStart={handleRevealStart} />
       <ScrollProgressBar />
       <CustomCursor />
       {!isAuthPage && <Header />}
-      <main className="flex-1">
+      <main className="relative z-10 flex-1">
         <AppRoutes />
       </main>
       {!isAuthPage && <Footer />}

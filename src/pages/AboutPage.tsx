@@ -15,7 +15,6 @@ import {
   Volume2,
   Zap,
 } from '../components/icons'
-import { ProceduralGradientBg } from '../components/common/ProceduralGradientBg'
 
 const TOC_ITEMS = [
   { id: 'about-shadowing', label: '1. What is Spoken Shadowing?' },
@@ -49,8 +48,6 @@ export function AboutPage() {
 
   return (
     <div className="relative min-h-screen text-[#171B2A] font-sans pb-16">
-      <ProceduralGradientBg variant="page" />
-
       <div className="relative z-10 mx-auto max-w-5xl px-3 sm:px-6 lg:px-8 pt-6 space-y-6">
         {/* Top Back Navigation & Hero Banner */}
         <div className="rounded-[28px] bg-white/78 backdrop-blur-md border border-white/70 shadow-[0_24px_60px_-15px_rgba(23,27,42,0.14)] p-6 sm:p-8 lg:p-10 relative overflow-hidden">
