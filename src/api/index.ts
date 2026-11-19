@@ -23,6 +23,7 @@ import {
   getAttemptById,
   getAttempts,
   getDailyQuestsState,
+  getMyParticipantId,
   getRoomByCode,
   getStoredClips,
   getUserInventory,
@@ -32,8 +33,10 @@ import {
   saveAttempt,
   saveRoom,
   saveStoredClips,
+  setMyParticipantId,
   updateDisplayName,
 } from './storage'
+export { getMyParticipantId, setMyParticipantId } from './storage'
 import {
   fetchRemoteClips,
   recordRemoteAttempt,
@@ -176,6 +179,7 @@ export async function createRoom(clipId: string, maxPlayers: number = 2): Promis
     botJoinAt: now + DEMO_CONFIG.botJoinDelayMs,
   }
 
+  setMyParticipantId(code, hostParticipant.userId)
   saveRoom(room)
   void broadcastRoomRealtime(room)
   void saveRoomToSupabase(room)
@@ -231,9 +235,13 @@ export async function joinRoom(code: string): Promise<BattleRoom> {
       existing.opponent = newParticipant
     }
 
+    setMyParticipantId(normalizedCode, participantUserId)
     saveRoom(existing)
     void broadcastRoomRealtime(existing)
     void saveRoomToSupabase(existing)
+  } else {
+    // Already in room or room full; ensure session participant is recorded
+    setMyParticipantId(normalizedCode, participantUserId)
   }
 
   return syncRoomState(existing)
@@ -254,30 +262,28 @@ export async function addBotToRoom(code: string): Promise<BattleRoom> {
   return updated
 }
 
-export async function setReady(code: string, ready = true): Promise<BattleRoom> {
+export async function setReady(
+  code: string,
+  ready = true,
+  targetUserId?: string
+): Promise<BattleRoom> {
   const normalizedCode = code.trim().toUpperCase()
   const room = getRoomByCode(normalizedCode)
   if (!room) {
     throw new Error(`Room not found: ${normalizedCode}`)
   }
 
-  const user = await getMe()
-  const myParticipant = room.participants?.find(
-    (p) => !p.isBot && (p.userId === user.id || (room.hostUserId !== user.id && p.userId !== room.hostUserId))
-  )
-  const myUserId = myParticipant ? myParticipant.userId : user.id
-
-  if (room.hostUserId === myUserId) {
-    room.player.isReady = ready
-  } else if (room.opponent && room.opponent.userId === myUserId) {
-    room.opponent.isReady = ready
-  } else {
-    room.player.isReady = ready
-  }
+  const myUserId = targetUserId || getMyParticipantId(normalizedCode)
 
   if (room.participants) {
     const p = room.participants.find((item) => item.userId === myUserId)
     if (p) p.isReady = ready
+  }
+
+  if (room.player.userId === myUserId) {
+    room.player.isReady = ready
+  } else if (room.opponent && room.opponent.userId === myUserId) {
+    room.opponent.isReady = ready
   }
 
   const updated = syncRoomState(room)
@@ -303,7 +309,8 @@ export async function getRoom(code: string): Promise<BattleRoom | null> {
 
 export async function submitBattleAttempt(
   code: string,
-  audioBlob?: Blob
+  audioBlob?: Blob,
+  targetUserId?: string
 ): Promise<BattleRoom> {
   const normalizedCode = code.trim().toUpperCase()
   const room = getRoomByCode(normalizedCode)
@@ -313,28 +320,24 @@ export async function submitBattleAttempt(
 
   const clip = await getClip(room.clipId)
   const refText = clip ? clip.referenceText : 'English shadowing practice sample text.'
-  const user = await getMe()
+  const myUserId = targetUserId || getMyParticipantId(normalizedCode)
 
   const assessment = audioBlob
     ? await assessPronunciation(audioBlob, refText)
     : undefined
 
-  if (room.hostUserId === user.id) {
+  if (room.player.userId === myUserId) {
     room.player.hasSubmitted = true
     room.player.submittedAt = Date.now()
     if (assessment) room.player.assessment = assessment
-  } else if (room.opponent && room.opponent.userId === user.id) {
+  } else if (room.opponent && room.opponent.userId === myUserId) {
     room.opponent.hasSubmitted = true
     room.opponent.submittedAt = Date.now()
     if (assessment) room.opponent.assessment = assessment
-  } else {
-    room.player.hasSubmitted = true
-    room.player.submittedAt = Date.now()
-    if (assessment) room.player.assessment = assessment
   }
 
   if (room.participants) {
-    const p = room.participants.find((item) => item.userId === user.id)
+    const p = room.participants.find((item) => item.userId === myUserId)
     if (p) {
       p.hasSubmitted = true
       p.submittedAt = Date.now()

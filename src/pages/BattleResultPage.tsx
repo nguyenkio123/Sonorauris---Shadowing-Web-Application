@@ -12,7 +12,7 @@ import {
   Trophy,
   Zap,
 } from 'lucide-react'
-import { createRoom } from '../api'
+import { createRoom, getMyParticipantId } from '../api'
 import { AvatarWithFrame, resolveParticipantFrameId } from '../components/common/AvatarWithFrame'
 import { useRoom } from '../hooks/useRoom'
 
@@ -62,6 +62,7 @@ export function BattleResultPage() {
     )
   }
 
+  const myUserId = roomCode ? getMyParticipantId(roomCode) : ''
   const { player, opponent } = room
   const participants =
     room.participants && room.participants.length > 0
@@ -69,10 +70,13 @@ export function BattleResultPage() {
       : [player, ...(opponent ? [opponent] : [])]
   const isMultiplayer = participants.length > 2
 
-  const myRank = player.rank || (player.outcome === 'WIN' ? 1 : 2)
-  const outcome = player.outcome || 'DRAW'
-  const playerScore = player.assessment?.battleScore || 0
-  const opponentScore = opponent?.assessment?.battleScore || 0
+  const myParticipant = participants.find((p) => p.userId === myUserId) || player
+  const otherParticipant = participants.find((p) => p.userId !== myParticipant.userId) || opponent || participants[1] || null
+
+  const myRank = myParticipant.rank || (myParticipant.outcome === 'WIN' ? 1 : 2)
+  const outcome = myParticipant.outcome || 'DRAW'
+  const playerScore = myParticipant.assessment?.battleScore || 0
+  const opponentScore = otherParticipant?.assessment?.battleScore || 0
   const scoreDiff = playerScore - opponentScore
 
   const getOutcomeStyle = () => {
@@ -179,11 +183,11 @@ export function BattleResultPage() {
             </span>
             <div className="flex items-center gap-1.5 font-bold text-[#460479] text-xs font-mono">
               <Zap className="h-4 w-4 fill-[#460479]" />
-              <span>+{player.earnedXp || 0} XP</span>
+              <span>+{myParticipant.earnedXp || 0} XP</span>
             </div>
             <div className="flex items-center gap-1.5 font-bold text-amber-600 text-xs font-mono">
               <Coins className="h-4 w-4 fill-amber-500" />
-              <span>+{player.earnedCoins || 0} Coins</span>
+              <span>+{myParticipant.earnedCoins || 0} Coins</span>
             </div>
           </div>
         </section>
@@ -203,7 +207,7 @@ export function BattleResultPage() {
 
             <div className="flex flex-col gap-4">
               {participants.map((p, idx) => {
-                const isMe = p.userId === player.userId
+                const isMe = p.userId === myUserId
                 const rank = p.rank || idx + 1
                 const score = p.assessment?.battleScore || 0
 
@@ -383,19 +387,21 @@ export function BattleResultPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <AvatarWithFrame
-                      avatarUrl={player.avatarUrl}
-                      alt={player.displayName}
-                      frameId={resolveParticipantFrameId(player.userId, player.isBot, 0)}
+                      avatarUrl={myParticipant.avatarUrl}
+                      alt={myParticipant.displayName}
+                      frameId={resolveParticipantFrameId(myParticipant.userId, myParticipant.isBot, 0)}
                       size="md"
                     />
                     <div>
                       <div className="text-sm font-bold text-[#171B2A] flex items-center gap-1.5">
-                        <span>{player.displayName}</span>
+                        <span>{myParticipant.displayName}</span>
                         <span className="text-[10px] bg-[#4E9488]/10 text-[#4E9488] px-2 py-0.5 rounded-full font-bold font-mono">
                           YOU
                         </span>
                       </div>
-                      <span className="text-xs text-[#5B6780]">Host Contender</span>
+                      <span className="text-xs text-[#5B6780]">
+                        {myParticipant.userId === room.hostUserId ? 'Host Contender' : 'Contender'}
+                      </span>
                     </div>
                   </div>
 
@@ -410,45 +416,45 @@ export function BattleResultPage() {
                 </div>
 
                 {/* 4 Metrics Bars */}
-                {player.assessment && (
+                {myParticipant.assessment && (
                   <div className="space-y-2.5 pt-3 border-t border-[#ebebeb]">
                     <div>
                       <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Accuracy</span>
-                        <span className="text-[#4E9488] font-bold font-mono">{player.assessment.accuracy}%</span>
+                        <span className="text-[#4E9488] font-bold font-mono">{myParticipant.assessment.accuracy}%</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
-                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${player.assessment.accuracy}%` }} />
+                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${myParticipant.assessment.accuracy}%` }} />
                       </div>
                     </div>
 
                     <div>
                       <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Fluency</span>
-                        <span className="text-[#171B2A] font-bold font-mono">{player.assessment.fluency}%</span>
+                        <span className="text-[#171B2A] font-bold font-mono">{myParticipant.assessment.fluency}%</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
-                        <div className="h-full bg-[#171B2A] rounded-full" style={{ width: `${player.assessment.fluency}%` }} />
+                        <div className="h-full bg-[#171B2A] rounded-full" style={{ width: `${myParticipant.assessment.fluency}%` }} />
                       </div>
                     </div>
 
                     <div>
                       <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Completeness</span>
-                        <span className="text-amber-600 font-bold font-mono">{player.assessment.completeness}%</span>
+                        <span className="text-amber-600 font-bold font-mono">{myParticipant.assessment.completeness}%</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
-                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${player.assessment.completeness}%` }} />
+                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${myParticipant.assessment.completeness}%` }} />
                       </div>
                     </div>
 
                     <div>
                       <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Prosody</span>
-                        <span className="text-[#4E9488] font-bold font-mono">{player.assessment.prosody}%</span>
+                        <span className="text-[#4E9488] font-bold font-mono">{myParticipant.assessment.prosody}%</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
-                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${player.assessment.prosody}%` }} />
+                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${myParticipant.assessment.prosody}%` }} />
                       </div>
                     </div>
                   </div>
@@ -484,17 +490,19 @@ export function BattleResultPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <AvatarWithFrame
-                      avatarUrl={opponent?.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot'}
-                      alt={opponent?.displayName || 'Opponent'}
-                      frameId={resolveParticipantFrameId(opponent?.userId, opponent?.isBot ?? true, 1)}
+                      avatarUrl={otherParticipant?.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=ShadowBot'}
+                      alt={otherParticipant?.displayName || 'Opponent'}
+                      frameId={resolveParticipantFrameId(otherParticipant?.userId, otherParticipant?.isBot ?? true, 1)}
                       size="md"
                     />
                     <div>
                       <div className="text-sm font-bold text-[#171B2A] flex items-center gap-1.5">
-                        <span>{opponent?.displayName || 'ShadowBot AI'}</span>
-                        <Bot className="h-3.5 w-3.5 text-amber-500" />
+                        <span>{otherParticipant?.displayName || 'ShadowBot AI'}</span>
+                        {otherParticipant?.isBot && <Bot className="h-3.5 w-3.5 text-amber-500" />}
                       </div>
-                      <span className="text-xs text-[#5B6780]">Challenger</span>
+                      <span className="text-xs text-[#5B6780]">
+                        {otherParticipant?.userId === room.hostUserId ? 'Host Contender' : 'Contender'}
+                      </span>
                     </div>
                   </div>
 
@@ -509,45 +517,45 @@ export function BattleResultPage() {
                 </div>
 
                 {/* 4 Metrics Bars for Opponent */}
-                {opponent?.assessment && (
+                {otherParticipant?.assessment && (
                   <div className="space-y-2.5 pt-3 border-t border-[#ebebeb]">
                     <div>
                       <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Accuracy</span>
-                        <span className="text-[#4E9488] font-bold font-mono">{opponent.assessment.accuracy}%</span>
+                        <span className="text-[#4E9488] font-bold font-mono">{otherParticipant.assessment.accuracy}%</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
-                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${opponent.assessment.accuracy}%` }} />
+                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${otherParticipant.assessment.accuracy}%` }} />
                       </div>
                     </div>
 
                     <div>
                       <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Fluency</span>
-                        <span className="text-[#171B2A] font-bold font-mono">{opponent.assessment.fluency}%</span>
+                        <span className="text-[#171B2A] font-bold font-mono">{otherParticipant.assessment.fluency}%</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
-                        <div className="h-full bg-[#171B2A] rounded-full" style={{ width: `${opponent.assessment.fluency}%` }} />
+                        <div className="h-full bg-[#171B2A] rounded-full" style={{ width: `${otherParticipant.assessment.fluency}%` }} />
                       </div>
                     </div>
 
                     <div>
                       <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Completeness</span>
-                        <span className="text-amber-600 font-bold font-mono">{opponent.assessment.completeness}%</span>
+                        <span className="text-amber-600 font-bold font-mono">{otherParticipant.assessment.completeness}%</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
-                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${opponent.assessment.completeness}%` }} />
+                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${otherParticipant.assessment.completeness}%` }} />
                       </div>
                     </div>
 
                     <div>
                       <div className="flex justify-between text-[11px] font-medium text-[#171B2A] mb-1">
                         <span>Prosody</span>
-                        <span className="text-[#4E9488] font-bold font-mono">{opponent.assessment.prosody}%</span>
+                        <span className="text-[#4E9488] font-bold font-mono">{otherParticipant.assessment.prosody}%</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-[#f0f3f5] overflow-hidden">
-                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${opponent.assessment.prosody}%` }} />
+                        <div className="h-full bg-[#4E9488] rounded-full" style={{ width: `${otherParticipant.assessment.prosody}%` }} />
                       </div>
                     </div>
                   </div>

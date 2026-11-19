@@ -315,7 +315,7 @@ export function AudioRecorder({
           </button>
         </div>
 
-        <div className="flex items-center gap-1 rounded-full bg-[#f7f9fa] p-0.5 text-[11px] font-semibold">
+        <div className="flex flex-wrap items-center gap-1 rounded-2xl sm:rounded-full bg-[#f7f9fa] p-0.5 text-[11px] font-semibold max-w-full">
           {(
             [
               { id: 'auto', label: 'Auto Cascade' },

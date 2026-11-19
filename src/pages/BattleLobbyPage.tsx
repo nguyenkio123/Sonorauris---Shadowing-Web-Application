@@ -10,7 +10,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
-import { addBotToRoom, createRoom, getClips, joinRoom, setReady } from '../api'
+import { addBotToRoom, createRoom, getClips, getMyParticipantId, joinRoom, setReady } from '../api'
 import { AvatarWithFrame, resolveParticipantFrameId } from '../components/common/AvatarWithFrame'
 import { useRoom } from '../hooks/useRoom'
 import type { Clip } from '../types/clip'
@@ -58,12 +58,30 @@ export function BattleLobbyPage() {
     }
   }, [activeCode, searchParams, setSearchParams])
 
+  // Ensure user is enrolled as participant if entering directly with ?room=CODE
+  useEffect(() => {
+    if (activeCode && room) {
+      const myId = getMyParticipantId(activeCode)
+      const isInRoom = room.participants?.some((p) => p.userId === myId) || room.player.userId === myId
+      if (!isInRoom) {
+        void joinRoom(activeCode)
+      }
+    }
+  }, [activeCode, room])
+
   // Auto-redirect to battle arena once room is in COUNTDOWN or RECORDING
   useEffect(() => {
     if (room && (room.status === 'COUNTDOWN' || room.status === 'RECORDING')) {
       navigate(`/battle/room/${room.code}`)
     }
   }, [room, navigate])
+
+  const myUserId = activeCode ? getMyParticipantId(activeCode) : ''
+  const myParticipant = room
+    ? (room.participants?.find((p) => p.userId === myUserId) ||
+       (room.player.userId === myUserId ? room.player : room.opponent?.userId === myUserId ? room.opponent : null))
+    : null
+  const isMyReady = Boolean(myParticipant?.isReady)
 
   const handleCreateRoom = async () => {
     setCreating(true)
@@ -119,7 +137,7 @@ export function BattleLobbyPage() {
   const handleToggleReady = async () => {
     if (!room) return
     try {
-      await setReady(room.code, !room.player.isReady)
+      await setReady(room.code, !isMyReady, myUserId)
     } catch (err) {
       console.error('Failed to update ready state', err)
     }
@@ -131,7 +149,7 @@ export function BattleLobbyPage() {
     <div className="min-h-screen bg-white text-[#222222] font-sans py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-8">
           <Link
             to="/"
             className="flex items-center gap-1.5 text-sm font-medium text-[#222222] hover:underline transition-colors"
@@ -302,12 +320,12 @@ export function BattleLobbyPage() {
         {activeCode && (
           <div className="flex flex-col gap-6">
             {/* Room Header & Code Banner */}
-            <div className="rounded-[14px] border border-[#dddddd] bg-white p-6 sm:p-8 airbnb-shadow flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-[#4E9488] mb-1 block">
+            <div className="rounded-[14px] border border-[#dddddd] bg-white p-5 sm:p-8 airbnb-shadow flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="text-center sm:text-left w-full sm:w-auto">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-[#4E9488] mb-1.5 block">
                   Private Arena • {room?.maxPlayers || 2} Contenders
                 </span>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 sm:gap-3">
                   <span className="text-3xl sm:text-4xl font-mono font-bold text-[#171B2A] tracking-widest bg-[#f7f9fa] px-4 py-1.5 rounded-xl border border-[#dddddd]">
                     {activeCode}
                   </span>
@@ -393,7 +411,7 @@ export function BattleLobbyPage() {
                       const participant = participants[idx]
 
                       if (participant) {
-                        const isMe = participant.userId === room.player.userId
+                        const isMe = participant.userId === myUserId
                         return (
                           <div
                             key={participant.userId || idx}
@@ -478,7 +496,7 @@ export function BattleLobbyPage() {
                           <Zap className="h-4 w-4 text-emerald-600" />
                           <span>All {maxPlayers} gladiators ready! Starting countdown...</span>
                         </span>
-                      ) : room.player.isReady ? (
+                      ) : isMyReady ? (
                         <span className="text-amber-600 font-semibold">
                           You are ready! Waiting for others ({readyCount}/{maxPlayers})...
                         </span>
@@ -502,13 +520,13 @@ export function BattleLobbyPage() {
                         type="button"
                         onClick={handleToggleReady}
                         className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-lg px-8 h-[44px] text-sm font-semibold text-white transition-all active:scale-95 ${
-                          room.player.isReady
+                          isMyReady
                             ? 'bg-[#c13515] hover:bg-[#b32505]'
                             : 'btn-primary'
                         }`}
                       >
                         <Check className="h-4 w-4" />
-                        <span>{room.player.isReady ? 'Cancel Ready' : 'I AM READY!'}</span>
+                        <span>{isMyReady ? 'Cancel Ready' : 'I AM READY!'}</span>
                       </button>
                     </div>
                   </div>

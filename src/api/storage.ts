@@ -420,6 +420,26 @@ export function saveRoom(room: BattleRoom): void {
 }
 
 /**
+ * Returns the participant user ID associated with this browser session/tab for a battle room.
+ * Survives page refreshes (sessionStorage) while isolating multiple tabs on the same computer.
+ */
+export function getMyParticipantId(roomCode: string): string {
+  const code = roomCode.toUpperCase()
+  if (typeof window !== 'undefined') {
+    const saved = sessionStorage.getItem(`battle_participant_${code}`)
+    if (saved) return saved
+  }
+  return getUserBase().id || 'user-demo-player'
+}
+
+export function setMyParticipantId(roomCode: string, participantId: string): void {
+  const code = roomCode.toUpperCase()
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem(`battle_participant_${code}`, participantId)
+  }
+}
+
+/**
  * Purchases an item from the cosmetic shop using Coins.
  * Follows atomic transaction ledger pattern.
  */

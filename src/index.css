@@ -43,12 +43,14 @@
     --font-mono: 'Space Mono', monospace;
   }
 
+  html,
   body {
     margin: 0;
     background-color: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
     min-height: 100vh;
+    max-width: 100%;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -67,6 +69,8 @@
 
 #root {
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background-color: #ffffff;

@@ -300,6 +300,7 @@ export function syncRoomState(room: BattleRoom): BattleRoom {
   if (updated.status === 'WAITING') {
     if (updated.botJoinAt && now >= updated.botJoinAt) {
       let botIdx = 0
+      let botAdded = false
       while (updated.participants!.length < maxPlayers && botIdx < BOT_ROSTER.length) {
         const botData = BOT_ROSTER[botIdx]
         if (!updated.participants!.some((p) => p.userId === botData.userId)) {
@@ -312,6 +313,7 @@ export function syncRoomState(room: BattleRoom): BattleRoom {
             hasSubmitted: false,
           })
           modified = true
+          botAdded = true
         }
         botIdx++
       }
@@ -319,7 +321,7 @@ export function syncRoomState(room: BattleRoom): BattleRoom {
       if (!updated.opponent && updated.participants!.length > 1) {
         updated.opponent = updated.participants![1]
       }
-      if (!updated.botReadyAt) {
+      if (botAdded && !updated.botReadyAt) {
         updated.botReadyAt = now + DEMO_CONFIG.botReadyDelayMs
       }
     }
@@ -331,8 +333,9 @@ export function syncRoomState(room: BattleRoom): BattleRoom {
           modified = true
         }
       }
-      if (updated.opponent && !updated.opponent.isReady) {
+      if (updated.opponent && updated.opponent.isBot && !updated.opponent.isReady) {
         updated.opponent.isReady = true
+        modified = true
       }
     }
 

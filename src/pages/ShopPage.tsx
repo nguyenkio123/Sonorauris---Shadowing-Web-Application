@@ -236,7 +236,7 @@ export function ShopPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Live Dressing Room / Profile Preview (4 cols) */}
-          <div className="lg:col-span-4 sticky top-[100px] flex flex-col gap-6">
+          <div className="lg:col-span-4 lg:sticky lg:top-[100px] flex flex-col gap-6">
             <div className="rounded-[16px] border border-[#dddddd] bg-[#f7f7f7] p-6 text-center airbnb-shadow">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#6a6a6a]">

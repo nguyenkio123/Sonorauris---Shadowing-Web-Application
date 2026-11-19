@@ -80,18 +80,18 @@ export function Header() {
   const hasClaimable = quests.some((q) => q.completed && !q.claimed)
 
   return (
-    <header className="sticky top-0 z-40 w-full h-[80px] bg-white border-b border-[#ebebeb]">
-      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full bg-white border-b border-[#ebebeb]">
+      <div className="mx-auto flex h-[64px] md:h-[80px] max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 gap-2">
         {/* Brand / Logo with Sonorauris Emblem from logo.jpe */}
-        <Link to="/" className="flex items-center gap-3 group select-none">
+        <Link to="/" className="flex items-center gap-1.5 sm:gap-3 group select-none shrink-0 min-w-0">
           <img
             src="/logo.jpe"
             alt="Sonorauris Logo"
-            className="h-9 w-9 rounded-xl object-cover shadow-xs transition-transform duration-150 group-hover:scale-105 border border-[#e2e6ea]"
+            className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl object-cover shadow-xs transition-transform duration-150 group-hover:scale-105 border border-[#e2e6ea] shrink-0"
           />
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-[19px] tracking-tight">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1">
+              <span className="font-bold text-[15px] sm:text-[19px] tracking-tight truncate">
                 <span className="text-[#171B2A]">Sonor</span>
                 <span className="text-[#10B981]">auris</span>
               </span>
@@ -102,8 +102,8 @@ export function Header() {
           </div>
         </Link>
 
-        {/* Center Product Navigation Tabs — Clean Minimalist Airbnb Pattern */}
-        <nav className="flex items-center h-full gap-2 sm:gap-6">
+        {/* Center Product Navigation Tabs — Desktop (md+) */}
+        <nav className="hidden md:flex items-center h-full gap-4 lg:gap-6">
           {/* Product Tab 1: Practice */}
           <Link
             to="/"
@@ -176,7 +176,7 @@ export function Header() {
         </nav>
 
         {/* Right Utilities: Quests, Quick Stats, and Profile */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {user && (
             <>
               {/* Daily Quests Trigger Button (English, FR-QUEST-01) */}
@@ -184,10 +184,10 @@ export function Header() {
                 type="button"
                 onClick={() => setIsQuestsOpen(true)}
                 title={`Daily Quests (${completedCount}/${quests.length || 3})`}
-                className="relative flex items-center gap-1.5 rounded-full bg-[#f7f9fa] border border-[#e2e6ea] px-3 py-1.5 text-xs font-medium text-[#171B2A] hover:border-amber-300 hover:bg-amber-50/50 transition-all cursor-pointer group"
+                className="relative flex items-center gap-1 sm:gap-1.5 rounded-full bg-[#f7f9fa] border border-[#e2e6ea] px-2 sm:px-3 py-1.5 text-xs font-medium text-[#171B2A] hover:border-amber-300 hover:bg-amber-50/50 transition-all cursor-pointer group"
               >
                 <Trophy className="h-3.5 w-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
-                <span className="font-semibold text-[12px] hidden md:inline">Quests</span>
+                <span className="font-semibold text-[12px] hidden lg:inline">Quests</span>
                 <span className="font-mono text-[11px] text-gray-500">
                   {completedCount}/{quests.length || 3}
                 </span>
@@ -203,16 +203,16 @@ export function Header() {
               <Link
                 to="/shop"
                 title={`${user.streak} days active streak • ${user.coins} Coins (Click to visit Shop)`}
-                className="flex items-center gap-2.5 rounded-full bg-[#f7f9fa] border border-[#e2e6ea] px-3 py-1.5 text-xs font-semibold text-[#171B2A] hover:border-[#171B2A]/30 transition-all cursor-pointer group"
+                className="flex items-center gap-1.5 sm:gap-2.5 rounded-full bg-[#f7f9fa] border border-[#e2e6ea] px-2 sm:px-3 py-1.5 text-xs font-semibold text-[#171B2A] hover:border-[#171B2A]/30 transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-1 text-orange-500">
+                <div className="flex items-center gap-0.5 sm:gap-1 text-orange-500">
                   <Flame className="h-3.5 w-3.5 fill-orange-500 text-orange-500 group-hover:scale-110 transition-transform" />
-                  <span className="font-mono text-[12px]">{user.streak}d</span>
+                  <span className="font-mono text-[11px] sm:text-[12px]">{user.streak}d</span>
                 </div>
                 <div className="h-3 w-px bg-[#dddddd]" />
-                <div className="flex items-center gap-1 text-amber-600">
+                <div className="flex items-center gap-0.5 sm:gap-1 text-amber-600">
                   <Coins className="h-3.5 w-3.5 fill-amber-500 text-amber-500 group-hover:scale-110 transition-transform" />
-                  <span className="font-mono text-[12px]">{user.coins}</span>
+                  <span className="font-mono text-[11px] sm:text-[12px]">{user.coins}</span>
                 </div>
               </Link>
 
@@ -220,11 +220,11 @@ export function Header() {
               {authUser?.isGuest && (
                 <Link
                   to="/login"
-                  className="hidden sm:flex items-center gap-1.5 rounded-full bg-[#171B2A] hover:bg-[#2b3445] text-white text-xs font-semibold px-3 py-1.5 transition-all shadow-xs cursor-pointer"
+                  className="flex items-center gap-1.5 rounded-full bg-[#171B2A] hover:bg-[#2b3445] text-white text-xs font-semibold px-2.5 sm:px-3 py-1.5 transition-all shadow-xs cursor-pointer"
                   title="Sign In or Register"
                 >
                   <LogIn className="h-3.5 w-3.5" />
-                  <span>Sign In</span>
+                  <span className="hidden sm:inline">Sign In</span>
                 </Link>
               )}
 
@@ -232,7 +232,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-2 rounded-full border border-[#dddddd] p-1 pr-3 hover:shadow-xs hover:border-[#171B2A] transition-all cursor-pointer group"
+                className="flex items-center gap-2 rounded-full border border-[#dddddd] p-0.5 sm:p-1 sm:pr-3 hover:shadow-xs hover:border-[#171B2A] transition-all cursor-pointer group"
                 title={`Account & Settings (${user.displayName})`}
               >
                 <AvatarWithFrame
@@ -249,6 +249,58 @@ export function Header() {
           )}
         </div>
       </div>
+
+      {/* Mobile Navigation Bar (< md) */}
+      <nav className="flex md:hidden items-center justify-around border-t border-[#f0f3f5] bg-white px-2 h-11 overflow-x-auto scrollbar-none">
+        <Link
+          to="/"
+          className={`relative flex items-center gap-1.5 h-full px-3 text-xs font-semibold whitespace-nowrap transition-colors ${
+            isHomeActive ? 'text-[#171B2A]' : 'text-[#5B6780]'
+          }`}
+        >
+          <Headphones className="h-3.5 w-3.5" />
+          <span>Practice</span>
+          {isHomeActive && <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-[#4E9488]" />}
+        </Link>
+
+        <Link
+          to="/battle/lobby"
+          className={`relative flex items-center gap-1.5 h-full px-3 text-xs font-semibold whitespace-nowrap transition-colors ${
+            isBattleActive ? 'text-[#171B2A]' : 'text-[#5B6780]'
+          }`}
+        >
+          <Swords className="h-3.5 w-3.5" />
+          <span>Battle</span>
+          <span className="new-tag">LIVE</span>
+          {isBattleActive && <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-[#4E9488]" />}
+        </Link>
+
+        <Link
+          to="/shop"
+          className={`relative flex items-center gap-1.5 h-full px-3 text-xs font-semibold whitespace-nowrap transition-colors ${
+            isShopActive ? 'text-[#171B2A]' : 'text-[#5B6780]'
+          }`}
+        >
+          <Sparkles className="h-3.5 w-3.5 text-[#4E9488]" />
+          <span>Shop</span>
+          {isShopActive && <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-[#4E9488]" />}
+        </Link>
+
+        {authUser?.role === 'admin' && (
+          <Link
+            to="/admin"
+            className={`relative flex items-center gap-1 h-full px-3 text-xs font-semibold whitespace-nowrap transition-colors ${
+              location.pathname.startsWith('/admin') ? 'text-purple-700' : 'text-[#5B6780]'
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-purple-600" />
+            <span>Admin</span>
+            {location.pathname.startsWith('/admin') && (
+              <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-purple-600" />
+            )}
+          </Link>
+        )}
+      </nav>
 
       {/* Daily Quests Modal */}
       <DailyQuestsModal

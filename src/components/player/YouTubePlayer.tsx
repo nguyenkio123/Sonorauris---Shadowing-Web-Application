@@ -277,7 +277,7 @@ export function YouTubePlayer({
       )}
 
       {/* Segment Control Toolbar — Airbnb Clean Style */}
-      <div className="flex items-center justify-between border-t border-[#ebebeb] bg-white px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#ebebeb] bg-white px-4 py-3">
         <div className="flex items-center gap-2.5">
           {isPlaying ? (
             <button

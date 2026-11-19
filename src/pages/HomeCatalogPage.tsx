@@ -164,7 +164,7 @@ export function HomeCatalogPage() {
 
             {/* User Progression Ledger Cards */}
             {user && (
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
                 <div className="rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow flex items-center gap-3">
                   <div className="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
                     <Flame className="h-4 w-4 fill-orange-500 text-orange-500" />
@@ -203,7 +203,7 @@ export function HomeCatalogPage() {
       {/* GLOBAL SEARCH BAR — Signature Airbnb Pill (search-bar-pill & search-orb) */}
       <section className="border-b border-[#ebebeb] py-6 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="mx-auto max-w-2xl">
-          <div className="search-bar-pill flex items-center justify-between p-2 pl-6 gap-3">
+          <div className="search-bar-pill flex items-center justify-between p-2 pl-4 sm:pl-6 gap-2 sm:gap-3">
             {/* Search Keyword Input */}
             <div className="flex-1 min-w-0 pr-2">
               <label htmlFor="search-input" className="block text-[12px] font-semibold text-[#171B2A] leading-none mb-1">
@@ -253,9 +253,9 @@ export function HomeCatalogPage() {
       </section>
 
       {/* CATEGORY STRIP — Horizontal Product Tabs & Mobile-Accessible Difficulty Filter */}
-      <section className="sticky top-[80px] z-30 bg-white border-b border-[#ebebeb] shadow-xs">
+      <section className="sticky top-[108px] md:top-[80px] z-30 bg-white border-b border-[#ebebeb] shadow-xs">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-3">
-          <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto py-1 scrollbar-none">
+          <div className="w-full min-w-0 flex items-center gap-6 sm:gap-8 overflow-x-auto py-1 scrollbar-none">
             {TOPICS.map((t) => {
               const Icon = t.icon
               const isSelected = selectedTopic === t.name
@@ -278,7 +278,7 @@ export function HomeCatalogPage() {
           </div>
 
           {/* Quick Filter Pill for Difficulty & Saved (Visible on Mobile & Desktop) */}
-          <div className="flex items-center gap-2 pt-2 sm:pt-0 sm:pl-4 border-t sm:border-t-0 sm:border-l border-[#ebebeb] overflow-x-auto scrollbar-none shrink-0">
+          <div className="w-full sm:w-auto min-w-0 flex items-center gap-2 pt-2 sm:pt-0 sm:pl-4 border-t sm:border-t-0 sm:border-l border-[#ebebeb] overflow-x-auto scrollbar-none shrink-0">
             <SlidersHorizontal className="h-4 w-4 text-[#5B6780] shrink-0" />
             <div className="flex items-center gap-1.5">
               {DIFFICULTIES.map((d) => (

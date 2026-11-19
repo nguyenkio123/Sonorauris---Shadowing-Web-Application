@@ -10,7 +10,7 @@ import {
   Swords,
   Volume2,
 } from 'lucide-react'
-import { getClip, submitBattleAttempt } from '../api'
+import { getClip, getMyParticipantId, submitBattleAttempt } from '../api'
 import { AvatarWithFrame, resolveParticipantFrameId } from '../components/common/AvatarWithFrame'
 import { AudioRecorder } from '../components/recorder/AudioRecorder'
 import { YouTubePlayer } from '../components/player/YouTubePlayer'
@@ -61,12 +61,14 @@ export function BattleRoomPage() {
     }
   }, [room?.status, room?.code, navigate])
 
+  const myUserId = roomCode ? getMyParticipantId(roomCode) : ''
+
   const handleSubmitAudio = async (audioBlob: Blob) => {
     if (!room || submitting) return
     setSubmitting(true)
     setSubmitError(null)
     try {
-      await submitBattleAttempt(room.code, audioBlob)
+      await submitBattleAttempt(room.code, audioBlob, myUserId)
     } catch (err) {
       console.error('Failed to submit battle recording', err)
       setSubmitError('Could not submit your battle recording. Check your connection and click Submit again.')
@@ -105,7 +107,7 @@ export function BattleRoomPage() {
     <div className="min-h-screen bg-white text-[#171B2A] font-sans py-6 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         {/* Top Arena Navigation Bar */}
-        <div className="flex items-center justify-between border-b border-[#ebebeb] pb-4 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#ebebeb] pb-4 mb-6">
           <div className="flex items-center gap-3">
             <Link
               to="/battle/lobby"
@@ -174,7 +176,7 @@ export function BattleRoomPage() {
               return (
                 <div className={`grid ${gridCols} gap-4 items-stretch`}>
                   {participants.map((p, idx) => {
-                    const isMe = p.userId === room.player.userId
+                    const isMe = p.userId === myUserId
                     return (
                       <div
                         key={p.userId || idx}

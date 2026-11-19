@@ -98,7 +98,7 @@ export function PracticePage() {
     <div className="min-h-screen bg-white text-[#171B2A] font-sans py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1080px]">
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <Link
             to="/"
             className="flex items-center gap-1.5 text-sm font-medium text-[#171B2A] hover:underline transition-colors"
@@ -182,7 +182,7 @@ export function PracticePage() {
           </div>
 
           {/* Right Column: Sticky Transcript & Recording Studio Card */}
-          <div className="lg:col-span-5 sticky top-[100px] flex flex-col gap-4">
+          <div className="lg:col-span-5 lg:sticky lg:top-[100px] flex flex-col gap-4">
             <div className="rounded-[14px] border border-[#dddddd] bg-white p-6 airbnb-shadow">
               {/* Target Transcript Block */}
               <div className="mb-5 pb-5 border-b border-[#ebebeb]">
