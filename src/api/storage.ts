@@ -6,11 +6,12 @@ import {
   SHOP_ITEMS,
 } from '../data/shopItems'
 import { SAMPLE_CLIPS } from '../data/clips'
+import { calculateLevelInfo } from '../config/scoring'
 import type { Attempt } from '../types/attempt'
 import type { BattleRoom } from '../types/battle'
 import type { Clip } from '../types/clip'
 import type { DailyQuest } from '../types/quest'
-import type { CosmeticType, UserInventory } from '../types/shop'
+import type { CosmeticType, ShopItem, UserInventory } from '../types/shop'
 import type { ReferenceType, RewardTransaction, RewardType } from '../types/transaction'
 import type { UserProfile } from '../types/user'
 import type { UserRole } from '../types/auth'
@@ -22,6 +23,8 @@ const STORAGE_KEYS = {
   ROOMS: 'shadowing_rooms',
   INVENTORY: 'shadowing_user_inventory',
   CLIPS: 'shadowing_clips',
+  SHOP_ITEMS: 'shadowing_shop_items',
+  SHOP_DELETED_IDS: 'shadowing_shop_deleted_ids',
 } as const
 
 interface UserBase {
@@ -254,6 +257,73 @@ export function resetStoredClips(): Clip[] {
   return [...SAMPLE_CLIPS]
 }
 
+export function getStoredShopItems(): ShopItem[] {
+  if (typeof window === 'undefined') return [...SHOP_ITEMS]
+  const raw = localStorage.getItem(STORAGE_KEYS.SHOP_ITEMS)
+  if (!raw) {
+    saveStoredShopItems(SHOP_ITEMS)
+    return [...SHOP_ITEMS]
+  }
+  const stored = readJson<ShopItem[]>(STORAGE_KEYS.SHOP_ITEMS, SHOP_ITEMS)
+  const deletedIds = new Set(readJson<string[]>(STORAGE_KEYS.SHOP_DELETED_IDS, []))
+  const existingIds = new Set(stored.map((i) => i.id))
+  const missingDefaults = SHOP_ITEMS.filter(
+    (item) => !existingIds.has(item.id) && !deletedIds.has(item.id)
+  )
+  if (missingDefaults.length > 0) {
+    const merged = [...stored, ...missingDefaults]
+    saveStoredShopItems(merged)
+    return merged
+  }
+  return stored
+}
+
+export function saveStoredShopItems(items: ShopItem[]): void {
+  writeJson(STORAGE_KEYS.SHOP_ITEMS, items)
+}
+
+export function addStoredShopItem(itemData: Omit<ShopItem, 'id'>): ShopItem {
+  const items = getStoredShopItems()
+  const prefix = itemData.type.toLowerCase()
+  const newItem: ShopItem = {
+    ...itemData,
+    id: `${prefix}-${Date.now().toString(36)}`,
+  }
+  saveStoredShopItems([...items, newItem])
+  return newItem
+}
+
+export function updateStoredShopItem(
+  id: string,
+  updates: Partial<Omit<ShopItem, 'id'>>
+): ShopItem | null {
+  const items = getStoredShopItems()
+  const idx = items.findIndex((i) => i.id === id)
+  if (idx === -1) return null
+  const updated = { ...items[idx], ...updates }
+  items[idx] = updated
+  saveStoredShopItems(items)
+  return updated
+}
+
+export function deleteStoredShopItem(id: string): boolean {
+  const items = getStoredShopItems()
+  const filtered = items.filter((i) => i.id !== id)
+  if (filtered.length === items.length) return false
+  saveStoredShopItems(filtered)
+  const deleted = readJson<string[]>(STORAGE_KEYS.SHOP_DELETED_IDS, [])
+  if (!deleted.includes(id)) {
+    writeJson(STORAGE_KEYS.SHOP_DELETED_IDS, [...deleted, id])
+  }
+  return true
+}
+
+export function resetStoredShopItems(): ShopItem[] {
+  writeJson(STORAGE_KEYS.SHOP_DELETED_IDS, [])
+  saveStoredShopItems(SHOP_ITEMS)
+  return [...SHOP_ITEMS]
+}
+
 export function getTransactions(): RewardTransaction[] {
   return readJson<RewardTransaction[]>(STORAGE_KEYS.TRANSACTIONS, SEED_TRANSACTIONS)
 }
@@ -279,7 +349,7 @@ export function getUserProfile(targetUserId?: string): UserProfile {
     .filter((t) => t.type === 'COINS')
     .reduce((sum, t) => sum + t.amount, 0)
 
-  const titleItem = SHOP_ITEMS.find((i) => i.id === inventory.equippedTitleId)
+  const titleItem = getStoredShopItems().find((i) => i.id === inventory.equippedTitleId)
 
   if (targetUserId && targetUserId !== base.id) {
     const accounts = readJson<Array<{ id: string; email: string; displayName: string; avatarUrl: string; role?: UserRole; streak?: number; lastPracticeDate?: string | null; lastStreakRestoreDate?: string | null }>>(
@@ -444,15 +514,33 @@ export function setMyParticipantId(roomCode: string, participantId: string): voi
  * Follows atomic transaction ledger pattern.
  */
 export function buyShopItem(itemId: string): { success: boolean; message: string } {
-  const item = SHOP_ITEMS.find((i) => i.id === itemId)
+  const item = getStoredShopItems().find((i) => i.id === itemId)
   if (!item) return { success: false, message: 'Item not found in shop' }
+
+  const profile = getUserProfile()
+  const levelInfo = calculateLevelInfo(profile.xp)
+  if (item.unlockLevel && levelInfo.level < item.unlockLevel) {
+    return {
+      success: false,
+      message: `Reach Level ${item.unlockLevel} (need ${item.unlockLevel > 1 ? '' : ''}${item.unlockLevel}) to unlock this item!`,
+    }
+  }
 
   const inventory = getUserInventory()
   if (inventory.ownedItemIds.includes(itemId)) {
     return { success: false, message: 'You already own this item' }
   }
 
-  const profile = getUserProfile()
+  if (item.unlockLevel && item.price <= 0) {
+    const updatedInv: UserInventory = {
+      ...inventory,
+      ownedItemIds: [...inventory.ownedItemIds, itemId],
+    }
+    saveUserInventory(updatedInv)
+    notifyUserUpdated()
+    return { success: true, message: `Unlocked ${item.name} at Level ${item.unlockLevel}!` }
+  }
+
   if (profile.coins < item.price) {
     return { success: false, message: `Insufficient coins. Need ${item.price} coins.` }
   }
@@ -484,16 +572,25 @@ export function buyShopItem(itemId: string): { success: boolean; message: string
 }
 
 /**
- * Equips an owned cosmetic item.
+ * Equips an owned or level-unlocked cosmetic item.
  */
 export function equipShopItem(type: CosmeticType, itemId: string): boolean {
-  const inventory = getUserInventory()
-  if (!inventory.ownedItemIds.includes(itemId)) return false
-
-  const item = SHOP_ITEMS.find((i) => i.id === itemId)
+  const item = getStoredShopItems().find((i) => i.id === itemId)
   if (!item || item.type !== type) return false
 
-  const updatedInv = { ...inventory }
+  const inventory = getUserInventory()
+  const profile = getUserProfile()
+  const levelInfo = calculateLevelInfo(profile.xp)
+  const unlockedByLevel = Boolean(item.unlockLevel && levelInfo.level >= item.unlockLevel)
+  const isOwned = inventory.ownedItemIds.includes(itemId) || unlockedByLevel
+  if (!isOwned) return false
+
+  const updatedInv: UserInventory = {
+    ...inventory,
+    ownedItemIds: inventory.ownedItemIds.includes(itemId)
+      ? inventory.ownedItemIds
+      : [...inventory.ownedItemIds, itemId],
+  }
   const base = getUserBase()
 
   if (type === 'AVATAR') {

@@ -6,6 +6,7 @@ import { HomeCatalogPage } from '../pages/HomeCatalogPage'
 import { PracticePage } from '../pages/PracticePage'
 import { ResultPage } from '../pages/ResultPage'
 import { ShopPage } from '../pages/ShopPage'
+import { ProfilePage } from '../pages/ProfilePage'
 import { LoginPage } from '../pages/LoginPage'
 
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
@@ -33,6 +34,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <ShopPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />

@@ -7,7 +7,7 @@ from typing import List, Optional
 
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
 from pydantic import BaseModel
@@ -15,6 +15,8 @@ from pydantic import BaseModel
 MODEL_NAME = os.environ.get("WHISPER_MODEL", "base.en")
 COMPUTE_TYPE = os.environ.get("WHISPER_COMPUTE_TYPE", "int8")
 PORT = int(os.environ.get("WHISPER_PORT", "8000"))
+HOST = os.environ.get("WHISPER_HOST", "127.0.0.1")
+MAX_AUDIO_BYTES = 15 * 1024 * 1024  # 15 MB limit against memory exhaustion DoS
 
 app = FastAPI(
     title="Sonorauris Faster-Whisper Assessment Engine",
@@ -180,7 +182,22 @@ async def assess_audio(
     audio: UploadFile = File(...),
     referenceText: str = Form(...),
 ):
-    audio_bytes = await audio.read()
+    if audio.content_type and not (audio.content_type.startswith("audio/") or "octet-stream" in audio.content_type):
+        raise HTTPException(status_code=400, detail="Invalid audio content type.")
+
+    audio_chunks = []
+    total_bytes = 0
+    chunk_size = 64 * 1024  # 64 KB chunks
+    while True:
+        chunk = await audio.read(chunk_size)
+        if not chunk:
+            break
+        total_bytes += len(chunk)
+        if total_bytes > MAX_AUDIO_BYTES:
+            raise HTTPException(status_code=413, detail="Audio file exceeds 15MB limit.")
+        audio_chunks.append(chunk)
+
+    audio_bytes = b"".join(audio_chunks)
     clean_ref_tokens = [
         t for t in re.sub(r"[.,/#!$%^&*;:{}=\-_`~()?\"']", "", referenceText).split() if t
     ]
@@ -490,4 +507,4 @@ async def assess_audio(
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="info")
+    uvicorn.run(app, host=HOST, port=PORT, log_level="info")

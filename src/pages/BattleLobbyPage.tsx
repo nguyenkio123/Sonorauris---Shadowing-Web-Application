@@ -9,7 +9,7 @@ import {
   Swords,
   Users,
   Zap,
-} from 'lucide-react'
+} from '../components/icons'
 import { addBotToRoom, createRoom, getClips, getMyParticipantId, joinRoom, setReady } from '../api'
 import { AvatarWithFrame, resolveParticipantFrameId } from '../components/common/AvatarWithFrame'
 import { useRoom } from '../hooks/useRoom'

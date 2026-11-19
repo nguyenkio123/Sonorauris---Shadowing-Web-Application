@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, Volume2, X } from 'lucide-react'
+import { BookOpen, Volume2, X } from '../icons'
 import { lookupWord, playWordPronunciation, type DictionaryEntry } from '../../api/dictionary'
 
 interface DictionaryModalProps {

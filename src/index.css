@@ -310,3 +310,39 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #c1c1c1;
 }
+
+/* Procedural 5-Column Vertical Gradient Background Animation */
+@keyframes procedural-band-up {
+  0% {
+    transform: translate3d(0, 0%, 0);
+  }
+  100% {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+@keyframes procedural-band-down {
+  0% {
+    transform: translate3d(0, -50%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0%, 0);
+  }
+}
+
+.procedural-band-up {
+  animation: procedural-band-up var(--band-duration, 18s) linear infinite;
+  will-change: transform;
+}
+
+.procedural-band-down {
+  animation: procedural-band-down var(--band-duration, 18s) linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .procedural-band-up,
+  .procedural-band-down {
+    animation-duration: 45s !important;
+  }
+}

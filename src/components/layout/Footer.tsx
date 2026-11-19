@@ -1,9 +1,9 @@
-import { Globe, Sparkles } from 'lucide-react'
+import { Globe, Sparkles } from '../icons'
 
 export function Footer() {
   return (
-    <footer className="w-full border-t border-[#ebebeb] bg-white text-[#222222] font-sans">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <footer className="relative z-10 w-full px-3 sm:px-6 lg:px-8 pb-6 pt-2 text-[#222222] font-sans">
+      <div className="mx-auto max-w-7xl rounded-2xl bg-white/78 backdrop-blur-md border border-white/70 airbnb-shadow px-5 py-10 sm:px-8">
         {/* 3-Column Editorial Links Grid (Support / Practice / Sonorauris) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-10 border-b border-[#ebebeb]">
           {/* Column 1: Learning & Methods */}

@@ -6,6 +6,7 @@ export interface ShopItem {
   name: string
   description: string
   price: number
+  unlockLevel?: number
   assetValue: string
   previewColor?: string
   rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary'

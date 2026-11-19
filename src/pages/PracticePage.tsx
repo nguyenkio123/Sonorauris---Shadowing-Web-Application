@@ -10,7 +10,7 @@ import {
   Mic,
   BookOpen,
   AlertCircle,
-} from 'lucide-react'
+} from '../components/icons'
 import { getClip, submitAttempt } from '../api'
 import { REWARDS } from '../config/scoring'
 import { AudioRecorder } from '../components/recorder/AudioRecorder'

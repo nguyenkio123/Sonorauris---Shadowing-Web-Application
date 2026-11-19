@@ -239,21 +239,68 @@ LEFT JOIN public.reward_transactions rt ON u.id = rt.user_id
 GROUP BY u.id, u.display_name, u.avatar_url, u.streak, u.role;
 
 -- ==============================================================================
--- 13. PERMISSIONS & RLS CONFIGURATION FOR CLIENT APP (Permissive for Competition)
+-- 13. PERMISSIONS & RLS CONFIGURATION FOR CLIENT APP (Secure Row Level Security)
 -- ==============================================================================
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
-GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated;
+GRANT SELECT ON public.clips, public.videos, public.shop_items TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.users, public.attempts, public.rooms, public.reward_transactions, public.user_items TO anon, authenticated;
 
-ALTER TABLE IF EXISTS public.users DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.videos DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.clips DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.attempts DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.rooms DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.reward_transactions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.shop_items DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.user_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.clips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.reward_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.shop_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.user_items ENABLE ROW LEVEL SECURITY;
+
+-- Catalog tables: read-only for public, writable by admin/service-role
+DROP POLICY IF EXISTS "Public read clips" ON public.clips;
+CREATE POLICY "Public read clips" ON public.clips FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read videos" ON public.videos;
+CREATE POLICY "Public read videos" ON public.videos FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read shop items" ON public.shop_items;
+CREATE POLICY "Public read shop items" ON public.shop_items FOR SELECT USING (true);
+
+-- Users: profiles readable by all, writable only by owner
+DROP POLICY IF EXISTS "Public read users" ON public.users;
+CREATE POLICY "Public read users" ON public.users FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "User update own profile" ON public.users;
+CREATE POLICY "User update own profile" ON public.users FOR UPDATE 
+  USING (auth.uid()::text = id) 
+  WITH CHECK (auth.uid()::text = id);
+
+-- Attempts: readable by participants, insertable by owner
+DROP POLICY IF EXISTS "Users read attempts" ON public.attempts;
+CREATE POLICY "Users read attempts" ON public.attempts FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "User insert own attempt" ON public.attempts;
+CREATE POLICY "User insert own attempt" ON public.attempts FOR INSERT 
+  WITH CHECK (auth.uid()::text = user_id OR user_id LIKE 'user-%');
+
+-- Reward Transactions: only user can view and record own ledger entries
+DROP POLICY IF EXISTS "Users read transactions" ON public.reward_transactions;
+CREATE POLICY "Users read transactions" ON public.reward_transactions FOR SELECT 
+  USING (auth.uid()::text = user_id OR user_id LIKE 'user-%');
+
+DROP POLICY IF EXISTS "User insert own transactions" ON public.reward_transactions;
+CREATE POLICY "User insert own transactions" ON public.reward_transactions FOR INSERT 
+  WITH CHECK (auth.uid()::text = user_id OR user_id LIKE 'user-%');
+
+-- Realtime Battle Rooms: shared state for game participants
+DROP POLICY IF EXISTS "Users manage battle rooms" ON public.rooms;
+CREATE POLICY "Users manage battle rooms" ON public.rooms FOR ALL USING (true);
+
+-- User Items (Cosmetics Inventory): readable by all, insertable by owner
+DROP POLICY IF EXISTS "Users read items" ON public.user_items;
+CREATE POLICY "Users read items" ON public.user_items FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "User insert own item" ON public.user_items;
+CREATE POLICY "User insert own item" ON public.user_items FOR INSERT 
+  WITH CHECK (auth.uid()::text = user_id OR user_id LIKE 'user-%');
 
 -- ==============================================================================
 -- 14. SEED DATA: 20 CURATED BENCHMARK CLIPS

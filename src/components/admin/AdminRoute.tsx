@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, KeyRound, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, KeyRound, ShieldAlert } from '../icons'
 import { useAuth } from '../../context/AuthContext'
 
 interface AdminRouteProps {

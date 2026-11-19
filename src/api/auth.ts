@@ -21,10 +21,20 @@ export interface StoredLocalAccount {
   brokenStreak?: number
 }
 
+export async function hashPassword(password: string): Promise<string> {
+  const enc = new TextEncoder()
+  const data = enc.encode(`sonorauris_salt_v1_${password}`)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
 export const DEFAULT_ADMIN_ACCOUNT: StoredLocalAccount = {
   id: 'a0000000-0000-0000-0000-000000000001',
   email: 'admin@sonorauris.com',
-  passwordHash: btoa('admin123'),
+  // Salted SHA-256 hash (never store plaintext or reversible Base64)
+  passwordHash: '167296a2c62662739326671cf17bc31fb832426eeb2b381d054a616b778c63d6',
   displayName: 'System Admin',
   avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=AdminSonorauris',
   role: 'admin',
@@ -51,24 +61,7 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(supabase)
 }
 
-function persistSession(authUser: AuthUser, rawPassword?: string): AuthUser {
-  if (rawPassword) {
-    const localAccounts = getLocalAccounts()
-    const existingIdx = localAccounts.findIndex((a) => a.email === authUser.email)
-    const cachedAcc: StoredLocalAccount = {
-      id: authUser.id,
-      email: authUser.email,
-      passwordHash: btoa(rawPassword),
-      displayName: authUser.displayName,
-      avatarUrl: authUser.avatarUrl,
-      role: authUser.role,
-      createdAt: authUser.createdAt || new Date().toISOString(),
-    }
-    if (existingIdx >= 0) localAccounts[existingIdx] = cachedAcc
-    else localAccounts.push(cachedAcc)
-    saveLocalAccounts(localAccounts)
-  }
-
+function persistSession(authUser: AuthUser): AuthUser {
   writeJson(STORAGE_KEYS.AUTH_USER, authUser)
   const base = getUserBase()
   saveUserBase({
@@ -151,11 +144,11 @@ export function getGuestUser(): AuthUser {
 export async function signUpWithEmail(
   email: string,
   password: string,
-  displayName: string,
-  role: UserRole = 'user'
+  displayName: string
 ): Promise<{ user: AuthUser; message: string }> {
   const trimmedEmail = email.trim().toLowerCase()
   const trimmedName = displayName.trim() || trimmedEmail.split('@')[0]
+  const role: UserRole = 'user'
 
   if (!trimmedEmail || !trimmedEmail.includes('@')) {
     throw new Error('Please provide a valid email address.')
@@ -201,7 +194,7 @@ export async function signUpWithEmail(
         console.warn('[Auth] Optional public.users sync error:', dbErr)
       }
 
-      persistSession(authUser, password)
+      persistSession(authUser)
       return {
         user: authUser,
         message: data.session
@@ -211,22 +204,33 @@ export async function signUpWithEmail(
     }
   }
 
-  if (getLocalAccounts().some((a) => a.email === trimmedEmail)) {
+  const localAccounts = getLocalAccounts()
+  if (localAccounts.some((a) => a.email === trimmedEmail)) {
     throw new Error('An account with this email already exists.')
   }
 
-  const authUser = persistSession(
-    {
-      id: `user-local-${Date.now()}`,
-      email: trimmedEmail,
-      displayName: trimmedName,
-      avatarUrl,
-      role,
-      isGuest: false,
-      createdAt: new Date().toISOString(),
-    },
-    password
-  )
+  const newId = `user-local-${Date.now()}`
+  const passwordHash = await hashPassword(password)
+  localAccounts.push({
+    id: newId,
+    email: trimmedEmail,
+    displayName: trimmedName,
+    passwordHash,
+    avatarUrl,
+    role,
+    createdAt: new Date().toISOString(),
+  })
+  saveLocalAccounts(localAccounts)
+
+  const authUser = persistSession({
+    id: newId,
+    email: trimmedEmail,
+    displayName: trimmedName,
+    avatarUrl,
+    role,
+    isGuest: false,
+    createdAt: new Date().toISOString(),
+  })
 
   return { user: authUser, message: 'Account created successfully (Sandbox Profile)!' }
 }
@@ -238,6 +242,8 @@ export async function signInWithEmail(
   const trimmedEmail = email.trim().toLowerCase()
   if (!trimmedEmail) throw new Error('Please enter your email address.')
   if (!password) throw new Error('Please enter your password.')
+
+  const hashedEnteredPassword = await hashPassword(password)
 
   if (supabase) {
     let supabaseError: { message: string; status?: number } | null = null
@@ -264,18 +270,15 @@ export async function signInWithEmail(
           // ignore
         }
 
-        const authUser = persistSession(
-          {
-            id: data.user.id,
-            email: data.user.email || trimmedEmail,
-            displayName: meta.display_name || meta.name || trimmedEmail.split('@')[0],
-            avatarUrl: meta.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.user.id}`,
-            role,
-            isGuest: false,
-            createdAt: data.user.created_at,
-          },
-          password
-        )
+        const authUser = persistSession({
+          id: data.user.id,
+          email: data.user.email || trimmedEmail,
+          displayName: meta.display_name || meta.name || trimmedEmail.split('@')[0],
+          avatarUrl: meta.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.user.id}`,
+          role,
+          isGuest: false,
+          createdAt: data.user.created_at,
+        })
         return { user: authUser, message: 'Signed in successfully!' }
       }
     } catch (err) {
@@ -284,7 +287,9 @@ export async function signInWithEmail(
 
     if (supabaseError) {
       const msgLower = supabaseError.message.toLowerCase()
-      const found = getLocalAccounts().find((a) => a.email === trimmedEmail && a.passwordHash === btoa(password))
+      const found = getLocalAccounts().find(
+        (a) => a.email === trimmedEmail && a.passwordHash === hashedEnteredPassword
+      )
 
       if (found) {
         const authUser = persistSession(accountToAuthUser(found))
@@ -311,7 +316,9 @@ export async function signInWithEmail(
     }
   }
 
-  const found = getLocalAccounts().find((a) => a.email === trimmedEmail && a.passwordHash === btoa(password))
+  const found = getLocalAccounts().find(
+    (a) => a.email === trimmedEmail && a.passwordHash === hashedEnteredPassword
+  )
   if (!found) throw new Error('Invalid email or password.')
 
   return { user: persistSession(accountToAuthUser(found)), message: 'Signed in successfully!' }
@@ -340,19 +347,83 @@ export async function signOutUser(): Promise<void> {
   })
 }
 
-export async function toggleCurrentRole(): Promise<UserRole> {
-  const current = await getCurrentAuthUser()
-  const newRole: UserRole = current?.role === 'admin' ? 'user' : 'admin'
+export async function updateCurrentUserProfile(params: {
+  displayName: string
+  email: string
+}): Promise<{ user: AuthUser; message: string }> {
+  const trimmedName = params.displayName.trim().slice(0, 30)
+  const trimmedEmail = params.email.trim().toLowerCase()
 
-  if (current) {
-    persistSession({ ...current, role: newRole })
-    const accounts = getLocalAccounts()
-    const idx = accounts.findIndex((a) => a.id === current.id)
-    if (idx >= 0) {
-      accounts[idx].role = newRole
-      saveLocalAccounts(accounts)
+  if (!trimmedName) {
+    throw new Error('Display name cannot be empty.')
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    throw new Error('Please enter a valid email address.')
+  }
+
+  const current = await getCurrentAuthUser()
+  if (!current) {
+    throw new Error('No active user session found.')
+  }
+
+  const emailChanged = trimmedEmail !== (current.email || '').toLowerCase()
+  let statusMessage = 'Profile name and email updated successfully!'
+
+  if (supabase && !current.isGuest) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        const updatePayload: { email?: string; data: { display_name: string } } = {
+          data: { display_name: trimmedName },
+        }
+        if (emailChanged) {
+          updatePayload.email = trimmedEmail
+        }
+
+        const { error } = await supabase.auth.updateUser(updatePayload)
+        if (error) {
+          throw new Error(error.message)
+        }
+
+        try {
+          await supabase
+            .from('users')
+            .update({ display_name: trimmedName, email: trimmedEmail })
+            .eq('id', session.user.id)
+        } catch {
+          // Optional table sync
+        }
+
+        if (emailChanged) {
+          statusMessage =
+            'Name updated! Please check your new email inbox to confirm the email change if required by Supabase.'
+        }
+      }
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Failed to update profile on Supabase.')
     }
   }
 
-  return newRole
+  // Update local accounts list (check duplicate email on local accounts)
+  const accounts = getLocalAccounts()
+  if (emailChanged && accounts.some((a) => a.email === trimmedEmail && a.id !== current.id)) {
+    throw new Error('This email address is already used by another local account.')
+  }
+  const accIdx = accounts.findIndex((a) => a.id === current.id)
+  if (accIdx >= 0) {
+    accounts[accIdx] = {
+      ...accounts[accIdx],
+      displayName: trimmedName,
+      email: trimmedEmail,
+    }
+    saveLocalAccounts(accounts)
+  }
+
+  const updatedAuthUser: AuthUser = {
+    ...current,
+    displayName: trimmedName,
+    email: trimmedEmail,
+  }
+  persistSession(updatedAuthUser)
+  return { user: updatedAuthUser, message: statusMessage }
 }

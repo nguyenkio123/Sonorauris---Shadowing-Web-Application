@@ -1,4 +1,4 @@
-import { Mic, Square, RotateCcw, Send, AlertCircle, Info, Volume2, Cpu, RefreshCw } from 'lucide-react'
+import { Mic, Square, RotateCcw, Send, AlertCircle, Info, Volume2, Cpu, RefreshCw } from '../icons'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   checkFasterWhisperHealth,

@@ -11,7 +11,7 @@ import {
   Zap,
   HelpCircle,
   Volume2,
-} from 'lucide-react'
+} from '../components/icons'
 import { getAttempt, getAttemptAudioUrl, getClip, getMe } from '../api'
 import type { Attempt, MiscueWord } from '../types/attempt'
 import type { Clip } from '../types/clip'

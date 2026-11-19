@@ -56,3 +56,55 @@ export function calculateBattleScore(
     prosody * SCORING_WEIGHTS.prosody
   return Math.round(score)
 }
+
+export interface LevelInfo {
+  level: number
+  rankName: string
+  currentLevelXp: number
+  nextLevelXp: number
+  xpIntoLevel: number
+  xpNeededForNext: number
+  progressPct: number
+}
+
+const LEVEL_RANK_NAMES = [
+  'Novice Listener',
+  'Echo Apprentice',
+  'Cadence Seeker',
+  'Rhythm Striker',
+  'Fluent Speaker',
+  'Prosody Adept',
+  'Articulate Virtuoso',
+  'Native Shadow',
+  'Orator Elite',
+  'Phonetic Grandmaster',
+] as const
+
+export function getXpForLevel(level: number): number {
+  if (level <= 1) return 0
+  return 25 * (level - 1) * (level + 2)
+}
+
+export function calculateLevelInfo(totalXp: number): LevelInfo {
+  const safeXp = Math.max(0, Math.floor(totalXp || 0))
+  let level = 1
+  while (safeXp >= getXpForLevel(level + 1) && level < 99) {
+    level++
+  }
+  const currentLevelXp = getXpForLevel(level)
+  const nextLevelXp = getXpForLevel(level + 1)
+  const xpIntoLevel = safeXp - currentLevelXp
+  const xpNeededForNext = Math.max(1, nextLevelXp - currentLevelXp)
+  const progressPct = Math.min(100, Math.round((xpIntoLevel / xpNeededForNext) * 100))
+  const rankName = LEVEL_RANK_NAMES[Math.min(level - 1, LEVEL_RANK_NAMES.length - 1)]
+
+  return {
+    level,
+    rankName,
+    currentLevelXp,
+    nextLevelXp,
+    xpIntoLevel,
+    xpNeededForNext,
+    progressPct,
+  }
+}

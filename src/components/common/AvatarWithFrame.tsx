@@ -8,7 +8,7 @@ import {
   Trophy,
   Zap,
 } from 'lucide-react'
-import { getUserInventory } from '../../api/storage'
+import { getStoredShopItems, getUserInventory } from '../../api/storage'
 
 export type FrameSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
@@ -101,6 +101,15 @@ export function AvatarWithFrame({
   const resolvedId = normalizeFrameId(frameId)
   const sz = SIZE_MAP[size]
   const gradSuffix = `${resolvedId}-${size}`
+  const isBuiltInFrame =
+    resolvedId === 'frame-none' ||
+    resolvedId === 'frame-rausch' ||
+    resolvedId === 'frame-golden' ||
+    resolvedId === 'frame-cyber' ||
+    resolvedId === 'frame-celestial'
+  const customFrameColor = !isBuiltInFrame
+    ? getStoredShopItems().find((i) => i.id === resolvedId)?.previewColor || '#4E9488'
+    : undefined
 
   return (
     <div className={`relative inline-flex items-center justify-center shrink-0 select-none ${sz.box} ${className}`}>
@@ -116,6 +125,12 @@ export function AvatarWithFrame({
       )}
       {resolvedId === 'frame-celestial' && (
         <span className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_18px_rgba(139,92,246,0.65)]" />
+      )}
+      {!isBuiltInFrame && customFrameColor && (
+        <span
+          className="pointer-events-none absolute inset-0 rounded-full"
+          style={{ boxShadow: `0 0 16px ${customFrameColor}88` }}
+        />
       )}
 
       {/* Bespoke Multi-Layer SVG Ornate Ring */}
@@ -267,6 +282,32 @@ export function AvatarWithFrame({
             <circle cx="15" cy="84" r="2" fill="#C084FC" />
           </>
         )}
+
+        {!isBuiltInFrame && customFrameColor && (
+          <>
+            <circle
+              cx="50"
+              cy="50"
+              r="47.5"
+              fill="none"
+              stroke={customFrameColor}
+              strokeWidth="4.8"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="43.5"
+              fill="none"
+              stroke={customFrameColor}
+              strokeOpacity="0.45"
+              strokeWidth="1.5"
+              strokeDasharray="6 3"
+            />
+            <circle cx="50" cy="2.5" r="2.5" fill={customFrameColor} />
+            <circle cx="97.5" cy="50" r="2" fill={customFrameColor} />
+            <circle cx="2.5" cy="50" r="2" fill={customFrameColor} />
+          </>
+        )}
       </svg>
 
       {/* Inner Avatar Image */}
@@ -288,13 +329,17 @@ export function AvatarWithFrame({
               ? 'bg-amber-400 text-[#171B2A]'
               : resolvedId === 'frame-cyber'
               ? 'bg-emerald-500 text-white'
-              : 'bg-violet-600 text-white'
+              : resolvedId === 'frame-celestial'
+              ? 'bg-violet-600 text-white'
+              : 'text-white'
           }`}
+          style={!isBuiltInFrame && customFrameColor ? { backgroundColor: customFrameColor } : undefined}
         >
           {resolvedId === 'frame-rausch' && <Zap className={`${sz.crestIcon} fill-current`} />}
           {resolvedId === 'frame-golden' && <Crown className={`${sz.crestIcon} fill-current`} />}
           {resolvedId === 'frame-cyber' && <Shield className={`${sz.crestIcon} fill-current`} />}
           {resolvedId === 'frame-celestial' && <Sparkles className={sz.crestIcon} />}
+          {!isBuiltInFrame && <Sparkles className={sz.crestIcon} />}
         </span>
       )}
     </div>

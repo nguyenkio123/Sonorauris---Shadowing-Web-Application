@@ -23,33 +23,36 @@ import {
   Video,
   X,
   Zap,
-} from 'lucide-react'
+} from '../components/icons'
 import {
   createAdminClip,
+  createAdminShopItem,
   createAdminUser,
   deleteAdminClip,
+  deleteAdminShopItem,
   deleteAdminUser,
   getAdminClips,
+  getAdminShopItems,
   getAdminStats,
   getAdminUsers,
   grantUserCurrency,
   grantUserItem,
   resetAdminClips,
+  resetAdminShopItems,
   revokeUserItem,
   updateAdminClip,
+  updateAdminShopItem,
   updateAdminUser,
 } from '../api/admin'
-import { toggleCurrentRole } from '../api/auth'
 import { getUserInventory } from '../api/storage'
-import { SHOP_ITEMS } from '../data/shopItems'
 import { AvatarWithFrame, TitleEmblem } from '../components/common/AvatarWithFrame'
 import type { AdminClipInput, AdminDashboardStats, AdminUserSummary } from '../types/admin'
 import type { Clip, Difficulty, Topic } from '../types/clip'
 import type { UserRole } from '../types/auth'
-import type { ShopItem } from '../types/shop'
+import type { CosmeticType, ShopItem } from '../types/shop'
 import { useAuth } from '../context/AuthContext'
 
-type TabType = 'OVERVIEW' | 'CLIPS' | 'USERS'
+type TabType = 'OVERVIEW' | 'CLIPS' | 'USERS' | 'COSMETICS'
 
 const TOPICS: Topic[] = [
   'Daily Life',
@@ -71,13 +74,14 @@ function extractYouTubeId(urlOrId: string): string {
 }
 
 export const AdminDashboardPage: React.FC = () => {
-  const { user: authUser, refreshUser } = useAuth()
+  const { user: authUser } = useAuth()
   const navigate = useNavigate()
 
   const [activeTab, setActiveTab] = useState<TabType>('OVERVIEW')
   const [stats, setStats] = useState<AdminDashboardStats | null>(null)
   const [clips, setClips] = useState<Clip[]>([])
   const [users, setUsers] = useState<AdminUserSummary[]>([])
+  const [shopItems, setShopItems] = useState<ShopItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
     null
@@ -92,12 +96,29 @@ export const AdminDashboardPage: React.FC = () => {
   const [userSearch, setUserSearch] = useState('')
   const [userRoleFilter, setUserRoleFilter] = useState<string>('ALL')
 
+  // Filters for Cosmetics
+  const [cosmeticSearch, setCosmeticSearch] = useState('')
+  const [cosmeticTypeFilter, setCosmeticTypeFilter] = useState<'ALL' | CosmeticType>('ALL')
+
   // Modals state
   const [isClipModalOpen, setIsClipModalOpen] = useState(false)
   const [editingClip, setEditingClip] = useState<Clip | null>(null)
 
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<AdminUserSummary | null>(null)
+
+  const [isCosmeticModalOpen, setIsCosmeticModalOpen] = useState(false)
+  const [editingCosmetic, setEditingCosmetic] = useState<ShopItem | null>(null)
+  const [cosmeticForm, setCosmeticForm] = useState<Omit<ShopItem, 'id'>>({
+    type: 'AVATAR',
+    name: '',
+    description: '',
+    price: 0,
+    unlockLevel: undefined,
+    rarity: 'Rare',
+    assetValue: '',
+    previewColor: '#4E9488',
+  })
 
   const [grantModalUser, setGrantModalUser] = useState<AdminUserSummary | null>(null)
   const [grantSubTab, setGrantSubTab] = useState<'CURRENCY' | 'ITEMS'>('CURRENCY')
@@ -131,14 +152,16 @@ export const AdminDashboardPage: React.FC = () => {
   const loadAllData = async () => {
     setIsLoading(true)
     try {
-      const [sData, cData, uData] = await Promise.all([
+      const [sData, cData, uData, shopData] = await Promise.all([
         getAdminStats(),
         getAdminClips(),
         getAdminUsers(),
+        getAdminShopItems(),
       ])
       setStats(sData)
       setClips(cData)
       setUsers(uData)
+      setShopItems(shopData)
     } catch (err) {
       console.error('Failed to load admin data:', err)
       setFeedback({ type: 'error', message: 'Failed to refresh admin data.' })
@@ -154,6 +177,95 @@ export const AdminDashboardPage: React.FC = () => {
   const showToast = (type: 'success' | 'error', message: string) => {
     setFeedback({ type, message })
     setTimeout(() => setFeedback(null), 4000)
+  }
+
+  // --- COSMETIC ACTIONS ---
+  const handleOpenAddCosmetic = () => {
+    setEditingCosmetic(null)
+    setCosmeticForm({
+      type: 'AVATAR',
+      name: '',
+      description: '',
+      price: 100,
+      unlockLevel: undefined,
+      rarity: 'Rare',
+      assetValue: 'https://api.dicebear.com/7.x/bottts/svg?seed=NewAvatar',
+      previewColor: '#4E9488',
+    })
+    setIsCosmeticModalOpen(true)
+  }
+
+  const handleOpenEditCosmetic = (item: ShopItem) => {
+    setEditingCosmetic(item)
+    setCosmeticForm({
+      type: item.type,
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      unlockLevel: item.unlockLevel,
+      rarity: item.rarity,
+      assetValue: item.assetValue,
+      previewColor: item.previewColor || '#4E9488',
+    })
+    setIsCosmeticModalOpen(true)
+  }
+
+  const handleSaveCosmetic = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!cosmeticForm.name.trim()) {
+      showToast('error', 'Item name is required.')
+      return
+    }
+    if (!cosmeticForm.assetValue.trim()) {
+      showToast('error', 'Asset value (URL, frame style, or title text) is required.')
+      return
+    }
+    try {
+      const payload: Omit<ShopItem, 'id'> = {
+        ...cosmeticForm,
+        name: cosmeticForm.name.trim(),
+        description: cosmeticForm.description.trim() || 'Custom cosmetic item.',
+        assetValue: cosmeticForm.assetValue.trim(),
+        price: cosmeticForm.unlockLevel ? 0 : Math.max(0, Number(cosmeticForm.price) || 0),
+        unlockLevel:
+          cosmeticForm.unlockLevel && cosmeticForm.unlockLevel >= 1
+            ? Math.floor(cosmeticForm.unlockLevel)
+            : undefined,
+      }
+      if (editingCosmetic) {
+        await updateAdminShopItem(editingCosmetic.id, payload)
+        showToast('success', `Updated "${payload.name}"!`)
+      } else {
+        await createAdminShopItem(payload)
+        showToast('success', `Created "${payload.name}"!`)
+      }
+      setIsCosmeticModalOpen(false)
+      await loadAllData()
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to save cosmetic item.')
+    }
+  }
+
+  const handleDeleteCosmetic = async (item: ShopItem) => {
+    if (!window.confirm(`Delete "${item.name}" from the shop catalog?`)) return
+    try {
+      await deleteAdminShopItem(item.id)
+      showToast('success', `Deleted "${item.name}".`)
+      await loadAllData()
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to delete cosmetic.')
+    }
+  }
+
+  const handleResetCosmetics = async () => {
+    if (!window.confirm('Reset all shop avatars, frames, and titles back to defaults?')) return
+    try {
+      await resetAdminShopItems()
+      showToast('success', 'Restored default cosmetics catalog.')
+      await loadAllData()
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to reset cosmetics.')
+    }
   }
 
   // --- CLIP ACTIONS ---
@@ -372,14 +484,8 @@ export const AdminDashboardPage: React.FC = () => {
     }
   }
 
-  const handleSwitchToLearner = async () => {
-    try {
-      await toggleCurrentRole()
-      await refreshUser()
-      navigate('/')
-    } catch {
-      showToast('error', 'Failed to switch role.')
-    }
+  const handleSwitchToLearner = () => {
+    navigate('/')
   }
 
   // Filtered lists
@@ -516,6 +622,19 @@ export const AdminDashboardPage: React.FC = () => {
           >
             <Users className="w-4 h-4 text-[#4E9488]" />
             <span>Users & Grants ({users.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('COSMETICS')}
+            className={`py-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+              activeTab === 'COSMETICS'
+                ? 'border-[#4E9488] text-[#171B2A]'
+                : 'border-transparent text-[#5B6780] hover:text-[#171B2A]'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-[#4E9488]" />
+            <span>Avatars, Frames & Titles ({shopItems.length})</span>
           </button>
         </div>
       </header>
@@ -1006,7 +1125,345 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* TAB 4: COSMETICS MANAGEMENT */}
+        {activeTab === 'COSMETICS' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#E2E6EA] shadow-2xs">
+              <div className="flex flex-wrap items-center gap-2.5 flex-1">
+                <div className="relative flex-1 min-w-[200px] max-w-xs">
+                  <Search className="w-4 h-4 text-[#5B6780] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={cosmeticSearch}
+                    onChange={(e) => setCosmeticSearch(e.target.value)}
+                    placeholder="Search avatars, frames, titles..."
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#E2E6EA] focus:outline-hidden focus:border-[#4E9488]"
+                  />
+                </div>
+                {(['ALL', 'AVATAR', 'FRAME', 'TITLE'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setCosmeticTypeFilter(t)}
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                      cosmeticTypeFilter === t
+                        ? 'bg-[#171B2A] text-white'
+                        : 'bg-[#F7F9FA] text-[#5B6780] hover:bg-gray-100'
+                    }`}
+                  >
+                    {t === 'ALL' ? 'All Types' : t === 'AVATAR' ? 'Avatars' : t === 'FRAME' ? 'Frames' : 'Titles'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleResetCosmetics}
+                  className="px-3 py-2 rounded-xl border border-[#E2E6EA] bg-white hover:bg-gray-50 text-xs font-semibold text-[#5B6780] flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Reset Defaults</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenAddCosmetic}
+                  className="px-4 py-2 rounded-xl bg-[#4E9488] hover:bg-[#3f7a70] text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create Cosmetic</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {shopItems
+                .filter((item) => {
+                  const matchesType =
+                    cosmeticTypeFilter === 'ALL' || item.type === cosmeticTypeFilter
+                  const q = cosmeticSearch.trim().toLowerCase()
+                  const matchesSearch =
+                    !q ||
+                    item.name.toLowerCase().includes(q) ||
+                    item.description.toLowerCase().includes(q) ||
+                    item.id.toLowerCase().includes(q)
+                  return matchesType && matchesSearch
+                })
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl border border-[#E2E6EA] p-4 flex flex-col justify-between gap-3 shadow-2xs"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gray-100 text-[#5B6780]">
+                          {item.type}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            item.rarity === 'Legendary'
+                              ? 'bg-purple-100 text-purple-700'
+                              : item.rarity === 'Epic'
+                              ? 'bg-amber-100 text-amber-700'
+                              : item.rarity === 'Rare'
+                              ? 'bg-sky-100 text-sky-700'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {item.rarity}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {item.type === 'AVATAR' ? (
+                          <AvatarWithFrame
+                            avatarUrl={item.assetValue}
+                            alt={item.name}
+                            frameId="frame-none"
+                            size="md"
+                          />
+                        ) : item.type === 'FRAME' ? (
+                          <AvatarWithFrame
+                            avatarUrl="https://api.dicebear.com/7.x/bottts/svg?seed=DemoPlayer"
+                            alt={item.name}
+                            frameId={item.id}
+                            size="md"
+                          />
+                        ) : (
+                          <TitleEmblem titleId={item.id} size="sm" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-bold text-[#171B2A] truncate">{item.name}</h4>
+                          <p className="text-xs text-[#5B6780] line-clamp-2 mt-0.5">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-[#f0f2f5]">
+                      <div className="text-xs font-semibold">
+                        {item.unlockLevel ? (
+                          <span className="inline-flex items-center gap-1 text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
+                            <Zap className="w-3 h-3 fill-current" />
+                            Lv.{item.unlockLevel} Unlock
+                          </span>
+                        ) : item.price > 0 ? (
+                          <span className="inline-flex items-center gap-1 text-amber-700">
+                            <Coins className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                            {item.price} Coins
+                          </span>
+                        ) : (
+                          <span className="text-emerald-600">Free Default</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditCosmetic(item)}
+                          className="p-1.5 rounded-lg border border-[#E2E6EA] text-[#5B6780] hover:text-[#171B2A] hover:bg-gray-50 cursor-pointer"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCosmetic(item)}
+                          className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* MODAL 0: ADD / EDIT COSMETIC */}
+      {isCosmeticModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#E2E6EA] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 sm:p-8 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-[#f0f2f5] mb-5">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#4E9488]" />
+                <h3 className="font-bold text-lg text-[#171B2A]">
+                  {editingCosmetic ? 'Edit Cosmetic Item' : 'Create Cosmetic Item'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCosmeticModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCosmetic} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#171B2A] mb-1">Type</label>
+                  <select
+                    value={cosmeticForm.type}
+                    onChange={(e) =>
+                      setCosmeticForm((f) => ({ ...f, type: e.target.value as CosmeticType }))
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#E2E6EA] bg-white"
+                  >
+                    <option value="AVATAR">Avatar</option>
+                    <option value="FRAME">Frame</option>
+                    <option value="TITLE">Title</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#171B2A] mb-1">Rarity</label>
+                  <select
+                    value={cosmeticForm.rarity}
+                    onChange={(e) =>
+                      setCosmeticForm((f) => ({
+                        ...f,
+                        rarity: e.target.value as ShopItem['rarity'],
+                      }))
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#E2E6EA] bg-white"
+                  >
+                    <option value="Common">Common</option>
+                    <option value="Rare">Rare</option>
+                    <option value="Epic">Epic</option>
+                    <option value="Legendary">Legendary</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#171B2A] mb-1">Name</label>
+                <input
+                  type="text"
+                  required
+                  value={cosmeticForm.name}
+                  onChange={(e) => setCosmeticForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="e.g. Phoenix Scholar"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#E2E6EA]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#171B2A] mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={2}
+                  value={cosmeticForm.description}
+                  onChange={(e) => setCosmeticForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Short description shown in the Shop..."
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#E2E6EA]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#171B2A] mb-1">
+                  {cosmeticForm.type === 'AVATAR'
+                    ? 'Avatar Image URL'
+                    : cosmeticForm.type === 'FRAME'
+                    ? 'Frame Style Key / Ring Label'
+                    : 'Equipped Title Display Text'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={cosmeticForm.assetValue}
+                  onChange={(e) => setCosmeticForm((f) => ({ ...f, assetValue: e.target.value }))}
+                  placeholder={
+                    cosmeticForm.type === 'AVATAR'
+                      ? 'https://api.dicebear.com/7.x/bottts/svg?seed=...'
+                      : cosmeticForm.type === 'FRAME'
+                      ? 'ring-[#4E9488]'
+                      : 'Echo Sovereign'
+                  }
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#E2E6EA]"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#171B2A] mb-1">
+                    Unlock Level
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={50}
+                    value={cosmeticForm.unlockLevel ?? 0}
+                    onChange={(e) => {
+                      const val = Number(e.target.value)
+                      setCosmeticForm((f) => ({
+                        ...f,
+                        unlockLevel: val > 0 ? val : undefined,
+                      }))
+                    }}
+                    placeholder="0 = Coin Shop"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#E2E6EA]"
+                  />
+                  <span className="text-[10px] text-[#5B6780]">0 = Buy with Coins</span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#171B2A] mb-1">
+                    Price (Coins)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    disabled={Boolean(cosmeticForm.unlockLevel)}
+                    value={cosmeticForm.unlockLevel ? 0 : cosmeticForm.price}
+                    onChange={(e) =>
+                      setCosmeticForm((f) => ({ ...f, price: Number(e.target.value) || 0 }))
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#E2E6EA] disabled:bg-gray-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#171B2A] mb-1">
+                    Accent Color
+                  </label>
+                  <input
+                    type="color"
+                    value={cosmeticForm.previewColor || '#4E9488'}
+                    onChange={(e) =>
+                      setCosmeticForm((f) => ({ ...f, previewColor: e.target.value }))
+                    }
+                    className="w-full h-[34px] p-0.5 rounded-xl border border-[#E2E6EA] cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#f0f2f5]">
+                <button
+                  type="button"
+                  onClick={() => setIsCosmeticModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-[#E2E6EA] text-xs font-semibold text-[#5B6780] hover:bg-gray-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#4E9488] hover:bg-[#3f7a70] text-white text-xs font-semibold cursor-pointer"
+                >
+                  {editingCosmetic ? 'Save Changes' : 'Create Item'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* MODAL 1: ADD / EDIT CLIP */}
       {isClipModalOpen && (
@@ -1517,7 +1974,7 @@ export const AdminDashboardPage: React.FC = () => {
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1">
-                  {SHOP_ITEMS.map((item) => {
+                  {shopItems.map((item) => {
                     const userInv = grantModalUser ? getUserInventory(grantModalUser.id) : null
                     const isOwned = userInv ? userInv.ownedItemIds.includes(item.id) : false
                     return (

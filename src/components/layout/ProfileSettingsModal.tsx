@@ -19,7 +19,7 @@ import {
   X,
   Zap,
   ShieldCheck,
-} from 'lucide-react'
+} from '../icons'
 import { Link } from 'react-router-dom'
 import { getMe, getUserAttempts, resetDemo, setDisplayName } from '../../api'
 import {

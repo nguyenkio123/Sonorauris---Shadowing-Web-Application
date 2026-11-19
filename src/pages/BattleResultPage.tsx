@@ -11,7 +11,7 @@ import {
   Swords,
   Trophy,
   Zap,
-} from 'lucide-react'
+} from '../components/icons'
 import { createRoom, getMyParticipantId } from '../api'
 import { AvatarWithFrame, resolveParticipantFrameId } from '../components/common/AvatarWithFrame'
 import { useRoom } from '../hooks/useRoom'

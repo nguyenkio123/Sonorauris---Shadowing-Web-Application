@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Check, Coins, Sparkles, Trophy, X, Zap } from 'lucide-react'
+import { Check, Coins, Sparkles, Trophy, X, Zap } from '../icons'
 import { claimQuest, getDailyQuests } from '../../api'
 import type { DailyQuest } from '../../types/quest'
 

@@ -11,7 +11,7 @@ import {
   Sparkles,
   User,
   Zap,
-} from 'lucide-react'
+} from '../components/icons'
 import {
   attemptStreakRestore,
   checkStreakRestoreEligibility,
@@ -22,6 +22,7 @@ import {
   purchaseItem,
 } from '../api'
 import { AvatarWithFrame, TitleEmblem } from '../components/common/AvatarWithFrame'
+import { calculateLevelInfo } from '../config/scoring'
 import type { CosmeticType, ShopItem, UserInventory } from '../types/shop'
 import type { UserProfile } from '../types/user'
 
@@ -140,6 +141,8 @@ export function ShopPage() {
     if (activeTab === 'ALL') return true
     return item.type === activeTab
   })
+
+  const levelInfo = calculateLevelInfo(user?.xp || 0)
 
   // Determine current preview appearance
   const equippedAvatarItem = catalog.find((i) => i.id === inventory?.equippedAvatarId)
@@ -286,10 +289,25 @@ export function ShopPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-[11px] text-[#5B6780]">Rank</div>
-                  <div className="font-mono font-bold text-sm text-[#171B2A] mt-0.5">
-                    Tier 1
+                  <div className="text-[11px] text-[#5B6780]">Level</div>
+                  <div className="font-mono font-bold text-sm text-[#4E9488] mt-0.5">
+                    Lv.{levelInfo.level}
                   </div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-[#ebebeb] text-left">
+                <div className="flex items-center justify-between text-[11px] mb-1.5">
+                  <span className="font-semibold text-[#171B2A]">{levelInfo.rankName}</span>
+                  <span className="font-mono text-[#5B6780]">
+                    {levelInfo.xpIntoLevel}/{levelInfo.xpNeededForNext} XP
+                  </span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-[#ebebeb] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[#4E9488] transition-all duration-300"
+                    style={{ width: `${levelInfo.progressPct}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -365,7 +383,11 @@ export function ShopPage() {
             {/* Catalog Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {filteredItems.map((item) => {
-                const isOwned = inventory?.ownedItemIds.includes(item.id) ?? false
+                const isLevelLocked = Boolean(item.unlockLevel && levelInfo.level < item.unlockLevel)
+                const isLevelUnlocked = Boolean(item.unlockLevel && levelInfo.level >= item.unlockLevel)
+                const isOwned =
+                  (inventory?.ownedItemIds.includes(item.id) ?? false) ||
+                  (isLevelUnlocked && item.price <= 0)
                 const isEquipped =
                   (item.type === 'AVATAR' && inventory?.equippedAvatarId === item.id) ||
                   (item.type === 'FRAME' && inventory?.equippedFrameId === item.id) ||
@@ -437,7 +459,20 @@ export function ShopPage() {
                     {/* Price and CTA Stack */}
                     <div className="flex items-center justify-between pt-3 border-t border-[#ebebeb] mt-2">
                       <div className="flex items-center gap-1.5">
-                        {item.price > 0 ? (
+                        {item.unlockLevel ? (
+                          <span
+                            className={`inline-flex items-center gap-1 text-xs font-semibold ${
+                              isLevelLocked ? 'text-purple-700' : 'text-emerald-600'
+                            }`}
+                          >
+                            <Zap className="h-3.5 w-3.5 fill-current" />
+                            <span>
+                              {isLevelLocked
+                                ? `Requires Lv.${item.unlockLevel}`
+                                : `Unlocked at Lv.${item.unlockLevel}`}
+                            </span>
+                          </span>
+                        ) : item.price > 0 ? (
                           <>
                             <Coins className="h-4 w-4 fill-amber-500 text-amber-500" />
                             <span className="font-mono font-bold text-sm text-[#222222]">
@@ -457,6 +492,14 @@ export function ShopPage() {
                             <Check className="h-3.5 w-3.5" />
                             <span>Equipped</span>
                           </span>
+                        ) : isLevelLocked ? (
+                          <button
+                            disabled
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs font-semibold h-[32px] px-3.5 rounded-lg bg-[#f2f2f2] text-[#929292] cursor-not-allowed"
+                          >
+                            <span>Locked · Lv.{item.unlockLevel}</span>
+                          </button>
                         ) : isOwned ? (
                           <button
                             disabled={isProcessing}

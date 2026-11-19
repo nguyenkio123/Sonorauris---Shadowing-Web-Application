@@ -9,7 +9,7 @@ import {
   Sparkles,
   Swords,
   Volume2,
-} from 'lucide-react'
+} from '../components/icons'
 import { getClip, getMyParticipantId, submitBattleAttempt } from '../api'
 import { AvatarWithFrame, resolveParticipantFrameId } from '../components/common/AvatarWithFrame'
 import { AudioRecorder } from '../components/recorder/AudioRecorder'

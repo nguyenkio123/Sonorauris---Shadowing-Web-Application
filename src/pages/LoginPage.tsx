@@ -10,8 +10,9 @@ import {
   ShieldAlert,
   User,
   UserPlus,
-} from 'lucide-react'
+} from '../components/icons'
 import { useAuth } from '../context/AuthContext'
+import { ProceduralGradientBg } from '../components/common/ProceduralGradientBg'
 
 interface LoginPageProps {
   initialMode?: 'signin' | 'signup'
@@ -91,11 +92,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) 
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F9FA] flex flex-col justify-between text-[#171B2A] font-sans pb-10">
+    <div className="relative overflow-hidden min-h-screen bg-[#F7F9FA] flex flex-col justify-between text-[#171B2A] font-sans pb-10">
+      <ProceduralGradientBg variant="auth" />
 
       {/* Main Authentication Card */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
-        <div className="w-full max-w-md rounded-3xl bg-white border border-[#E2E6EA] p-6 sm:p-8 airbnb-shadow">
+      <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
+        <div className="w-full max-w-md rounded-3xl bg-white/92 backdrop-blur-md border border-[#E2E6EA] p-6 sm:p-8 airbnb-shadow">
           {/* Brand Logo & Title with Two-Tone Styling */}
           <div className="flex flex-col items-center text-center mb-6">
             <Link to="/" className="inline-flex items-center gap-3 group mb-3">
@@ -269,7 +271,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signin' }) 
       </main>
 
       {/* Footer copyright */}
-      <footer className="text-center text-xs text-[#5B6780]">
+      <footer className="relative z-10 text-center text-xs text-[#5B6780]">
         © 2026 Sonorauris — English Shadowing Platform
       </footer>
     </div>

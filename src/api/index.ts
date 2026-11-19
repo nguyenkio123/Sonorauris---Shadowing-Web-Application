@@ -5,7 +5,6 @@ import type { BattleRoom } from '../types/battle'
 import type { Clip } from '../types/clip'
 import type { UserProfile } from '../types/user'
 import { generateAssessmentResult, syncRoomState } from './mockServer'
-import { SHOP_ITEMS } from '../data/shopItems'
 import type { CosmeticType } from '../types/shop'
 import { assessPronunciation } from './azureSpeech'
 import {
@@ -26,6 +25,7 @@ import {
   getMyParticipantId,
   getRoomByCode,
   getStoredClips,
+  getStoredShopItems,
   getUserInventory,
   getUserProfile,
   resetAllStorage,
@@ -58,7 +58,7 @@ export const getMe = async (): Promise<UserProfile> => getUserProfile()
 export const getAttempt = async (id: string): Promise<Attempt | null> => getAttemptById(id)
 export const getUserAttempts = async (): Promise<Attempt[]> => getAttempts()
 export const resetDemo = async (): Promise<void> => resetAllStorage()
-export const getShopCatalog = async () => [...SHOP_ITEMS]
+export const getShopCatalog = async () => getStoredShopItems()
 export const getInventory = async () => getUserInventory()
 export const purchaseItem = async (itemId: string) => buyShopItem(itemId)
 export const equipItem = async (type: CosmeticType, itemId: string) => equipShopItem(type, itemId)

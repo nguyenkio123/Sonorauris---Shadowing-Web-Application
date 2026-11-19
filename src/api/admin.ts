@@ -1,25 +1,32 @@
 import type { AdminClipInput, AdminDashboardStats, AdminUserSummary } from '../types/admin'
 import type { Clip } from '../types/clip'
+import type { ShopItem } from '../types/shop'
 import type { UserRole } from '../types/auth'
 import {
   getLocalAccounts,
+  hashPassword,
   saveLocalAccounts,
 } from './auth'
 import {
   addRewardTransactions,
   addStoredClip,
+  addStoredShopItem,
   deleteStoredClip,
+  deleteStoredShopItem,
   getAttempts,
   getStoredClips,
+  getStoredShopItems,
   getTransactions,
   getUserBase,
   getUserInventory,
   getUserProfile,
   grantUserCosmetic,
   resetStoredClips,
+  resetStoredShopItems,
   revokeUserCosmetic,
   saveUserBase,
   updateStoredClip,
+  updateStoredShopItem,
 } from './storage'
 import {
   deleteRemoteClip,
@@ -186,11 +193,13 @@ export async function createAdminUser(data: {
   const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(trimmedName)}`
   const createdAt = new Date().toISOString()
 
+  const passwordHash = await hashPassword(data.password || 'password123')
+
   accounts.push({
     id: newId,
     email: trimmedEmail,
     displayName: trimmedName,
-    passwordHash: btoa(data.password || 'password123'),
+    passwordHash,
     avatarUrl,
     role: data.role,
     createdAt,
@@ -503,4 +512,47 @@ export async function deleteAdminClip(id: string): Promise<boolean> {
 export async function resetAdminClips(): Promise<Clip[]> {
   await delay()
   return resetStoredClips()
+}
+
+/**
+ * Fetches all shop cosmetics (avatars, frames, titles) for Admin
+ */
+export async function getAdminShopItems(): Promise<ShopItem[]> {
+  await delay()
+  return getStoredShopItems()
+}
+
+/**
+ * Creates a new cosmetic item (avatar, frame, or title)
+ */
+export async function createAdminShopItem(itemData: Omit<ShopItem, 'id'>): Promise<ShopItem> {
+  await delay()
+  return addStoredShopItem(itemData)
+}
+
+/**
+ * Updates an existing cosmetic item
+ */
+export async function updateAdminShopItem(
+  id: string,
+  updates: Partial<Omit<ShopItem, 'id'>>,
+): Promise<ShopItem | null> {
+  await delay()
+  return updateStoredShopItem(id, updates)
+}
+
+/**
+ * Deletes a cosmetic item
+ */
+export async function deleteAdminShopItem(id: string): Promise<boolean> {
+  await delay()
+  return deleteStoredShopItem(id)
+}
+
+/**
+ * Resets shop cosmetics to default catalog
+ */
+export async function resetAdminShopItems(): Promise<ShopItem[]> {
+  await delay()
+  return resetStoredShopItems()
 }

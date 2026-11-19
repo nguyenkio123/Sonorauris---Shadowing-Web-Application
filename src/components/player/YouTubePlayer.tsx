@@ -1,4 +1,4 @@
-import { ExternalLink, Play, RotateCcw, AlertTriangle, Pause } from 'lucide-react'
+import { ExternalLink, Play, RotateCcw, AlertTriangle, Pause } from '../icons'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 declare global {

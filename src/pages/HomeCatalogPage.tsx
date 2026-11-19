@@ -1,10 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Sparkles,
-  Flame,
-  Coins,
-  Zap,
   Play,
   Swords,
   Clock,
@@ -17,15 +14,19 @@ import {
   Film,
   MessageSquare,
   FlaskConical,
+  Volume2,
+  VolumeX,
   X,
-} from 'lucide-react'
-import { getClips, getMe, getUserAttempts } from '../api'
+  ArrowDown,
+  type AnimatedIconHandle,
+} from '../components/icons'
+import { getClips, getUserAttempts } from '../api'
+import { ProceduralGradientBg } from '../components/common/ProceduralGradientBg'
 import type { Clip, Difficulty, Topic } from '../types/clip'
-import type { UserProfile } from '../types/user'
 
 const FAVORITES_KEY = 'shadowing_favorites'
 
-const TOPICS: { name: 'All' | Topic; label: string; icon: typeof Compass }[] = [
+const TOPICS: { name: 'All' | Topic; label: string; icon: ComponentType<{ className?: string }> }[] = [
   { name: 'All', label: 'All Topics', icon: Compass },
   { name: 'Daily Life', label: 'Daily Life', icon: MessageSquare },
   { name: 'Work & Tech', label: 'Work & Tech', icon: Briefcase },
@@ -38,12 +39,15 @@ const DIFFICULTIES: ('All' | Difficulty)[] = ['All', 'Beginner', 'Intermediate',
 
 export function HomeCatalogPage() {
   const [clips, setClips] = useState<Clip[]>([])
-  const [user, setUser] = useState<UserProfile | null>(null)
   const [bestScores, setBestScores] = useState<Record<string, number>>({})
   const [selectedTopic, setSelectedTopic] = useState<string>('All')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All')
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false)
   const [sortBy, setSortBy] = useState<'level' | 'alphabetical' | 'duration'>('level')
+  const [heroMuted, setHeroMuted] = useState(true)
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null)
+  const searchIconRef = useRef<AnimatedIconHandle>(null)
+  const exploreArrowRef = useRef<AnimatedIconHandle>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [favorites, setFavorites] = useState<Record<string, boolean>>(() => {
     try {
@@ -58,13 +62,11 @@ export function HomeCatalogPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [clipsData, userData, attemptsData] = await Promise.all([
+        const [clipsData, attemptsData] = await Promise.all([
           getClips(),
-          getMe(),
           getUserAttempts().catch(() => []),
         ])
         setClips(clipsData)
-        setUser(userData)
         const scoresMap: Record<string, number> = {}
         for (const att of attemptsData) {
           const score = att.result?.battleScore ?? -1
@@ -81,16 +83,6 @@ export function HomeCatalogPage() {
       }
     }
     void loadData()
-
-    const handleUserUpdate = () => {
-      void getMe().then(setUser).catch(() => {})
-    }
-    window.addEventListener('shadowing_user_updated', handleUserUpdate)
-    window.addEventListener('storage', handleUserUpdate)
-    return () => {
-      window.removeEventListener('shadowing_user_updated', handleUserUpdate)
-      window.removeEventListener('storage', handleUserUpdate)
-    }
   }, [])
 
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
@@ -144,117 +136,151 @@ export function HomeCatalogPage() {
     })
 
   return (
-    <div className="min-h-screen bg-white text-[#171B2A] font-sans pb-16">
-      {/* HERO EDITORIAL SECTION — Airbnb Style High-Impact Welcome */}
-      <section className="bg-gradient-to-b from-[#f7f9fa] to-white border-b border-[#ebebeb] pt-8 pb-7">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#dddddd] px-3.5 py-1 text-xs font-semibold text-[#171B2A] mb-3 shadow-2xs">
-                <Sparkles className="h-3.5 w-3.5 text-[#4E9488]" />
-                <span>Authentic Voice Shadowing • Real-Time AI Diagnostics</span>
+    <div className="relative min-h-screen text-[#171B2A] font-sans pb-16">
+      <ProceduralGradientBg variant="page" />
+
+      {/* HERO EDITORIAL SECTION — Elevated Spotlight Card + 3D Fly-Through */}
+      <section className="relative z-10 pt-5 pb-2 px-3 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-white/75 backdrop-blur-md border border-white/70 shadow-[0_24px_60px_-15px_rgba(23,27,42,0.14)] p-6 sm:p-8 lg:p-10">
+          {/* Subtle Ambient Radial Spotlights */}
+          <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[#4E9488]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 right-10 h-72 w-72 rounded-full bg-emerald-400/12 blur-3xl" />
+
+          <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            <div className="lg:col-span-7 flex flex-col gap-5">
+              <div>
+                <h1 className="text-[32px] sm:text-[44px] font-bold text-[#171B2A] leading-[1.12] tracking-tight">
+                  <span
+                    className="italic font-normal text-[42px] sm:text-[56px] leading-none bg-gradient-to-r from-[#2B6B61] via-[#4E9488] to-[#10B981] bg-clip-text text-transparent pr-1.5"
+                    style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
+                  >
+                    Inspiration
+                  </span>
+                  for spoken English rhythm
+                </h1>
+                <p className="text-[15px] sm:text-[16px] text-[#4A5568] mt-3 max-w-xl font-normal leading-relaxed">
+                  Imitate native speaker intonation, pauses, and cadence with short authentic video clips. Challenge other learners in 1v1 synchronized duels.
+                </p>
               </div>
-              <h1 className="text-[28px] sm:text-[34px] font-bold text-[#171B2A] leading-[1.25] tracking-tight">
-                Inspiration for spoken English rhythm
-              </h1>
-              <p className="text-[15px] sm:text-[16px] text-[#5B6780] mt-2 max-w-2xl font-normal leading-relaxed">
-                Imitate native speaker intonation, pauses, and cadence with short authentic video clips. Challenge other learners in 1v1 synchronized duels.
-              </p>
+
+              {/* Aesthetic Scroll-to-Clips Action Button */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onMouseEnter={() => exploreArrowRef.current?.startAnimation()}
+                  onMouseLeave={() => exploreArrowRef.current?.stopAnimation()}
+                  onClick={() =>
+                    document.getElementById('clips-grid')?.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                    })
+                  }
+                  className="group relative inline-flex items-center gap-3.5 rounded-full bg-[#171B2A] hover:bg-[#1f263b] text-white pl-5 pr-2 py-2 shadow-[0_10px_28px_-6px_rgba(23,27,42,0.28)] hover:shadow-[0_14px_34px_-6px_rgba(78,148,136,0.42)] ring-1 ring-white/10 transition-all duration-200 active:scale-[0.98] cursor-pointer"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+                    <span>Explore Practice Clips</span>
+                    {clips.length > 0 && (
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[11px] font-medium text-[#8ee3d5]">
+                        {clips.length}
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#4E9488] text-white shadow-xs group-hover:bg-[#3d7a70] transition-colors">
+                    <ArrowDown ref={exploreArrowRef} className="h-4 w-4 text-white" />
+                  </span>
+                </button>
+              </div>
+
+              {/* Search Clips Pill directly under Explore Practice Clips */}
+              <div className="pt-2 max-w-xl">
+                <div className="search-bar-pill flex items-center justify-between p-1.5 pl-4 sm:pl-5 gap-2 sm:gap-3">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <label htmlFor="search-input" className="block text-[12px] font-semibold text-[#171B2A] leading-none mb-1">
+                      Search Clips
+                    </label>
+                    <input
+                      id="search-input"
+                      type="text"
+                      placeholder="By title, speaker, topic, or transcript..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && searchQuery.trim()) {
+                          document.getElementById('clips-grid')?.scrollIntoView({ behavior: 'smooth' })
+                        }
+                      }}
+                      className="w-full bg-transparent text-[14px] text-[#171B2A] placeholder-[#5B6780] outline-none truncate"
+                    />
+                  </div>
+
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      aria-label="Clear search"
+                      className="p-1 text-[#5B6780] hover:text-[#171B2A] hover:bg-[#f7f7f7] rounded-full transition-colors cursor-pointer"
+                      title="Clear search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="search-orb"
+                    aria-label="Search practice clips"
+                    title="Search clips"
+                    onMouseEnter={() => searchIconRef.current?.startAnimation()}
+                    onMouseLeave={() => searchIconRef.current?.stopAnimation()}
+                    onClick={() => {
+                      if (searchQuery.trim()) {
+                        document.getElementById('clips-grid')?.scrollIntoView({ behavior: 'smooth' })
+                      } else {
+                        document.getElementById('search-input')?.focus()
+                      }
+                    }}
+                  >
+                    <Search ref={searchIconRef} className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* User Progression Ledger Cards */}
-            {user && (
-              <div className="flex flex-wrap items-center gap-3 shrink-0">
-                <div className="rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
-                    <Flame className="h-4 w-4 fill-orange-500 text-orange-500" />
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-[#5B6780]">Streak</div>
-                    <div className="text-[14px] font-bold text-[#171B2A] font-mono">{user.streak} Days</div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-[#dddddd] bg-[#ffffff] p-3 airbnb-shadow flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
-                    <Coins className="h-4 w-4 fill-current" />
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-[#5B6780]">Coins</div>
-                    <div className="text-[14px] font-bold text-[#171B2A] font-mono">{user.coins}</div>
-                  </div>
-                </div>
-
-                <div className="hidden sm:flex rounded-xl border border-purple-100 bg-[#ffffff] p-3 airbnb-shadow items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
-                    <Zap className="h-4 w-4 fill-purple-600 text-purple-600" />
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-purple-600/80">Total XP</div>
-                    <div className="text-[14px] font-bold text-purple-700 font-mono">{user.xp} XP</div>
-                  </div>
-                </div>
+            {/* 3D Fly-Through Showcase Video (1440x1152 / 5:4) */}
+            <div className="lg:col-span-5">
+              <div className="relative aspect-[5/4] w-full overflow-hidden rounded-2xl border border-[#4E9488]/25 bg-[#f9fbfb] shadow-[0_18px_40px_-12px_rgba(23,27,42,0.22)] ring-1 ring-black/5">
+                <video
+                  ref={heroVideoRef}
+                  src="/hero-flythrough.mp4"
+                  autoPlay
+                  muted={heroMuted}
+                  loop
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-cover block"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !heroMuted
+                    setHeroMuted(next)
+                    if (heroVideoRef.current) heroVideoRef.current.muted = next
+                  }}
+                  aria-label={heroMuted ? 'Unmute showcase audio' : 'Mute showcase audio'}
+                  title={heroMuted ? 'Unmute audio' : 'Mute audio'}
+                  className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 border border-[#e2e6ea] text-[#171B2A] shadow-xs hover:bg-white transition-colors cursor-pointer"
+                >
+                  {heroMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5 text-[#4E9488]" />}
+                </button>
               </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* GLOBAL SEARCH BAR — Signature Airbnb Pill (search-bar-pill & search-orb) */}
-      <section className="border-b border-[#ebebeb] py-6 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="mx-auto max-w-2xl">
-          <div className="search-bar-pill flex items-center justify-between p-2 pl-4 sm:pl-6 gap-2 sm:gap-3">
-            {/* Search Keyword Input */}
-            <div className="flex-1 min-w-0 pr-2">
-              <label htmlFor="search-input" className="block text-[12px] font-semibold text-[#171B2A] leading-none mb-1">
-                Search Clips
-              </label>
-              <input
-                id="search-input"
-                type="text"
-                placeholder="By title, speaker, topic, or transcript..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent text-[14px] text-[#171B2A] placeholder-[#5B6780] outline-none truncate"
-              />
             </div>
-
-            {/* Clear Button */}
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear search"
-                className="p-1 text-[#5B6780] hover:text-[#171B2A] hover:bg-[#f7f7f7] rounded-full transition-colors cursor-pointer"
-                title="Clear search"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-
-            {/* Search Orb terminating right edge */}
-            <button
-              type="button"
-              className="search-orb"
-              aria-label="Search practice clips"
-              title="Search clips"
-              onClick={() => {
-                if (searchQuery.trim()) {
-                  document.getElementById('clips-grid')?.scrollIntoView({ behavior: 'smooth' })
-                } else {
-                  document.getElementById('search-input')?.focus()
-                }
-              }}
-            >
-              <Search className="h-5 w-5 text-white" />
-            </button>
           </div>
         </div>
       </section>
 
       {/* CATEGORY STRIP — Horizontal Product Tabs & Mobile-Accessible Difficulty Filter */}
-      <section className="sticky top-[108px] md:top-[80px] z-30 bg-white border-b border-[#ebebeb] shadow-xs">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-3">
+      <section className="sticky top-[118px] md:top-[92px] z-30 mt-6 w-full px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-2xl bg-white/78 backdrop-blur-md border border-white/70 airbnb-shadow px-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-2.5">
           <div className="w-full min-w-0 flex items-center gap-6 sm:gap-8 overflow-x-auto py-1 scrollbar-none">
             {TOPICS.map((t) => {
               const Icon = t.icon
@@ -314,7 +340,7 @@ export function HomeCatalogPage() {
       </section>
 
       {/* CLIPS CATALOG GRID */}
-      <div id="clips-grid" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
+      <div id="clips-grid" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 scroll-mt-[190px] md:scroll-mt-[165px]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-2">
             <h2 className="text-[20px] font-semibold text-[#171B2A]">
@@ -385,7 +411,7 @@ export function HomeCatalogPage() {
             Loading curated practice clips...
           </div>
         ) : filteredClips.length === 0 ? (
-          <div className="rounded-2xl border border-[#dddddd] bg-[#f7f9fa] p-12 text-center text-[#5B6780]">
+          <div className="rounded-2xl border border-white/70 bg-white/78 backdrop-blur-md p-12 text-center text-[#5B6780] airbnb-shadow">
             <p className="font-semibold text-[#171B2A] mb-1.5 text-lg">No matching clips found</p>
             <p className="text-sm">Try broadening your search or resetting the category filter.</p>
             <button
@@ -412,7 +438,7 @@ export function HomeCatalogPage() {
               return (
                 <div
                   key={clip.id}
-                  className="airbnb-card group flex flex-col justify-between overflow-hidden border border-[#ebebeb] bg-white hover:border-[#171B2A]/30"
+                  className="airbnb-card group flex flex-col justify-between overflow-hidden border border-white/70 bg-white/78 backdrop-blur-md hover:border-[#171B2A]/30"
                 >
                   {/* Thumbnail with Authentic Cadence / Best Score Badge */}
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#f0f3f5]">
@@ -491,7 +517,7 @@ export function HomeCatalogPage() {
                       </div>
 
                       {/* Line 4: Reference text snippet in italic quotes */}
-                      <p className="text-[13px] text-[#283044] italic line-clamp-2 bg-[#f7f9fa] p-2.5 rounded-lg border border-[#e2e6ea] mb-3 leading-relaxed">
+                      <p className="text-[13px] text-[#283044] italic line-clamp-2 bg-white/60 p-2.5 rounded-lg border border-[#e2e6ea]/80 mb-3 leading-relaxed">
                         "{clip.referenceText}"
                       </p>
                     </div>

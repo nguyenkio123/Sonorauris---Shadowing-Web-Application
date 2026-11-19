@@ -2,8 +2,9 @@ import { calculateBattleScore } from '../config/scoring'
 import type { AssessmentResult, MiscueWord } from '../types/attempt'
 import { generateAssessmentResult, generateMockMiscues } from './mockServer'
 
-const AZURE_KEY = import.meta.env.VITE_AZURE_SPEECH_KEY
-const AZURE_REGION = import.meta.env.VITE_AZURE_SPEECH_REGION || 'eastus'
+// Security Notice: Secret cloud provider keys must never be exposed to the browser
+// with VITE_ prefixes. Azure Speech evaluation must be proxied via backend server.
+const AZURE_PROXY_URL = import.meta.env.VITE_AZURE_PROXY_URL
 
 export interface AnnotatedAudioBlob extends Blob {
   recognizedText?: string
@@ -46,10 +47,11 @@ interface AzureSpeechResponse {
 }
 
 /**
- * Checks whether Azure Speech credentials are configured.
+ * Checks whether Azure Speech backend proxy is configured.
+ * Direct browser calls using secret API keys are disabled for security.
  */
 export function isAzureSpeechConfigured(): boolean {
-  return Boolean(AZURE_KEY && AZURE_REGION)
+  return Boolean(AZURE_PROXY_URL)
 }
 
 /**
@@ -447,12 +449,9 @@ export async function assessPronunciation(
         ? 'audio/wav; codecs=audio/pcm; samplerate=16000'
         : audioBlob.type || 'audio/webm; codecs=opus'
 
-      const endpoint = `https://${AZURE_REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed`
-
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${AZURE_PROXY_URL!.replace(/\/$/, '')}/api/azure-assess`, {
         method: 'POST',
         headers: {
-          'Ocp-Apim-Subscription-Key': AZURE_KEY!,
           'Pronunciation-Assessment': base64Params,
           'Content-Type': contentType,
           Accept: 'application/json',
