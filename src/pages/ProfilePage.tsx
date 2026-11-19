@@ -3,25 +3,29 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   Check,
+  Clock,
   Coins,
   Cpu,
   Crown,
   Edit2,
   Flame,
+  Heart,
   LogIn,
   LogOut,
   Mail,
   Mic,
+  Play,
   RefreshCw,
   RotateCcw,
   ShieldCheck,
   Sparkles,
+  Swords,
   Trophy,
   User,
   Volume2,
   Zap,
 } from '../components/icons'
-import { getMe, getUserAttempts, resetDemo } from '../api'
+import { getClips, getMe, getUserAttempts, resetDemo } from '../api'
 import { updateCurrentUserProfile } from '../api/auth'
 import {
   checkFasterWhisperHealth,
@@ -32,11 +36,12 @@ import {
 } from '../api/azureSpeech'
 import type { UserProfile } from '../types/user'
 import type { Attempt } from '../types/attempt'
+import type { Clip } from '../types/clip'
 import { AvatarWithFrame } from '../components/common/AvatarWithFrame'
 import { calculateLevelInfo } from '../config/scoring'
 import { useAuth } from '../context/AuthContext'
 
-type TabType = 'ACCOUNT' | 'STATS' | 'AUDIO'
+type TabType = 'ACCOUNT' | 'STATS' | 'SAVED' | 'AUDIO'
 
 export function ProfilePage() {
   const { user: authUser, signOut, isConfigured, refreshUser } = useAuth()
@@ -44,6 +49,7 @@ export function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('ACCOUNT')
   const [user, setUser] = useState<UserProfile | null>(null)
   const [attempts, setAttempts] = useState<Attempt[]>([])
+  const [savedClips, setSavedClips] = useState<Clip[]>([])
   const [loading, setLoading] = useState(true)
   const [isEditingName, setIsEditingName] = useState(false)
   const [nameInput, setNameInput] = useState('')
@@ -111,16 +117,25 @@ export function ProfilePage() {
     let active = true
     async function init() {
       try {
-        const [uData, attData, whisperStatus] = await Promise.all([
+        const [uData, attData, whisperStatus, allClips] = await Promise.all([
           getMe(),
           getUserAttempts(),
           checkFasterWhisperHealth(),
+          getClips(),
         ])
         if (!active) return
+        let favMap: Record<string, boolean> = {}
+        try {
+          const rawFavs = localStorage.getItem('shadowing_favorites')
+          if (rawFavs) favMap = JSON.parse(rawFavs) as Record<string, boolean>
+        } catch {
+          favMap = {}
+        }
         setUser(uData)
         setNameInput(uData.displayName)
         setEmailInput(authUser?.email || '')
         setAttempts(attData)
+        setSavedClips(allClips.filter((c) => Boolean(favMap[c.id])))
         setWhisperHealth(whisperStatus)
       } catch (err) {
         console.error('Failed to load profile data', err)
@@ -287,6 +302,18 @@ export function ProfilePage() {
               }`}
             >
               Stats &amp; Records
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('SAVED')}
+              className={`pb-2 text-xs font-semibold px-3 transition-colors border-b-2 whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'SAVED'
+                  ? 'border-[#4E9488] text-[#171B2A]'
+                  : 'border-transparent text-[#5B6780] hover:text-[#171B2A]'
+              }`}
+            >
+              <Heart className="w-3.5 h-3.5 text-[#4E9488]" />
+              <span>Saved Clips ({savedClips.length})</span>
             </button>
             <button
               type="button"
@@ -801,6 +828,91 @@ export function ProfilePage() {
                       <span>Reset Data</span>
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* TAB 4: SAVED / LIKED CLIPS */}
+              {activeTab === 'SAVED' && (
+                <div className="flex flex-col gap-4">
+                  {savedClips.length === 0 ? (
+                    <div className="rounded-2xl border border-[#ebebeb] bg-[#fcfcfc] p-10 text-center">
+                      <Heart className="w-8 h-8 text-[#4E9488]/40 mx-auto mb-2.5" />
+                      <h3 className="text-sm font-bold text-[#171B2A]">No saved clips yet</h3>
+                      <p className="text-xs text-[#5B6780] mt-1 mb-4">
+                        Tap the heart icon on any practice clip to save it here for quick access.
+                      </p>
+                      <Link to="/" className="btn-primary text-xs font-semibold h-9 px-4 rounded-xl inline-flex">
+                        Explore Practice Clips
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {savedClips.map((clip) => (
+                        <div
+                          key={clip.id}
+                          className="rounded-2xl border border-[#ebebeb] bg-white overflow-hidden flex flex-col justify-between shadow-2xs"
+                        >
+                          <div className="relative aspect-[16/9] w-full bg-[#f0f3f5] overflow-hidden">
+                            <img
+                              src={clip.thumbnailUrl}
+                              alt={clip.title}
+                              className="h-full w-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                try {
+                                  const raw = localStorage.getItem('shadowing_favorites')
+                                  const favMap = raw ? (JSON.parse(raw) as Record<string, boolean>) : {}
+                                  delete favMap[clip.id]
+                                  localStorage.setItem('shadowing_favorites', JSON.stringify(favMap))
+                                } catch {
+                                  // ignore storage errors
+                                }
+                                setSavedClips((prev) => prev.filter((c) => c.id !== clip.id))
+                              }}
+                              title="Remove from saved clips"
+                              className="absolute top-2.5 right-2.5 h-8 w-8 rounded-full bg-white/90 flex items-center justify-center shadow-xs hover:scale-105 transition-transform cursor-pointer"
+                            >
+                              <Heart className="w-4 h-4 fill-[#4E9488] text-[#4E9488]" />
+                            </button>
+                            <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-medium text-white">
+                              <Clock className="w-3 h-3" />
+                              {clip.durationSec}s
+                            </span>
+                          </div>
+
+                          <div className="p-3.5 flex-1 flex flex-col justify-between gap-3">
+                            <div>
+                              <h4 className="text-sm font-bold text-[#171B2A] line-clamp-1">
+                                {clip.title}
+                              </h4>
+                              <p className="text-xs text-[#5B6780] mt-0.5 line-clamp-1">
+                                {clip.channelName} · {clip.difficulty}
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#f0f2f5]">
+                              <Link
+                                to={`/practice/${clip.id}`}
+                                className="btn-primary text-xs font-semibold h-8 px-3 rounded-lg"
+                              >
+                                <Play className="w-3 h-3 fill-current" />
+                                <span>Practice</span>
+                              </Link>
+                              <Link
+                                to={`/battle/lobby?clipId=${clip.id}`}
+                                className="btn-secondary text-xs font-semibold h-8 px-3 rounded-lg"
+                              >
+                                <Swords className="w-3 h-3" />
+                                <span>Battle</span>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </>
